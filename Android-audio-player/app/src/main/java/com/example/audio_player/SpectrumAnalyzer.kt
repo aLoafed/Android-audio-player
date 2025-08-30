@@ -38,34 +38,19 @@ class SpectrumAnalyzer : AudioProcessor {
         //================================ Collecting buffer data ================================//
         val shortBuffer = inputBuffer.asShortBuffer()
         val fftArray = DoubleArray(1024) //512 as it's a power of 2 and isn't too laggy
-        val soundArray = FloatArray(1024)
 
         for (i in 0 until 1024) {
             try {
                 fftArray[i] = shortBuffer.get() / 32768.0 // Normalisation
-                soundArray[i] = shortBuffer.get().toFloat()
             } catch (e: BufferUnderflowException) {
                 fftArray[i] = 0.0
-                soundArray[i] = 0f
             }
             if (fftArray[i].isNaN() or fftArray[i].isInfinite()) { // Prevent float NaN's
                 fftArray[i] = 0.0
-                soundArray[i] = 0f
             }
             val window = 0.5 * (1 - kotlin.math.cos(2.0 * Math.PI * i / (1024 - 1))) // Hann window to reduce sound leakage
             fftArray[i] = fftArray[i] * window
         }
-        for (i in 0 until 1024) {
-            try {
-                soundArray[i] = shortBuffer.get().toFloat()
-            } catch (e: BufferUnderflowException) {
-                soundArray[i] = 0f
-            }
-            if (soundArray[i].isNaN() or soundArray[i].isInfinite()) { // Prevent float NaN's
-                soundArray[i] = 0f
-            }
-        }
-
         //================================= Graphical Equaliser =================================//
         fft.realForward(fftArray) // Input array has the output array
 
