@@ -36,8 +36,7 @@ fun mediaStoreSongName(applicationContext: Context): List<SongInfo> {
         MediaStore.Audio.Media.ALBUM,
         MediaStore.Audio.Media.ARTIST,
         MediaStore.Audio.Media.DURATION,
-        MediaStore.Audio.Media._ID,
-        MediaStore.Audio.Albums._ID
+        MediaStore.Audio.Media._ID
     )
     val sortOrder = "${MediaStore.Audio.Media.TITLE} ASC"
     val contentResolver = applicationContext.contentResolver
@@ -75,16 +74,17 @@ fun mediaStoreSongName(applicationContext: Context): List<SongInfo> {
                     null
                 )
             } catch (e: FileNotFoundException) {}
-
-            songInfo.add(SongInfo(
-                getName,
-                getFileName,
-                songUri,
-                duration,
-                getArtist,
-                getAlbum,
-                albumCover.asImageBitmap()
-                ))
+            songInfo.add(
+                SongInfo(
+                    getName,
+                    getFileName,
+                    songUri,
+                    duration,
+                    getArtist,
+                    getAlbum,
+                    albumCover.asImageBitmap()
+                )
+            )
         }
     }
     return songInfo

@@ -69,6 +69,8 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.media3.common.MediaItem
+import androidx.media3.common.Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM
 import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
@@ -145,11 +147,20 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
                 modifier = Modifier
                     .size(80.dp),
                 onClick = {
-                    if (player.currentPosition < 10000L) {
-                        player.seekToPreviousMediaItem()
-                        viewModel.incrementSongInfoIterator(-1)
-                    } else {
-                        player.seekTo(0L)
+                    try {
+                        if (player.currentPosition < 10000L) {
+                            if (player.hasPreviousMediaItem()) {
+                                player.seekToPreviousMediaItem()
+                            } else {
+                                player.moveMediaItems(0,songInfo.lastIndex + 1, 1)
+                                player.addMediaItem(0, MediaItem.fromUri(songInfo[viewModel.songInfoIterator - 1].songUri))
+                                player.seekToPreviousMediaItem()
+                            }
+                            viewModel.incrementSongInfoIterator(-1)
+                        } else {
+                            player.seekTo(0L)
+                        }
+                    } catch (e: IndexOutOfBoundsException) {
                     }
                 },
                 colors = IconButtonColors(
@@ -196,13 +207,15 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
                     )
                 }
             )
-            IconButton( // Skip button
+            IconButton(
+                // Skip button
                 modifier = Modifier
                     .size(80.dp),
                 onClick = {
-                    player.seekToNextMediaItem()
-                    player.play()
-                    viewModel.incrementSongInfoIterator(1)
+                    if (player.hasNextMediaItem()) {
+                        player.seekToNextMediaItem()
+                        viewModel.incrementSongInfoIterator(1)
+                    }
                 },
                 colors = IconButtonColors(
                     containerColor = Color.Transparent,
