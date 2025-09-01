@@ -2,21 +2,15 @@ package com.example.audio_player
 
 import androidx.annotation.OptIn
 import androidx.compose.animation.core.EaseOut
-import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
-import androidx.compose.animation.core.TweenSpec
 import androidx.compose.animation.core.animateFloat
-import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
-import androidx.compose.animation.core.rememberTransition
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -28,24 +22,16 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material3.Button
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
-import androidx.compose.material3.IconToggleButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
-import androidx.compose.material3.SliderColors
-import androidx.compose.material3.SliderDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -53,32 +39,17 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.ColorFilter
-import androidx.compose.ui.graphics.Outline
-import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.graphics.drawscope.DrawStyle
 import androidx.compose.ui.graphics.drawscope.Fill
-import androidx.compose.ui.graphics.drawscope.Stroke
-import androidx.compose.ui.graphics.drawscope.rotate
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.media3.common.MediaItem
-import androidx.media3.common.Player.COMMAND_SEEK_TO_PREVIOUS_MEDIA_ITEM
-import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import com.example.audio_player.ui.theme.dotoFamily
-import java.nio.file.WatchEvent
-import kotlin.time.Duration.Companion.milliseconds
-import kotlin.time.DurationUnit
-import kotlin.time.toDuration
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -96,9 +67,9 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
         Image( // Album art
             bitmap = (
                     if (viewModel.playingFromSongsScreen) {
-                        songInfo[viewModel.songInfoIterator].albumArt
+                        songInfo[viewModel.songIterator].albumArt
                     } else {
-                        viewModel.albumSongInfo[viewModel.songInfoIterator].albumArt
+                        viewModel.albumSongInfo[viewModel.songIterator].albumArt
                     }
                     ),
             modifier = Modifier
@@ -111,9 +82,9 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
         )
         LargePlayerScreenLcdText(
             if (viewModel.playingFromSongsScreen) {
-                songInfo[viewModel.songInfoIterator].name
+                songInfo[viewModel.songIterator].name
             } else {
-                viewModel.albumSongInfo[viewModel.songInfoIterator].name
+                viewModel.albumSongInfo[viewModel.songIterator].name
             }
         )
         Spacer(
@@ -122,16 +93,16 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
         )
         LargeLcdText(
             if (viewModel.playingFromSongsScreen) {
-                songInfo[viewModel.songInfoIterator].artist
+                songInfo[viewModel.songIterator].artist
             } else {
-                viewModel.albumSongInfo[viewModel.songInfoIterator].artist
+                viewModel.albumSongInfo[viewModel.songIterator].artist
             }
         )
         LargeLcdText(
             if (viewModel.playingFromSongsScreen) {
-                songInfo[viewModel.songInfoIterator].album
+                songInfo[viewModel.songIterator].album
             } else {
-                viewModel.albumSongInfo[viewModel.songInfoIterator].album
+                viewModel.albumSongInfo[viewModel.songIterator].album
             }
         )
         Spacer(
@@ -152,11 +123,17 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
                             if (player.hasPreviousMediaItem()) {
                                 player.seekToPreviousMediaItem()
                             } else {
-                                player.moveMediaItems(0,songInfo.lastIndex + 1, 1)
-                                player.addMediaItem(0, MediaItem.fromUri(songInfo[viewModel.songInfoIterator - 1].songUri))
-                                player.seekToPreviousMediaItem()
+                                if (viewModel.playingFromSongsScreen) {
+                                    player.moveMediaItems(0,songInfo.lastIndex + 1, 1)
+                                    player.addMediaItem(0, MediaItem.fromUri(songInfo[viewModel.songIterator - 1].songUri))
+                                    player.seekToPreviousMediaItem()
+                                } else {
+                                    player.moveMediaItems(0,viewModel.albumSongInfo.lastIndex + 1, 1)
+                                    player.addMediaItem(0, MediaItem.fromUri(viewModel.albumSongInfo[viewModel.songIterator - 1].songUri))
+                                    player.seekToPreviousMediaItem()
+                                }
                             }
-                            viewModel.incrementSongInfoIterator(-1)
+                            viewModel.incrementSongIterator(-1)
                         } else {
                             player.seekTo(0L)
                         }
@@ -214,7 +191,7 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
                 onClick = {
                     if (player.hasNextMediaItem()) {
                         player.seekToNextMediaItem()
-                        viewModel.incrementSongInfoIterator(1)
+                        viewModel.incrementSongIterator(1)
                     }
                 },
                 colors = IconButtonColors(

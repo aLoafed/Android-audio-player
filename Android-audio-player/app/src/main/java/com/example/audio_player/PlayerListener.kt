@@ -4,12 +4,8 @@ import android.content.Context
 import android.widget.Toast
 import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
-import androidx.media3.common.MediaMetadata
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
-import androidx.media3.common.Timeline
-import androidx.media3.common.Tracks
-import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 
@@ -31,7 +27,7 @@ class PlayerListener(
     ) {
         super.onMediaItemTransition(mediaItem, reason)
         if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) {
-            viewModel.incrementSongInfoIterator(1)
+            viewModel.incrementSongIterator(1)
         }
     }
     override fun onPlayerError(error: PlaybackException) {

@@ -26,12 +26,10 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
-import java.lang.Thread.sleep
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -68,7 +66,7 @@ fun SongsScreen(songInfo: List<SongInfo>, player: ExoPlayer, viewModel: PlayerVi
                             viewModel.updateAlbumArt(songInfo[i].albumArt)
                             viewModel.updateIsPlaying(true)
                             viewModel.updateSongDuration((songInfo[i].time).toLong())
-                            viewModel.updateSongInfoIterator(i)
+                            viewModel.updateSongIterator(i)
                             pagerState.requestScrollToPage(0)
                         }
                     ),

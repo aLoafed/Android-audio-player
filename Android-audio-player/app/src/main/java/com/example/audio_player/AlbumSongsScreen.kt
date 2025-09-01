@@ -55,6 +55,7 @@ fun AlbumSongsScreen(album: String, songInfo: List<SongInfo>, player: ExoPlayer,
                     .padding(5.dp)
                     .clickable(
                         onClick = {
+                            viewModel.updateAlbumSongInfo(albumSongsList)
                             val songUri = albumSongsList[i].songUri
                             val mediaItem = MediaItem.fromUri(songUri)
                             player.setMediaItem(mediaItem)
@@ -69,7 +70,7 @@ fun AlbumSongsScreen(album: String, songInfo: List<SongInfo>, player: ExoPlayer,
                             viewModel.updateAlbumArt(albumSongsList[i].albumArt)
                             viewModel.updateIsPlaying(true)
                             viewModel.updateSongDuration((albumSongsList[i].time).toLong())
-                            viewModel.updateSongInfoIterator(i)
+                            viewModel.updateSongIterator(i)
                             viewModel.updatePlayingFromSongsScreen(false) // Shows details from albums list
                             navController.navigate("pager")
                         }
