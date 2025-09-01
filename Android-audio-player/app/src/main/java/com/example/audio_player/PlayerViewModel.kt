@@ -2,6 +2,7 @@ package com.example.audio_player
 
 import android.content.Context
 import android.graphics.BitmapFactory
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -13,7 +14,9 @@ import androidx.compose.ui.graphics.asImageBitmap
 import androidx.lifecycle.ViewModel
 import androidx.media3.exoplayer.ExoPlayer
 
-class PlayerViewModel(applicationContext: Context) : ViewModel() {
+class PlayerViewModel(
+    applicationContext: Context,
+) : ViewModel() {
     var isPlaying by mutableStateOf(false)
         private set
     var duration by mutableFloatStateOf(1f) // Length of song

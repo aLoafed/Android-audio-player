@@ -1,18 +1,11 @@
 package com.example.audio_player
 
 import androidx.media3.common.audio.AudioProcessor
-import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
-import be.tarsos.dsp.AudioEvent
-import be.tarsos.dsp.PitchShifter
-import be.tarsos.dsp.WaveformSimilarityBasedOverlapAdd
-import be.tarsos.dsp.io.TarsosDSPAudioFormat
-import be.tarsos.dsp.io.jvm.AudioDispatcherFactory
 import org.jtransforms.fft.DoubleFFT_1D
 import java.nio.BufferUnderflowException
 import java.nio.ByteBuffer
 import kotlin.math.sqrt
-import kotlin.properties.Delegates
 
 @UnstableApi
 class SpectrumAnalyzer : AudioProcessor {

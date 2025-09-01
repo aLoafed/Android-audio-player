@@ -70,6 +70,7 @@ fun AlbumSongsScreen(album: String, songInfo: List<SongInfo>, player: ExoPlayer,
                             viewModel.updateIsPlaying(true)
                             viewModel.updateSongDuration((albumSongsList[i].time).toLong())
                             viewModel.updateSongInfoIterator(i)
+                            viewModel.updatePlayingFromSongsScreen(false) // Shows details from albums list
                             navController.navigate("pager")
                         }
                     ),

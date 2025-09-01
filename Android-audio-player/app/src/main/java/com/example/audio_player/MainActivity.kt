@@ -35,6 +35,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.media3.common.C
+import androidx.media3.common.Effect
 import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultRenderersFactory
@@ -141,12 +142,11 @@ class MainActivity : ComponentActivity() {
             .setRenderersFactory(renderersFactory)
             .build()
         val listener = PlayerListener(applicationContext, viewModel, player) // Do not remove, though unused
-
+        player.addListener(listener)
         enableEdgeToEdge()
         setContent {
             Audio_playerTheme {
                 NavHost(player, songInfo, spectrumAnalyzer, viewModel, albumInfo)
-//                Pager(player, spectrumAnalyzer, viewModel, songInfo, albumInfo)
                 if (viewModel.isPlaying) {
                     LaunchedEffect(Unit) {
                         while (true) {
@@ -158,15 +158,6 @@ class MainActivity : ComponentActivity() {
                         while (true) {
                             if (player.duration != C.TIME_UNSET) {
                                 viewModel.updateSongDuration(time = player.duration / 1000)
-                            }
-                            delay(1.seconds / 30)
-                        }
-                    }
-                    LaunchedEffect(Unit) {
-                        while (true) {
-                            if (viewModel.currentSongPosition == viewModel.duration) {
-                                viewModel.incrementSongInfoIterator(1)
-                                delay(1000)
                             }
                             delay(1.seconds / 30)
                         }
