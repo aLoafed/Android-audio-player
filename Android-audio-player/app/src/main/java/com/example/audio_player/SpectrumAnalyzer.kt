@@ -1,6 +1,7 @@
 package com.example.audio_player
 
 import androidx.media3.common.audio.AudioProcessor
+import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import org.jtransforms.fft.DoubleFFT_1D
 import java.nio.BufferUnderflowException
@@ -14,7 +15,7 @@ class SpectrumAnalyzer : AudioProcessor {
     private var endOfStreamQueued = false
     private var isEnded = false
     var eqList = DoubleArray(7)
-
+    var volume = 0f
     override fun configure(inputAudioFormat: AudioProcessor.AudioFormat): AudioProcessor.AudioFormat {
         return inputAudioFormat
     }
@@ -31,15 +32,20 @@ class SpectrumAnalyzer : AudioProcessor {
         //================================ Collecting buffer data ================================//
         val shortBuffer = inputBuffer.asShortBuffer()
         val fftArray = DoubleArray(1024) //512 as it's a power of 2 and isn't too laggy
-
+        val volumeArray = FloatArray(1024)
+        var buffer: Short
         for (i in 0 until 1024) {
             try {
-                fftArray[i] = shortBuffer.get() / 32768.0 // Normalisation
+                buffer = shortBuffer.get()
+                volumeArray[i] = buffer.toFloat()
+                fftArray[i] = buffer / 32768.0 // Normalisation
             } catch (e: BufferUnderflowException) {
                 fftArray[i] = 0.0
+                volumeArray[i] = 0f
             }
             if (fftArray[i].isNaN() or fftArray[i].isInfinite()) { // Prevent float NaN's
                 fftArray[i] = 0.0
+                volumeArray[i] = 0f
             }
             val window = 0.5 * (1 - kotlin.math.cos(2.0 * Math.PI * i / (1024 - 1))) // Hann window to reduce sound leakage
             fftArray[i] = fftArray[i] * window
@@ -56,6 +62,7 @@ class SpectrumAnalyzer : AudioProcessor {
             i++
         }
         eqList = frequencyCalculator(absValueList)
+        volume = averageVolumeCalculator(volumeArray)
     }
 
     override fun queueEndOfStream() {
@@ -86,7 +93,6 @@ class SpectrumAnalyzer : AudioProcessor {
         endOfStreamQueued = false
         outputBuffer = AudioProcessor.EMPTY_BUFFER
     }
-
     fun frequencyCalculator(absValueList: DoubleArray): DoubleArray {
         val tempList = DoubleArray(7)
         tempList[0] = (absValueList[1 * 2])
@@ -98,5 +104,16 @@ class SpectrumAnalyzer : AudioProcessor {
         tempList[6] = (absValueList[205 * 2])
         return tempList
 
+    }
+    fun averageVolumeCalculator(list: FloatArray): Float {
+        var tmpVolume = 0f
+        for (i in 0 until 1024) {
+            tmpVolume = tmpVolume + list[i]
+        }
+        tmpVolume /= 1024f
+        if (tmpVolume < 0f) {
+            tmpVolume = 0f
+        }
+        return tmpVolume
     }
 }

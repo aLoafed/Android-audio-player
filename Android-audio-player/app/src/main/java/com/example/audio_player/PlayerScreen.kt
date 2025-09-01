@@ -1,5 +1,6 @@
 package com.example.audio_player
 
+import android.widget.Space
 import androidx.annotation.OptIn
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.RepeatMode
@@ -50,6 +51,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import com.example.audio_player.ui.theme.dotoFamily
+import kotlin.math.pow
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -114,7 +116,8 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
                 .fillMaxWidth(),
             horizontalArrangement = Arrangement.SpaceEvenly
         ) {
-            IconButton( // Previous button
+            IconButton(
+                // Previous button
                 modifier = Modifier
                     .size(80.dp),
                 onClick = {
@@ -124,12 +127,22 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
                                 player.seekToPreviousMediaItem()
                             } else {
                                 if (viewModel.playingFromSongsScreen) {
-                                    player.moveMediaItems(0,songInfo.lastIndex + 1, 1)
-                                    player.addMediaItem(0, MediaItem.fromUri(songInfo[viewModel.songIterator - 1].songUri))
+                                    player.moveMediaItems(0, songInfo.lastIndex + 1, 1)
+                                    player.addMediaItem(
+                                        0,
+                                        MediaItem.fromUri(songInfo[viewModel.songIterator - 1].songUri)
+                                    )
                                     player.seekToPreviousMediaItem()
                                 } else {
-                                    player.moveMediaItems(0,viewModel.albumSongInfo.lastIndex + 1, 1)
-                                    player.addMediaItem(0, MediaItem.fromUri(viewModel.albumSongInfo[viewModel.songIterator - 1].songUri))
+                                    player.moveMediaItems(
+                                        0,
+                                        viewModel.albumSongInfo.lastIndex + 1,
+                                        1
+                                    )
+                                    player.addMediaItem(
+                                        0,
+                                        MediaItem.fromUri(viewModel.albumSongInfo[viewModel.songIterator - 1].songUri)
+                                    )
                                     player.seekToPreviousMediaItem()
                                 }
                             }
@@ -222,12 +235,33 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
 fun GraphicalEqualizer(spectrumAnalyzer: SpectrumAnalyzer, viewModel: PlayerViewModel) {
     Row(
         modifier = Modifier
-            .size(280.dp, 140.dp)
+            .size(320.dp, 140.dp)
             .padding(horizontal = 15.dp),
         verticalAlignment = Alignment.Bottom,
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         val fieldName = listOf("63","160","400","1k","2.5k","6.3k","16k")
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
+                .width(35.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Bottom
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy((-2).dp)
+            ) {
+                val tick = viewModel.currentSongPosition
+                if (viewModel.isPlaying) {
+                    VolumeLevelText(spectrumAnalyzer, tick)
+                    VolumeLevelText(spectrumAnalyzer, tick)
+                }
+            }
+        }
+        Spacer(
+            modifier = Modifier
+                .width(15.dp)
+        )
         for (i in 0..6) {
             AudioLevelColumn(fieldName[i],spectrumAnalyzer, viewModel)
         }
@@ -304,6 +338,68 @@ fun AudioLevelText(fieldName: String, spectrumAnalyzer: SpectrumAnalyzer, tick: 
         lineHeight = 3.sp,
         textAlign = TextAlign.Center
         )
+}
+@OptIn(UnstableApi::class)
+@Composable
+fun VolumeLevelText(spectrumAnalyzer: SpectrumAnalyzer, tick: Float) {
+    val eqTransition = rememberInfiniteTransition()
+    val target = remember(tick) {
+        volumeLevel(spectrumAnalyzer)
+    }
+    val levels by eqTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = target,
+        animationSpec = infiniteRepeatable(
+            tween(
+                10,
+                0,
+                EaseOut
+            ),
+            repeatMode = RepeatMode.Reverse
+        )
+    )
+    Text(
+        modifier = Modifier,
+        text = textLevelBuilder(1..levels.toInt()),
+        fontFamily = dotoFamily,
+        fontWeight = FontWeight.W100,
+        fontSize = 23.sp,
+        color = Color.White,
+        letterSpacing = 0.sp,
+        lineHeight = 3.sp,
+        textAlign = TextAlign.Center
+    )
+}
+
+@OptIn(UnstableApi::class)
+fun volumeLevel(spectrumAnalyzer: SpectrumAnalyzer): Float {
+    var tmpSound = spectrumAnalyzer.volume.toDouble()
+    if (tmpSound > 20000.0) {
+        tmpSound = 20000.0
+    }
+    return when{
+        tmpSound <= 1 -> 1f
+        tmpSound <= 2 -> 2f
+        tmpSound <= 3 -> 3f
+        tmpSound <= 5 -> 4f
+        tmpSound <= 8 -> 5f
+        tmpSound <= 14 -> 6f
+        tmpSound <= 23 -> 7f
+        tmpSound <= 38 -> 8f
+        tmpSound <= 65 -> 9f
+        tmpSound <= 109 -> 10f
+        tmpSound <= 184 -> 11f
+        tmpSound <= 309 -> 12f
+        tmpSound <= 521 -> 13f
+        tmpSound <= 877 -> 14f
+        tmpSound <= 1476 -> 15f
+        tmpSound <= 2486 -> 16f
+        tmpSound <= 4187 -> 17f
+        tmpSound <= 7052 -> 18f
+        tmpSound <= 11876 -> 19f
+        tmpSound <= 20000 -> 20f
+        else -> 0f
+    }
 }
 
 @OptIn(UnstableApi::class)
