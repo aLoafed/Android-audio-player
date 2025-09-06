@@ -47,6 +47,7 @@ import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.audio.MediaCodecAudioRenderer
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.exoplayer.source.MediaSourceEventListener
+import androidx.media3.session.MediaSession
 import com.example.audio_player.ui.theme.Audio_playerTheme
 import com.example.audio_player.ui.theme.lcdFont
 import kotlinx.coroutines.coroutineScope
@@ -63,7 +64,6 @@ class MainActivity : ComponentActivity() {
                     return PlayerViewModel(
                         applicationContext
                     ) as T
-
                 }
             }
         }
@@ -138,8 +138,13 @@ class MainActivity : ComponentActivity() {
                 )
             }
         }
+        val mediaSessionCallback = object : MediaSession.Callback{}
         player = ExoPlayer.Builder(applicationContext) // Player declaration
             .setRenderersFactory(renderersFactory)
+            .build()
+        val mediaSession = MediaSession.Builder(applicationContext, player)
+            .setId("media_session")
+            .setCallback(mediaSessionCallback)
             .build()
         val listener = PlayerListener(applicationContext, viewModel, player) // Do not remove, though unused
         player.addListener(listener)

@@ -11,6 +11,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -48,6 +49,7 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.media3.common.MediaItem
+import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import com.example.audio_player.ui.theme.dotoFamily
@@ -64,7 +66,7 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
     ) {
         Spacer(
             modifier = Modifier
-                .height(30.dp)
+                .height(20.dp)
         )
         Image( // Album art
             bitmap = (
@@ -75,12 +77,12 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
                     }
                     ),
             modifier = Modifier
-                .size(225.dp),
+                .size(300.dp),
             contentDescription = null
         )
         Spacer(
             modifier = Modifier
-                .height(20.dp)
+                .height(10.dp)
         )
         LargePlayerScreenLcdText(
             if (viewModel.playingFromSongsScreen) {
@@ -108,8 +110,7 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
             }
         )
         Spacer(
-            modifier = Modifier
-                .height(10.dp)
+            modifier = Modifier.height(10.dp)
         )
         Row( // Playback controls
             modifier = Modifier
@@ -119,7 +120,7 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
             IconButton(
                 // Previous button
                 modifier = Modifier
-                    .size(80.dp),
+                    .size(60.dp),
                 onClick = {
                     try {
                         if (player.currentPosition < 10000L) {
@@ -162,7 +163,7 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
                 content = {
                     Icon(
                         painter = painterResource(R.drawable.skip_previous),
-                        contentDescription = null
+                        contentDescription = "Previous"
                     )
                 },
             )
@@ -170,14 +171,12 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
                 onClick = {
                     if (player.isPlaying) {
                         player.pause()
-                        viewModel.updateIsPlaying(false)
                     } else {
                         player.play()
-                        viewModel.updateIsPlaying(true)
                     }
                 },
                 modifier = Modifier
-                    .size(80.dp),
+                    .size(60.dp),
                 colors = IconButtonColors(
                     containerColor = Color.Transparent,
                     contentColor = Color.White,
@@ -193,14 +192,14 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
                                 painterResource(R.drawable.pause)
                             }
                         ),
-                        contentDescription = null
+                        contentDescription = "Play & pause"
                     )
                 }
             )
             IconButton(
                 // Skip button
                 modifier = Modifier
-                    .size(80.dp),
+                    .size(60.dp),
                 onClick = {
                     if (player.hasNextMediaItem()) {
                         player.seekToNextMediaItem()
@@ -216,7 +215,7 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
                 content = {
                     Icon(
                         painter = painterResource(R.drawable.skip_next),
-                        contentDescription = null
+                        contentDescription = "Next"
                     )
                 },
             )
@@ -241,27 +240,27 @@ fun GraphicalEqualizer(spectrumAnalyzer: SpectrumAnalyzer, viewModel: PlayerView
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         val fieldName = listOf("63","160","400","1k","2.5k","6.3k","16k")
-        Column(
-            modifier = Modifier
-                .fillMaxHeight()
-                .width(35.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.Bottom
-        ) {
-            Row(
-                horizontalArrangement = Arrangement.spacedBy((-2).dp)
-            ) {
-                val tick = viewModel.currentSongPosition
-                if (viewModel.isPlaying) {
-                    VolumeLevelText(spectrumAnalyzer, tick)
-                    VolumeLevelText(spectrumAnalyzer, tick)
-                }
-            }
-        }
-        Spacer(
-            modifier = Modifier
-                .width(15.dp)
-        )
+//        Column(
+//            modifier = Modifier
+//                .fillMaxHeight()
+//                .width(35.dp),
+//            horizontalAlignment = Alignment.CenterHorizontally,
+//            verticalArrangement = Arrangement.Bottom
+//        ) {
+//            Row(
+//                horizontalArrangement = Arrangement.spacedBy((-2).dp)
+//            ) {
+//                val tick = viewModel.currentSongPosition
+//                if (viewModel.isPlaying) {
+//                    VolumeLevelText(spectrumAnalyzer, tick)
+//                    VolumeLevelText(spectrumAnalyzer, tick)
+//                }
+//            }
+//        }
+//        Spacer(
+//            modifier = Modifier
+//                .width(15.dp)
+//        )
         for (i in 0..6) {
             AudioLevelColumn(fieldName[i],spectrumAnalyzer, viewModel)
         }
@@ -373,11 +372,12 @@ fun VolumeLevelText(spectrumAnalyzer: SpectrumAnalyzer, tick: Float) {
 
 @OptIn(UnstableApi::class)
 fun volumeLevel(spectrumAnalyzer: SpectrumAnalyzer): Float {
-    var tmpSound = spectrumAnalyzer.volume.toDouble()
+    var tmpSound = spectrumAnalyzer.volume
+    Log.d("Neoplayer", "$tmpSound")
     if (tmpSound > 20000.0) {
         tmpSound = 20000.0
     }
-    return when{
+    return when {
         tmpSound <= 1 -> 1f
         tmpSound <= 2 -> 2f
         tmpSound <= 3 -> 3f
@@ -505,7 +505,7 @@ fun SeekBar(player: ExoPlayer, viewModel: PlayerViewModel) {
             onValueChange = {
                 currentSongPosition = it
                 viewModel.updateSongPosition(player, currentSongPosition.toLong())
-                viewModel.updateIsPlaying(true)
+//                viewModel.updateIsPlaying(true)
             },
             thumb = {
                 SliderThumb()

@@ -7,8 +7,10 @@ import androidx.collection.intListOf
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,8 +23,12 @@ import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.List
 import androidx.compose.material.icons.outlined.PlayArrow
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.NavigationBar
 import androidx.compose.material3.NavigationBarItem
@@ -34,6 +40,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -69,6 +76,12 @@ fun NavHost(
         }
         composable(route = Screen.AlbumSongsScreen.route) {
             AlbumSongsScreen(viewModel.selectedAlbum, songInfo, player, viewModel, navController)
+        }
+        composable(route = Screen.Settings.route) {
+            Settings(navController, viewModel)
+        }
+        composable(route = Screen.ThemeChange.route) {
+            ThemeChange(viewModel)
         }
     }
 }
@@ -110,46 +123,102 @@ fun Pager(
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(viewModel.backgroundColor)
             .windowInsetsPadding(WindowInsets.statusBars),
         verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        TabRow(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
                 .height(55.dp),
-            containerColor = MaterialTheme.colorScheme.background,
-            selectedTabIndex = selectedTab,
-            indicator =  { tabPositions ->
-                TabRowDefaults.SecondaryIndicator(
-                    modifier = Modifier
-                        .tabIndicatorOffset(
-                            tabPositions[pagerState.currentPage]
-                        ),
-                    color = Color.White,
-                    height = 2.dp
-                )
-            }
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Start
         ) {
-            for (i in 0 until pagerState.pageCount) {
+            TabRow(
+                modifier = Modifier
+                    .fillMaxWidth() // Was 0.85f
+                    .height(55.dp),
+                containerColor = viewModel.backgroundColor,
+                selectedTabIndex = selectedTab,
+                indicator =  { tabPositions ->
+                    TabRowDefaults.SecondaryIndicator(
+                        modifier = Modifier
+                            .tabIndicatorOffset(
+                                tabPositions[pagerState.currentPage]
+                            ),
+                        color = Color.White,
+                        height = 2.dp
+                    )
+                }
+            ) {
+                for (i in 0 until pagerState.pageCount) {
+                    Tab(
+                        modifier = Modifier
+                            .fillMaxSize(),
+                        selected = selectedTab == i,
+                        onClick = {
+                            selectedTab = i
+                        },
+                        icon = {
+                            if (selectedTab == i) {
+                                Icon(
+                                    painter = painterResource(iconList[i * 2]),
+                                    contentDescription = null
+                                )
+                            } else {
+                                Icon(
+                                    painter = painterResource(iconList[i * 2 + 1]),
+                                    contentDescription = null
+                                )
+                            }
+                        },
+                        selectedContentColor = Color.White,
+                        unselectedContentColor = Color.White
+                    )
+                }
+                var dropDownMenu by remember { mutableStateOf(false) }
                 Tab(
                     modifier = Modifier
-                        .fillMaxSize(),
-                    selected = selectedTab == i,
+                        .fillMaxSize(0.15f),
+                    selected = false,
                     onClick = {
-                        selectedTab = i
+                        dropDownMenu = !dropDownMenu
                     },
-                    icon = {
-                        if (selectedTab == i) {
-                            Icon(
-                                painter = painterResource(iconList[i * 2]),
-                                contentDescription = null
+                    content = {
+                        Icon(
+                            painterResource(R.drawable.more_menu),
+                            contentDescription = "More options"
+                        )
+                        DropdownMenu(
+                            expanded = dropDownMenu,
+                            onDismissRequest = { dropDownMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = {
+                                    LcdText(
+                                        "Settings"
+                                    )
+                                },
+                                onClick = {
+                                    navController.navigate("settings")
+                                }
                             )
-                        } else {
-                            Icon(
-                                painter = painterResource(iconList[i * 2 + 1]),
-                                contentDescription = null
+                            DropdownMenuItem(
+                                text = {
+                                    LcdText(
+                                        "Equaliser"
+                                    )
+                                },
+                                onClick = {TODO()}
+                            )
+                            DropdownMenuItem(
+                                text = {
+                                    LcdText(
+                                        "Info"
+                                    )
+                                },
+                                onClick = {TODO()}
                             )
                         }
                     },

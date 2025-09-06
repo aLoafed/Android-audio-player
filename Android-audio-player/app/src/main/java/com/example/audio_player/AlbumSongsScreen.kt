@@ -55,20 +55,15 @@ fun AlbumSongsScreen(album: String, songInfo: List<SongInfo>, player: ExoPlayer,
                     .padding(5.dp)
                     .clickable(
                         onClick = {
+                            player.clearMediaItems()
                             viewModel.updateAlbumSongInfo(albumSongsList)
-                            val songUri = albumSongsList[i].songUri
-                            val mediaItem = MediaItem.fromUri(songUri)
-                            player.setMediaItem(mediaItem)
-                            val length = albumSongsList.count() - 1
-                            for (j in i + 1..length) {
-                                val songUri = albumSongsList[j].songUri
-                                val mediaItem = MediaItem.fromUri(songUri)
-                                player.addMediaItem(mediaItem)
+                            for (j in 0 until albumSongsList.count()) {
+                                player.addMediaItem(MediaItem.fromUri(albumSongsList[j].songUri))
                             }
                             player.prepare()
+                            player.seekTo(i, 0L)
                             player.play()
                             viewModel.updateAlbumArt(albumSongsList[i].albumArt)
-                            viewModel.updateIsPlaying(true)
                             viewModel.updateSongDuration((albumSongsList[i].time).toLong())
                             viewModel.updateSongIterator(i)
                             viewModel.updatePlayingFromSongsScreen(false) // Shows details from albums list

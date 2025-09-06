@@ -52,21 +52,17 @@ fun SongsScreen(songInfo: List<SongInfo>, player: ExoPlayer, viewModel: PlayerVi
                     .padding(5.dp)
                     .clickable(
                         onClick = {
-                            val songUri = songInfo[i].songUri
-                            val mediaItem = MediaItem.fromUri(songUri)
-                            player.setMediaItem(mediaItem)
-                            val length = songInfo.count() - 1
-                            for (j in i + 1..length) {
-                                val songUri = songInfo[j].songUri
-                                val mediaItem = MediaItem.fromUri(songUri)
-                                player.addMediaItem(mediaItem)
+                            player.clearMediaItems()
+                            for (j in 0 until songInfo.count()) {
+                                player.addMediaItem(MediaItem.fromUri(songInfo[j].songUri))
                             }
                             player.prepare()
+                            player.seekTo(i,0L)
                             player.play()
                             viewModel.updateAlbumArt(songInfo[i].albumArt)
-                            viewModel.updateIsPlaying(true)
                             viewModel.updateSongDuration((songInfo[i].time).toLong())
                             viewModel.updateSongIterator(i)
+                            viewModel.updatePlayingFromSongsScreen(true)
                             pagerState.requestScrollToPage(0)
                         }
                     ),
