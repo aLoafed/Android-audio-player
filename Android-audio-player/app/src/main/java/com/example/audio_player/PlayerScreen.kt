@@ -1,6 +1,5 @@
 package com.example.audio_player
 
-import android.widget.Space
 import androidx.annotation.OptIn
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.RepeatMode
@@ -11,7 +10,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -53,7 +51,6 @@ import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import com.example.audio_player.ui.theme.dotoFamily
-import kotlin.math.pow
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -61,7 +58,7 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background),
+            .background(viewModel.backgroundColor),
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
         Spacer(
@@ -89,7 +86,8 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
                 songInfo[viewModel.songIterator].name
             } else {
                 viewModel.albumSongInfo[viewModel.songIterator].name
-            }
+            },
+            viewModel = viewModel
         )
         Spacer(
             modifier = Modifier
@@ -100,14 +98,16 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
                 songInfo[viewModel.songIterator].artist
             } else {
                 viewModel.albumSongInfo[viewModel.songIterator].artist
-            }
+            },
+            viewModel = viewModel
         )
         LargeLcdText(
             if (viewModel.playingFromSongsScreen) {
                 songInfo[viewModel.songIterator].album
             } else {
                 viewModel.albumSongInfo[viewModel.songIterator].album
-            }
+            },
+            viewModel = viewModel
         )
         Spacer(
             modifier = Modifier.height(10.dp)
@@ -156,7 +156,7 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
                 },
                 colors = IconButtonColors(
                     containerColor = Color.Transparent,
-                    contentColor = Color.White,
+                    contentColor = viewModel.iconColor,
                     disabledContentColor = Color.Transparent,
                     disabledContainerColor = Color.Transparent
                 ),
@@ -179,7 +179,7 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
                     .size(60.dp),
                 colors = IconButtonColors(
                     containerColor = Color.Transparent,
-                    contentColor = Color.White,
+                    contentColor = viewModel.iconColor,
                     disabledContentColor = Color.Transparent,
                     disabledContainerColor = Color.Transparent
                 ),
@@ -208,7 +208,7 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
                 },
                 colors = IconButtonColors(
                     containerColor = Color.Transparent,
-                    contentColor = Color.White,
+                    contentColor = viewModel.iconColor,
                     disabledContentColor = Color.Transparent,
                     disabledContainerColor = Color.Transparent
                 ),
@@ -240,6 +240,44 @@ fun GraphicalEqualizer(spectrumAnalyzer: SpectrumAnalyzer, viewModel: PlayerView
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         val fieldName = listOf("63","160","400","1k","2.5k","6.3k","16k")
+//        val text = textLevelBuilder(1..10)
+//        Column( // Arbitrary measure dashes
+//            modifier = Modifier
+//                .fillMaxHeight()
+//                .width(5.dp),
+//            horizontalAlignment = Alignment.CenterHorizontally,
+//            verticalArrangement = Arrangement.Bottom
+//        ) {
+//            Row(
+//                modifier = Modifier
+//                    .fillMaxSize(),
+//                horizontalArrangement = Arrangement.spacedBy((-2).dp),
+//                verticalAlignment = Alignment.Bottom
+//            ) {
+//                Text(
+//                    modifier = Modifier,
+//                    text = text,
+//                    fontFamily = dotoFamily,
+//                    fontWeight = FontWeight.W300,
+//                    fontSize = 10.sp,
+//                    color = MaterialTheme.colorScheme.secondary,
+//                    lineHeight = 10.sp,
+//                )
+//                Text(
+//                    modifier = Modifier,
+//                    text = text,
+//                    fontFamily = dotoFamily,
+//                    fontWeight = FontWeight.W300,
+//                    fontSize = 10.sp,
+//                    color = MaterialTheme.colorScheme.secondary,
+//                    lineHeight = 10.sp,
+//                )
+//            }
+//        }
+        Spacer(
+            modifier = Modifier
+                .width(15.dp)
+        )
 //        Column(
 //            modifier = Modifier
 //                .fillMaxHeight()
@@ -280,15 +318,16 @@ fun AudioLevelColumn(fieldName: String, spectrumAnalyzer: SpectrumAnalyzer, view
         DotoText(
             fieldName,
             Modifier
-                .offset(y = 20.dp)
+                .offset(y = 20.dp),
+            viewModel
         )
         Row(
             horizontalArrangement = Arrangement.spacedBy((-2).dp)
         ) {
             val tick = viewModel.currentSongPosition
             if (viewModel.isPlaying) {
-                AudioLevelText(fieldName, spectrumAnalyzer, tick)
-                AudioLevelText(fieldName, spectrumAnalyzer, tick)
+                AudioLevelText(fieldName, spectrumAnalyzer, tick, viewModel)
+                AudioLevelText(fieldName, spectrumAnalyzer, tick, viewModel)
             }
         }
     }
@@ -296,7 +335,7 @@ fun AudioLevelColumn(fieldName: String, spectrumAnalyzer: SpectrumAnalyzer, view
 
 @OptIn(UnstableApi::class)
 @Composable
-fun AudioLevelText(fieldName: String, spectrumAnalyzer: SpectrumAnalyzer, tick: Float) {
+fun AudioLevelText(fieldName: String, spectrumAnalyzer: SpectrumAnalyzer, tick: Float, viewModel: PlayerViewModel) {
     val eqTransition = rememberInfiniteTransition()
     val target = remember(tick) {
         if (spectrumAnalyzer.eqList.count() != 0) {
@@ -332,75 +371,74 @@ fun AudioLevelText(fieldName: String, spectrumAnalyzer: SpectrumAnalyzer, tick: 
         fontFamily = dotoFamily,
         fontWeight = FontWeight.W100,
         fontSize = 23.sp,
-        color = Color.White,
+        color = viewModel.eqLevelColor,
         letterSpacing = 0.sp,
         lineHeight = 3.sp,
         textAlign = TextAlign.Center
         )
 }
-@OptIn(UnstableApi::class)
-@Composable
-fun VolumeLevelText(spectrumAnalyzer: SpectrumAnalyzer, tick: Float) {
-    val eqTransition = rememberInfiniteTransition()
-    val target = remember(tick) {
-        volumeLevel(spectrumAnalyzer)
-    }
-    val levels by eqTransition.animateFloat(
-        initialValue = 0f,
-        targetValue = target,
-        animationSpec = infiniteRepeatable(
-            tween(
-                10,
-                0,
-                EaseOut
-            ),
-            repeatMode = RepeatMode.Reverse
-        )
-    )
-    Text(
-        modifier = Modifier,
-        text = textLevelBuilder(1..levels.toInt()),
-        fontFamily = dotoFamily,
-        fontWeight = FontWeight.W100,
-        fontSize = 23.sp,
-        color = Color.White,
-        letterSpacing = 0.sp,
-        lineHeight = 3.sp,
-        textAlign = TextAlign.Center
-    )
-}
-
-@OptIn(UnstableApi::class)
-fun volumeLevel(spectrumAnalyzer: SpectrumAnalyzer): Float {
-    var tmpSound = spectrumAnalyzer.volume
-    Log.d("Neoplayer", "$tmpSound")
-    if (tmpSound > 20000.0) {
-        tmpSound = 20000.0
-    }
-    return when {
-        tmpSound <= 1 -> 1f
-        tmpSound <= 2 -> 2f
-        tmpSound <= 3 -> 3f
-        tmpSound <= 5 -> 4f
-        tmpSound <= 8 -> 5f
-        tmpSound <= 14 -> 6f
-        tmpSound <= 23 -> 7f
-        tmpSound <= 38 -> 8f
-        tmpSound <= 65 -> 9f
-        tmpSound <= 109 -> 10f
-        tmpSound <= 184 -> 11f
-        tmpSound <= 309 -> 12f
-        tmpSound <= 521 -> 13f
-        tmpSound <= 877 -> 14f
-        tmpSound <= 1476 -> 15f
-        tmpSound <= 2486 -> 16f
-        tmpSound <= 4187 -> 17f
-        tmpSound <= 7052 -> 18f
-        tmpSound <= 11876 -> 19f
-        tmpSound <= 20000 -> 20f
-        else -> 0f
-    }
-}
+//@OptIn(UnstableApi::class)
+//@Composable
+//fun VolumeLevelText(spectrumAnalyzer: SpectrumAnalyzer, tick: Float) {
+//    val eqTransition = rememberInfiniteTransition()
+//    val target = remember(tick) {
+//        volumeLevel(spectrumAnalyzer)
+//    }
+//    val levels by eqTransition.animateFloat(
+//        initialValue = 0f,
+//        targetValue = target,
+//        animationSpec = infiniteRepeatable(
+//            tween(
+//                10,
+//                0,
+//                EaseOut
+//            ),
+//            repeatMode = RepeatMode.Reverse
+//        )
+//    )
+//    Text(
+//        modifier = Modifier,
+//        text = textLevelBuilder(1..levels.toInt()),
+//        fontFamily = dotoFamily,
+//        fontWeight = FontWeight.W100,
+//        fontSize = 23.sp,
+//        color = Color.White,
+//        letterSpacing = 0.sp,
+//        lineHeight = 3.sp,
+//        textAlign = TextAlign.Center
+//    )
+//}
+//@OptIn(UnstableApi::class)
+//fun volumeLevel(spectrumAnalyzer: SpectrumAnalyzer): Float {
+//    var tmpSound = spectrumAnalyzer.volume
+//    Log.d("Neoplayer", "$tmpSound")
+//    if (tmpSound > 20000.0) {
+//        tmpSound = 20000.0
+//    }
+//    return when {
+//        tmpSound <= 1 -> 1f
+//        tmpSound <= 2 -> 2f
+//        tmpSound <= 3 -> 3f
+//        tmpSound <= 5 -> 4f
+//        tmpSound <= 8 -> 5f
+//        tmpSound <= 14 -> 6f
+//        tmpSound <= 23 -> 7f
+//        tmpSound <= 38 -> 8f
+//        tmpSound <= 65 -> 9f
+//        tmpSound <= 109 -> 10f
+//        tmpSound <= 184 -> 11f
+//        tmpSound <= 309 -> 12f
+//        tmpSound <= 521 -> 13f
+//        tmpSound <= 877 -> 14f
+//        tmpSound <= 1476 -> 15f
+//        tmpSound <= 2486 -> 16f
+//        tmpSound <= 4187 -> 17f
+//        tmpSound <= 7052 -> 18f
+//        tmpSound <= 11876 -> 19f
+//        tmpSound <= 20000 -> 20f
+//        else -> 0f
+//    }
+//}
 
 @OptIn(UnstableApi::class)
 fun level63(spectrumAnalyzer: SpectrumAnalyzer): Float {
@@ -466,14 +504,14 @@ fun level16k(spectrumAnalyzer: SpectrumAnalyzer): Float {
     return tempValue.toFloat()
 }
 @Composable
-fun DotoText(text: String, modifier: Modifier = Modifier) {
+fun DotoText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel) {
     Text(
         modifier = modifier,
         text = text,
         fontFamily = dotoFamily,
         fontWeight = FontWeight.W300,
         fontSize = 8.sp,
-        color = MaterialTheme.colorScheme.secondary,
+        color = viewModel.eqTextColor,
     )
 }
 fun textLevelBuilder(n: IntRange): String {
@@ -495,7 +533,8 @@ fun SeekBar(player: ExoPlayer, viewModel: PlayerViewModel) {
     ) {
         var currentSongPosition by remember { mutableFloatStateOf(viewModel.currentSongPosition) }
         LcdText(
-            "${(viewModel.currentSongPosition / 60).toInt()}:${(viewModel.currentSongPosition % 60).toInt()}"
+            "${(viewModel.currentSongPosition / 60).toInt()}:${(viewModel.currentSongPosition % 60).toInt()}",
+            viewModel = viewModel
         )
         Slider(
             value = viewModel.currentSongPosition,
@@ -505,22 +544,22 @@ fun SeekBar(player: ExoPlayer, viewModel: PlayerViewModel) {
             onValueChange = {
                 currentSongPosition = it
                 viewModel.updateSongPosition(player, currentSongPosition.toLong())
-//                viewModel.updateIsPlaying(true)
             },
             thumb = {
-                SliderThumb()
+                SliderThumb(viewModel)
             },
             track = {
-                SliderTrack()
+                SliderTrack(viewModel)
             },
         )
         LcdText(
-            "${(viewModel.duration / 60).toInt()}:${(viewModel.duration % 60).toInt()}"
+            "${(viewModel.duration / 60).toInt()}:${(viewModel.duration % 60).toInt()}",
+            viewModel = viewModel
         )
     }
 }
 @Composable
-fun SliderThumb() {
+fun SliderThumb(viewModel: PlayerViewModel) {
     Column(
         modifier = Modifier
             .size(30.dp),
@@ -531,7 +570,7 @@ fun SliderThumb() {
             modifier = Modifier,
             onDraw = {
                 drawCircle(
-                    color = Color.White,
+                    color = viewModel.sliderThumbColor,
                     radius = 25f,
                     center = this.center,
                     style = Fill
@@ -541,7 +580,7 @@ fun SliderThumb() {
     }
 }
 @Composable
-fun SliderTrack() {
+fun SliderTrack(viewModel: PlayerViewModel) {
     Column(
         modifier = Modifier
             .height(15.dp)
@@ -555,7 +594,7 @@ fun SliderTrack() {
                 drawRoundRect(
                     size = Size(600f, 15f),
                     style = Fill,
-                    color = Color(0.74f,0.74f,0.74f),
+                    color = viewModel.sliderTrackColor,
                     cornerRadius = CornerRadius(10f,10f),
                     topLeft = Offset(0f,-6.5f)
                 )

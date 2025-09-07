@@ -37,7 +37,7 @@ fun SongsScreen(songInfo: List<SongInfo>, player: ExoPlayer, viewModel: PlayerVi
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
-            .background(MaterialTheme.colorScheme.background)
+            .background(viewModel.backgroundColor)
             .windowInsetsPadding(WindowInsets.statusBars)
             .windowInsetsPadding(WindowInsets.navigationBars),
         contentPadding = PaddingValues(bottom = 55.dp),
@@ -87,17 +87,20 @@ fun SongsScreen(songInfo: List<SongInfo>, player: ExoPlayer, viewModel: PlayerVi
                     horizontalAlignment = Alignment.Start
                 ) {
                     LargeLcdText( //Song name
-                        text = songInfo[i].name
+                        text = songInfo[i].name,
+                        viewModel = viewModel
                     )
                     Spacer(
                         modifier = Modifier
                             .height(5.dp)
                     )
                     LcdText( // Artist name
-                        text = songInfo[i].artist
+                        text = songInfo[i].artist,
+                        viewModel = viewModel
                     )
                     LcdText( // Album name
-                        text = songInfo[i].album
+                        text = songInfo[i].album,
+                        viewModel = viewModel
                     )
                 }
             }

@@ -90,6 +90,7 @@ fun AlbumScreen(
                             )
                             AlbumScreenLcdText(
                                 albumInfo[rowIndex * 3 + index].albumName,
+                                viewModel = viewModel,
                             )
                         }
                     }
@@ -118,6 +119,7 @@ fun AlbumScreen(
                                 )
                                 AlbumScreenLcdText(
                                     albumInfo[rowIndex * 3 + index].albumName,
+                                    viewModel = viewModel,
                                 )
                             }
                         }
@@ -145,6 +147,7 @@ fun AlbumScreen(
                                 )
                                 AlbumScreenLcdText(
                                     albumInfo[rowIndex * 3 + index - 1].albumName,
+                                    viewModel = viewModel,
                                 )
                             }
                         }

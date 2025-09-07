@@ -20,7 +20,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -30,7 +29,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -64,10 +62,11 @@ fun Settings(navController: NavController, viewModel: PlayerViewModel) {
                 Icon(
                     painterResource(R.drawable.color_pallette),
                     contentDescription = "Change theme",
-                    tint = Color.White
+                    tint = viewModel.iconColor
                 )
                 LcdText(
-                    "Theme"
+                    "Theme",
+                    viewModel = viewModel
                 )
             }
         }
@@ -76,16 +75,118 @@ fun Settings(navController: NavController, viewModel: PlayerViewModel) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ThemeChange(viewModel: PlayerViewModel) {
-    val colourList = listOf("Default", "Red", "Green", "Blue", "Yellow", "Orange", "Black", "White", "Pink", "Purple", "Cyan", "Magenta")
-    var primaryExpanded by remember { mutableStateOf(false) }
-    var secondaryExpanded by remember { mutableStateOf(false) }
-    var tertiaryExpanded by remember { mutableStateOf(false) }
-    var backgroundExpanded by remember { mutableStateOf(false) }
-    var primarySelectedText by remember { mutableStateOf(colourList[0]) }
-    var secondarySelectedText by remember { mutableStateOf(colourList[0]) }
-    var tertiarySelectedText by remember { mutableStateOf(colourList[0]) }
-    var backgroundSelectedText by remember { mutableStateOf(colourList[0]) }
-
+    val colourList = listOf("Default", "Red", "Green", "Blue", "Light blue", "Yellow", "Orange", "Black", "White", "Pink", "Purple", "Cyan", "Magenta")
+    val colourOtherList = listOf("Default", "Red", "Green", "Blue","Light blue", "Yellow", "Orange", "Black", "Pink", "Purple", "Cyan", "Magenta")
+    @Composable
+    fun ColourListDropDownMenu(name: String, choice: String) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(70.dp)
+                .padding(vertical = 5.dp),
+            horizontalArrangement = Arrangement.Start
+        ) {
+            var expanded by remember { mutableStateOf(false) }
+            var selectedText by remember { mutableStateOf(colourOtherList[0]) }
+            LcdText(
+                "Change $name colour: ",
+                viewModel = viewModel
+            )
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded }
+            ) {
+                TextField(
+                    modifier = Modifier
+                        .menuAnchor(
+                            type = MenuAnchorType.PrimaryNotEditable,
+                            enabled = true
+                        ),
+                    value = selectedText,
+                    onValueChange = {},
+                    readOnly = true,
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(
+                            expanded = expanded
+                        )
+                    }
+                )
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    colourList.forEachIndexed { index, text ->
+                        DropdownMenuItem(
+                            text = {
+                                LcdText(text, viewModel = viewModel)
+                            },
+                            onClick = {
+                                selectedText = colourOtherList[index]
+                                viewModel.updateColor(choice, colourList[index])
+                                expanded = false
+                            },
+                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                        )
+                    }
+                }
+            }
+        }
+    }
+    @Composable
+    fun ColourOtherListDropDownMenu(name: String, choice: String) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(70.dp)
+                .padding(vertical = 5.dp),
+            horizontalArrangement = Arrangement.Start
+        ) {
+            var expanded by remember { mutableStateOf(false) }
+            var selectedText by remember { mutableStateOf(colourOtherList[0]) }
+            LcdText(
+                "Change $name colour: ",
+                viewModel = viewModel
+            )
+            ExposedDropdownMenuBox(
+                expanded = expanded,
+                onExpandedChange = { expanded = !expanded }
+            ) {
+                TextField(
+                    modifier = Modifier
+                        .menuAnchor(
+                            type = MenuAnchorType.PrimaryNotEditable,
+                            enabled = true
+                        ),
+                    value = selectedText,
+                    onValueChange = {},
+                    readOnly = true,
+                    trailingIcon = {
+                        ExposedDropdownMenuDefaults.TrailingIcon(
+                            expanded = expanded
+                        )
+                    }
+                )
+                ExposedDropdownMenu(
+                    expanded = expanded,
+                    onDismissRequest = { expanded = false }
+                ) {
+                    colourOtherList.forEachIndexed { index, text ->
+                        DropdownMenuItem(
+                            text = {
+                                LcdText(text, viewModel = viewModel)
+                            },
+                            onClick = {
+                                selectedText = colourOtherList[index]
+                                viewModel.updateColor(choice, colourOtherList[index])
+                                expanded = false
+                            },
+                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                        )
+                    }
+                }
+            }
+        }
+    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -99,201 +200,15 @@ fun ThemeChange(viewModel: PlayerViewModel) {
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
         ) {
-        Row( // Primary colour
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(70.dp)
-                .padding(vertical = 5.dp),
-            horizontalArrangement = Arrangement.Start
-        ) {
-            LcdText(
-                "Change primary colour: "
-            )
-            ExposedDropdownMenuBox(
-                expanded = primaryExpanded,
-                onExpandedChange = { primaryExpanded = !primaryExpanded }
-            ) {
-                TextField(
-                    modifier = Modifier
-                        .menuAnchor(
-                            type = MenuAnchorType.PrimaryNotEditable,
-                            enabled = true
-                        ),
-                    value = primarySelectedText,
-                    onValueChange = {},
-                    readOnly = true,
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(
-                            expanded = primaryExpanded
-                        )
-                    }
-                )
-                ExposedDropdownMenu(
-                    expanded = primaryExpanded,
-                    onDismissRequest = { primaryExpanded = false }
-                ) {
-                    colourList.forEachIndexed { index, text ->
-                        DropdownMenuItem(
-                            text = {
-                                LcdText(text)
-                            },
-                            onClick = {
-                                primarySelectedText = colourList[index]
-                                viewModel.updateColor("primary", colourList[index])
-                                primaryExpanded = false
-                            },
-                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-                        )
-                    }
-                }
-            }
-        }
-        Row( // Secondary colour
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(70.dp)
-                .padding(vertical = 5.dp),
-            horizontalArrangement = Arrangement.Start
-        ) {
-            LcdText(
-                "Change secondary colour: "
-            )
-            ExposedDropdownMenuBox(
-                expanded = secondaryExpanded,
-                onExpandedChange = { secondaryExpanded = !secondaryExpanded }
-            ) {
-                TextField(
-                    modifier = Modifier
-                        .menuAnchor(
-                            type = MenuAnchorType.PrimaryNotEditable,
-                            enabled = true
-                        ),
-                    value = secondarySelectedText,
-                    onValueChange = {},
-                    readOnly = true,
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(
-                            expanded = secondaryExpanded
-                        )
-                    }
-                )
-                ExposedDropdownMenu(
-                    expanded = secondaryExpanded,
-                    onDismissRequest = { secondaryExpanded = false }
-                ) {
-                    colourList.forEachIndexed { index, text ->
-                        DropdownMenuItem(
-                            text = {
-                                LcdText(text)
-                            },
-                            onClick = {
-                                secondarySelectedText = colourList[index]
-                                viewModel.updateColor("secondary", colourList[index])
-                                secondaryExpanded = false
-                            },
-                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-                        )
-                    }
-                }
-            }
-        }
-        Row( // Tertiary colour
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(70.dp)
-                .padding(vertical = 5.dp),
-            horizontalArrangement = Arrangement.Start
-        ) {
-            LcdText(
-                "Change tertiary colour: "
-            )
-            ExposedDropdownMenuBox(
-                expanded = tertiaryExpanded,
-                onExpandedChange = { tertiaryExpanded = !tertiaryExpanded }
-            ) {
-                TextField(
-                    modifier = Modifier
-                        .menuAnchor(
-                            type = MenuAnchorType.PrimaryNotEditable,
-                            enabled = true
-                        ),
-                    value = tertiarySelectedText,
-                    onValueChange = {},
-                    readOnly = true,
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(
-                            expanded = tertiaryExpanded
-                        )
-                    }
-                )
-                ExposedDropdownMenu(
-                    expanded = tertiaryExpanded,
-                    onDismissRequest = { tertiaryExpanded = false }
-                ) {
-                    colourList.forEachIndexed { index, text ->
-                        DropdownMenuItem(
-                            text = {
-                                LcdText(text)
-                            },
-                            onClick = {
-                                tertiarySelectedText = colourList[index]
-                                viewModel.updateColor("tertiary", colourList[index])
-                                tertiaryExpanded = false
-                            },
-                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-                        )
-                    }
-                }
-            }
-        }
-        Row( // Background colour
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(70.dp)
-                .padding(vertical = 5.dp),
-            horizontalArrangement = Arrangement.Start
-        ) {
-            LcdText(
-                "Change background colour: "
-            )
-            ExposedDropdownMenuBox(
-                expanded = backgroundExpanded,
-                onExpandedChange = { backgroundExpanded = !backgroundExpanded }
-            ) {
-                TextField(
-                    modifier = Modifier
-                        .menuAnchor(
-                            type = MenuAnchorType.PrimaryNotEditable,
-                            enabled = true
-                        ),
-                    value = backgroundSelectedText,
-                    onValueChange = {},
-                    readOnly = true,
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(
-                            expanded = backgroundExpanded
-                        )
-                    }
-                )
-                ExposedDropdownMenu(
-                    expanded = backgroundExpanded,
-                    onDismissRequest = { backgroundExpanded = false }
-                ) {
-                    colourList.forEachIndexed { index, text ->
-                        DropdownMenuItem(
-                            text = {
-                                LcdText(text)
-                            },
-                            onClick = {
-                                backgroundSelectedText = colourList[index]
-                                viewModel.updateColor("background", colourList[index])
-                                backgroundExpanded = false
-                            },
-                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-                        )
-                    }
-                }
-            }
-        }
+        ColourListDropDownMenu("primary","primary")
+        ColourListDropDownMenu("secondary","secondary")
+        ColourListDropDownMenu("tertiary","tertiary")
+        ColourListDropDownMenu("background","background")
+        ColourOtherListDropDownMenu("text","text")
+        ColourOtherListDropDownMenu("icon","icon")
+        ColourOtherListDropDownMenu("equaliser's level","eqLevel")
+        ColourListDropDownMenu("equaliser's text","eqText")
+        ColourListDropDownMenu("seek bar's thumb","sliderThumb")
+        ColourListDropDownMenu("seek bar's track","sliderTrack")
     }
 }

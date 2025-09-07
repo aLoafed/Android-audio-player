@@ -147,7 +147,7 @@ fun Pager(
                             .tabIndicatorOffset(
                                 tabPositions[pagerState.currentPage]
                             ),
-                        color = Color.White,
+                        color = viewModel.iconColor,
                         height = 2.dp
                     )
                 }
@@ -173,8 +173,8 @@ fun Pager(
                                 )
                             }
                         },
-                        selectedContentColor = Color.White,
-                        unselectedContentColor = Color.White
+                        selectedContentColor = viewModel.iconColor,
+                        unselectedContentColor = viewModel.iconColor,
                     )
                 }
                 var dropDownMenu by remember { mutableStateOf(false) }
@@ -191,13 +191,15 @@ fun Pager(
                             contentDescription = "More options"
                         )
                         DropdownMenu(
+                            containerColor = viewModel.backgroundColor,
                             expanded = dropDownMenu,
                             onDismissRequest = { dropDownMenu = false }
                         ) {
                             DropdownMenuItem(
                                 text = {
                                     LcdText(
-                                        "Settings"
+                                        "Settings",
+                                        viewModel = viewModel
                                     )
                                 },
                                 onClick = {
@@ -207,7 +209,8 @@ fun Pager(
                             DropdownMenuItem(
                                 text = {
                                     LcdText(
-                                        "Equaliser"
+                                        "Equaliser",
+                                        viewModel = viewModel
                                     )
                                 },
                                 onClick = {TODO()}
@@ -215,15 +218,16 @@ fun Pager(
                             DropdownMenuItem(
                                 text = {
                                     LcdText(
-                                        "Info"
+                                        "Info",
+                                        viewModel = viewModel
                                     )
                                 },
                                 onClick = {TODO()}
                             )
                         }
                     },
-                    selectedContentColor = Color.White,
-                    unselectedContentColor = Color.White
+                    selectedContentColor = viewModel.iconColor,
+                    unselectedContentColor = viewModel.iconColor
                 )
             }
         }

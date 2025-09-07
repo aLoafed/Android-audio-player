@@ -198,11 +198,11 @@ class MainActivity : ComponentActivity() {
 }
 
 @Composable
-fun LcdText(text: String, modifier: Modifier = Modifier) {
+fun LcdText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel) {
     Text(
         modifier = modifier,
         text = text,
-        color = Color.White,
+        color = viewModel.textColor,
         fontSize = 15.sp,
         fontFamily = lcdFont,
         fontWeight = FontWeight.Normal,
@@ -211,11 +211,11 @@ fun LcdText(text: String, modifier: Modifier = Modifier) {
 }
 
 @Composable
-fun LargeLcdText(text: String, modifier: Modifier = Modifier) {
+fun LargeLcdText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel) {
     Text(
         modifier = modifier,
         text = text,
-        color = Color.White,
+        color = viewModel.textColor,
         fontSize = 20.sp,
         fontFamily = lcdFont,
         fontWeight = FontWeight.Normal,
@@ -223,11 +223,11 @@ fun LargeLcdText(text: String, modifier: Modifier = Modifier) {
     )
 }
 @Composable
-fun LargePlayerScreenLcdText(text: String, modifier: Modifier = Modifier) {
+fun LargePlayerScreenLcdText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel) {
     Text(
         modifier = modifier,
         text = text,
-        color = Color.White,
+        color = viewModel.textColor,
         fontSize = 30.sp,
         fontFamily = lcdFont,
         fontWeight = FontWeight.Normal,
@@ -235,11 +235,11 @@ fun LargePlayerScreenLcdText(text: String, modifier: Modifier = Modifier) {
     )
 }
 @Composable
-fun AlbumScreenLcdText(text: String, modifier: Modifier = Modifier) {
+fun AlbumScreenLcdText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel) {
     Text(
         modifier = modifier,
         text = text,
-        color = Color.White,
+        color = viewModel.textColor,
         fontSize = 15.sp,
         fontFamily = lcdFont,
         fontWeight = FontWeight.Normal,
