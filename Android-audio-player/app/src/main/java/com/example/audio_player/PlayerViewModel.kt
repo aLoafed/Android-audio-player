@@ -67,197 +67,86 @@ class PlayerViewModel(
         private set
     var sliderTrackColor = Color.White
         private set
+    val colorMap = mutableMapOf(
+        "Default" to LcdGrey,
+        "Red" to Color.Red,
+        "Green" to Color.Green,
+        "Blue" to Color.Blue,
+        "Light blue" to LcdBlueWhite,
+        "Yellow" to Color.Yellow,
+        "Orange" to Color(0xffFFA500),
+        "Black" to Color.Black,
+        "White" to Color.White,
+        "Pink" to Color(0xffFFC0CB),
+        "Purple" to Color(0xffA020F0)
+    )
+    val otherColorMap = mutableMapOf(
+        "Default" to Color.White,
+        "Red" to Color.Red,
+        "Green" to Color.Green,
+        "Blue" to Color.Blue,
+        "Light blue" to LcdBlueWhite,
+        "Yellow" to Color.Yellow,
+        "Orange" to Color(0xffFFA500),
+        "Black" to Color.Black,
+        "Pink" to Color(0xffFFC0CB),
+        "Purple" to Color(0xffA020F0)
+    )
+    fun updateCustomColors(color: Color, name: String) {
+        var tmpName = name
+        if (tmpName == "") {
+            tmpName = "Custom"
+        }
+        var i = 1
+        while (tmpName in colorMap) {
+            tmpName = "$tmpName($i)"
+            i ++
+        }
+        colorMap[tmpName] = color
+        otherColorMap[tmpName] = color
+    }
+    fun removeCustomColors(key: String) {
+        colorMap.remove(key)
+        otherColorMap.remove(key)
+    }
     fun darkenColor(color: Color, factor: Float): Color {
         val hslArray = FloatArray(3)
         ColorUtils.colorToHSL(color.toColorLong().toInt(), hslArray)
         hslArray[2] = (hslArray[2] * factor).coerceIn(0f,1f)
         return Color(ColorUtils.HSLToColor(hslArray))
     }
-    fun updateColor(choice: String, color: String) {
-        when (choice) {
-            "primary" -> {
-                primaryColor = when (color) {
-                    "Default" -> LcdGrey
-                    "Red" -> Color.Red
-                    "Green" -> Color.Green
-                    "Blue" -> Color.Blue
-                    "Light blue" -> LcdBlueWhite
-                    "Yellow" -> Color.Yellow
-                    "Orange" -> Color(0xffFFA500)
-                    "Black" -> Color.Black
-                    "Grey" -> Color.Gray
-                    "White" -> Color.White
-                    "Pink" -> Color(0xffFFC0CB)
-                    "Purple" -> Color(0xffA020F0)
-                    "Cyan" -> Color.Cyan
-                    "Magenta" -> Color.Magenta
-                    else -> LcdGrey
+    fun updateColor(choice: String, color: Color?) {
+        if (color != null) {
+            when (choice) {
+//                "primary" -> {
+//                    primaryColor = color
+//                }
+//                "secondary" -> {
+//                    secondaryColor = color
+//                }
+//                "tertiary" -> {
+//                    tertiaryColor = color
+//                }
+                "background" -> {
+                    backgroundColor = color
                 }
-            }
-            "secondary" -> {
-                secondaryColor = when (color) {
-                    "Default" -> LcdBlueWhite
-                    "Red" -> Color.Red
-                    "Green" -> Color.Green
-                    "Blue" -> Color.Blue
-                    "Yellow" -> Color.Yellow
-                    "Orange" -> Color(0xffFFA500)
-                    "Black" -> Color.Black
-                    "Grey" -> Color.Gray
-                    "White" -> Color.White
-                    "Pink" -> Color(0xffFFC0CB)
-                    "Purple" -> Color(0xffA020F0)
-                    "Cyan" -> Color.Cyan
-                    "Magenta" -> Color.Magenta
-                    else -> LcdBlueWhite
+                "text" -> {
+                    textColor = color
                 }
-            }
-            "tertiary" -> {
-                tertiaryColor = when (color) {
-                    "Default" -> LcdOrange
-                    "Red" -> Color.Red
-                    "Green" -> Color.Green
-                    "Blue" -> Color.Blue
-                    "Light blue" -> LcdBlueWhite
-                    "Yellow" -> Color.Yellow
-                    "Orange" -> Color(0xffFFA500)
-                    "Black" -> Color.Black
-                    "Grey" -> Color.Gray
-                    "White" -> Color.White
-                    "Pink" -> Color(0xffFFC0CB)
-                    "Purple" -> Color(0xffA020F0)
-                    "Cyan" -> Color.Cyan
-                    "Magenta" -> Color.Magenta
-                    else -> LcdOrange
+                "icon" -> {
+                    iconColor = color
                 }
-            }
-            "background" -> {
-                backgroundColor = when (color) {
-                    "Default" -> LcdGrey
-                    "Red" -> Color.Red
-                    "Green" -> Color.Green
-                    "Blue" -> Color.Blue
-                    "Light blue" -> LcdBlueWhite
-                    "Yellow" -> Color.Yellow
-                    "Orange" -> Color(0xffFFA500)
-                    "Black" -> Color.Black
-                    "Grey" -> Color.Gray
-                    "White" -> Color.White
-                    "Pink" -> Color(0xffFFC0CB)
-                    "Purple" -> Color(0xffA020F0)
-                    "Cyan" -> Color.Cyan
-                    "Magenta" -> Color.Magenta
-                    else -> LcdGrey
+                "eqLevel" -> {
+                    eqLevelColor = color
                 }
-            }
-            "text" -> {
-                textColor = when (color) {
-                    "Default" -> Color.White
-                    "Red" -> Color.Red
-                    "Green" -> Color.Green
-                    "Blue" -> Color.Blue
-                    "Light blue" -> LcdBlueWhite
-                    "Yellow" -> Color.Yellow
-                    "Orange" -> Color(0xffFFA500)
-                    "Black" -> Color.Black
-                    "Grey" -> Color.Gray
-                    "Pink" -> Color(0xffFFC0CB)
-                    "Purple" -> Color(0xffA020F0)
-                    "Cyan" -> Color.Cyan
-                    "Magenta" -> Color.Magenta
-                    else -> Color.White
+                "eqText" -> {
+                    eqTextColor = color
                 }
-            }
-            "icon" -> {
-                iconColor = when (color) {
-                    "Default" -> Color.White
-                    "Red" -> Color.Red
-                    "Green" -> Color.Green
-                    "Blue" -> Color.Blue
-                    "Light blue" -> LcdBlueWhite
-                    "Yellow" -> Color.Yellow
-                    "Orange" -> Color(0xffFFA500)
-                    "Black" -> Color.Black
-                    "Grey" -> Color.Gray
-                    "Pink" -> Color(0xffFFC0CB)
-                    "Purple" -> Color(0xffA020F0)
-                    "Cyan" -> Color.Cyan
-                    "Magenta" -> Color.Magenta
-                    else -> Color.White
+                "sliderThumb" -> {
+                    sliderThumbColor = color
                 }
-            }
-            "eqLevel" -> {
-                eqLevelColor = when (color) {
-                    "Default" -> Color.White
-                    "Red" -> Color.Red
-                    "Green" -> Color.Green
-                    "Blue" -> Color.Blue
-                    "Light blue" -> LcdBlueWhite
-                    "Yellow" -> Color.Yellow
-                    "Orange" -> Color(0xffFFA500)
-                    "Black" -> Color.Black
-                    "Grey" -> Color.Gray
-                    "Pink" -> Color(0xffFFC0CB)
-                    "Purple" -> Color(0xffA020F0)
-                    "Cyan" -> Color.Cyan
-                    "Magenta" -> Color.Magenta
-                    else -> Color.White
-                }
-            }
-            "eqText" -> {
-                eqTextColor = when (color) {
-                    "Default" -> LcdBlueWhite
-                    "Red" -> Color.Red
-                    "Green" -> Color.Green
-                    "Blue" -> Color.Blue
-                    "Yellow" -> Color.Yellow
-                    "Orange" -> Color(0xffFFA500)
-                    "Black" -> Color.Black
-                    "Grey" -> Color.Gray
-                    "White" -> Color.White
-                    "Pink" -> Color(0xffFFC0CB)
-                    "Purple" -> Color(0xffA020F0)
-                    "Cyan" -> Color.Cyan
-                    "Magenta" -> Color.Magenta
-                    else -> LcdBlueWhite
-                }
-            }
-            "sliderThumb" -> {
-                sliderThumbColor = when (color) {
-                    "Default" -> Color.White
-                    "Red" -> Color.Red
-                    "Green" -> Color.Green
-                    "Blue" -> Color.Blue
-                    "Light blue" -> LcdBlueWhite
-                    "Yellow" -> Color.Yellow
-                    "Orange" -> Color(0xffFFA500)
-                    "Black" -> Color.Black
-                    "Grey" -> Color.Gray
-                    "White" -> Color.White
-                    "Pink" -> Color(0xffFFC0CB)
-                    "Purple" -> Color(0xffA020F0)
-                    "Cyan" -> Color.Cyan
-                    "Magenta" -> Color.Magenta
-                    else -> Color.White
-                }
-            }
-            "sliderTrack" -> {
-                sliderTrackColor = when (color) {
-                    "Default" -> Color(0.74f,0.74f,0.74f)
-                    "Red" -> darkenColor(Color.Red, 0.74f)
-                    "Green" -> darkenColor(Color.Green, 0.74f)
-                    "Blue" -> darkenColor(Color.Blue, 0.74f)
-                    "Light blue" -> darkenColor(LcdBlueWhite,0.74f)
-                    "Yellow" -> darkenColor(Color.Yellow,0.74f)
-                    "Orange" -> darkenColor(Color(0xffFFA500),0.74f)
-                    "Black" -> darkenColor(Color.Black,0.74f)
-                    "Grey" -> darkenColor(Color.Gray,0.74f)
-                    "White" -> darkenColor(Color.White,0.74f)
-                    "Pink" -> darkenColor(Color(0xffFFC0CB),0.74f)
-                    "Purple" -> darkenColor(Color(0xffA020F0),0.74f)
-                    "Cyan" -> darkenColor(Color.Cyan,0.74f)
-                    "Magenta" -> darkenColor(Color.Magenta,0.74f)
-                    else -> Color(0.74f,0.74f,0.74f)
+                "sliderTrack" -> {
+                    sliderTrackColor = color
                 }
             }
         }

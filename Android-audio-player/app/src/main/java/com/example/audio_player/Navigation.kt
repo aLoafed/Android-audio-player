@@ -81,7 +81,10 @@ fun NavHost(
             Settings(navController, viewModel)
         }
         composable(route = Screen.ThemeChange.route) {
-            ThemeChange(viewModel)
+            ThemeChange(viewModel, navController)
+        }
+        composable(route = Screen.ColorPicker.route) {
+            ColorPicker(viewModel, navController)
         }
     }
 }
