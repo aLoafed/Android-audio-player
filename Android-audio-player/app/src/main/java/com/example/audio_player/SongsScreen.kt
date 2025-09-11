@@ -21,7 +21,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.PagerState
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -33,7 +32,7 @@ import androidx.media3.exoplayer.ExoPlayer
 
 @OptIn(UnstableApi::class)
 @Composable
-fun SongsScreen(songInfo: List<SongInfo>, player: ExoPlayer, viewModel: PlayerViewModel, pagerState: PagerState, spectrumAnalyzer: SpectrumAnalyzer) {
+fun SongsScreen(songInfo: List<SongInfo>, player: ExoPlayer, viewModel: PlayerViewModel, pagerState: PagerState) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()

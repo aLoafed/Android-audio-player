@@ -31,8 +31,10 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
+import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.media3.common.C
 import androidx.media3.common.Effect
@@ -52,8 +54,10 @@ import com.example.audio_player.ui.theme.Audio_playerTheme
 import com.example.audio_player.ui.theme.lcdFont
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.seconds
 
+val Context.dataStore by preferencesDataStore(name = "settings")
 @kotlin.OptIn(ExperimentalMaterial3Api::class)
 @UnstableApi
 class MainActivity : ComponentActivity() {
@@ -99,6 +103,7 @@ class MainActivity : ComponentActivity() {
                 2
             )
         }
+//        lifecycleScope.launch { viewModel.initColorMaps() }
         val songInfo = mediaStoreSongName(applicationContext)
         val albumInfo = getAlbumList(applicationContext)
         // Audio processor is passed to the audio sink
@@ -151,7 +156,7 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             Audio_playerTheme {
-                NavHost(player, songInfo, spectrumAnalyzer, viewModel, albumInfo)
+                NavHost(player, songInfo, spectrumAnalyzer, viewModel, albumInfo, applicationContext)
                 if (viewModel.isPlaying) {
                     LaunchedEffect(Unit) {
                         while (true) {

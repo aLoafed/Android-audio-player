@@ -1,5 +1,6 @@
 package com.example.audio_player
 
+import android.media.browse.MediaBrowser
 import androidx.annotation.OptIn
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.RepeatMode
@@ -65,161 +66,11 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
             modifier = Modifier
                 .height(20.dp)
         )
-        Image( // Album art
-            bitmap = (
-                    if (viewModel.playingFromSongsScreen) {
-                        songInfo[viewModel.songIterator].albumArt
-                    } else {
-                        viewModel.albumSongInfo[viewModel.songIterator].albumArt
-                    }
-                    ),
-            modifier = Modifier
-                .size(300.dp),
-            contentDescription = null
-        )
-        Spacer(
-            modifier = Modifier
-                .height(10.dp)
-        )
-        LargePlayerScreenLcdText(
-            if (viewModel.playingFromSongsScreen) {
-                songInfo[viewModel.songIterator].name
-            } else {
-                viewModel.albumSongInfo[viewModel.songIterator].name
-            },
-            viewModel = viewModel
-        )
-        Spacer(
-            modifier = Modifier
-                .height(5.dp)
-        )
-        LargeLcdText(
-            if (viewModel.playingFromSongsScreen) {
-                songInfo[viewModel.songIterator].artist
-            } else {
-                viewModel.albumSongInfo[viewModel.songIterator].artist
-            },
-            viewModel = viewModel
-        )
-        LargeLcdText(
-            if (viewModel.playingFromSongsScreen) {
-                songInfo[viewModel.songIterator].album
-            } else {
-                viewModel.albumSongInfo[viewModel.songIterator].album
-            },
-            viewModel = viewModel
-        )
+        PlayingMediaInfo(viewModel, songInfo)
         Spacer(
             modifier = Modifier.height(10.dp)
         )
-        Row( // Playback controls
-            modifier = Modifier
-                .fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            IconButton(
-                // Previous button
-                modifier = Modifier
-                    .size(60.dp),
-                onClick = {
-                    try {
-                        if (player.currentPosition < 10000L) {
-                            if (player.hasPreviousMediaItem()) {
-                                player.seekToPreviousMediaItem()
-                            } else {
-                                if (viewModel.playingFromSongsScreen) {
-                                    player.moveMediaItems(0, songInfo.lastIndex + 1, 1)
-                                    player.addMediaItem(
-                                        0,
-                                        MediaItem.fromUri(songInfo[viewModel.songIterator - 1].songUri)
-                                    )
-                                    player.seekToPreviousMediaItem()
-                                } else {
-                                    player.moveMediaItems(
-                                        0,
-                                        viewModel.albumSongInfo.lastIndex + 1,
-                                        1
-                                    )
-                                    player.addMediaItem(
-                                        0,
-                                        MediaItem.fromUri(viewModel.albumSongInfo[viewModel.songIterator - 1].songUri)
-                                    )
-                                    player.seekToPreviousMediaItem()
-                                }
-                            }
-                            viewModel.incrementSongIterator(-1)
-                        } else {
-                            player.seekTo(0L)
-                        }
-                    } catch (e: IndexOutOfBoundsException) {
-                    }
-                },
-                colors = IconButtonColors(
-                    containerColor = Color.Transparent,
-                    contentColor = viewModel.iconColor,
-                    disabledContentColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent
-                ),
-                content = {
-                    Icon(
-                        painter = painterResource(R.drawable.skip_previous),
-                        contentDescription = "Previous"
-                    )
-                },
-            )
-            IconButton( // Play & pause button
-                onClick = {
-                    if (player.isPlaying) {
-                        player.pause()
-                    } else {
-                        player.play()
-                    }
-                },
-                modifier = Modifier
-                    .size(60.dp),
-                colors = IconButtonColors(
-                    containerColor = Color.Transparent,
-                    contentColor = viewModel.iconColor,
-                    disabledContentColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent
-                ),
-                content = {
-                    Icon(
-                        painter = (
-                            if (!viewModel.isPlaying) {
-                                painterResource(R.drawable.large_play_arrow)
-                            } else {
-                                painterResource(R.drawable.pause)
-                            }
-                        ),
-                        contentDescription = "Play & pause"
-                    )
-                }
-            )
-            IconButton(
-                // Skip button
-                modifier = Modifier
-                    .size(60.dp),
-                onClick = {
-                    if (player.hasNextMediaItem()) {
-                        player.seekToNextMediaItem()
-                        viewModel.incrementSongIterator(1)
-                    }
-                },
-                colors = IconButtonColors(
-                    containerColor = Color.Transparent,
-                    contentColor = viewModel.iconColor,
-                    disabledContentColor = Color.Transparent,
-                    disabledContainerColor = Color.Transparent
-                ),
-                content = {
-                    Icon(
-                        painter = painterResource(R.drawable.skip_next),
-                        contentDescription = "Next"
-                    )
-                },
-            )
-        }
+        PlaybackControls(player, viewModel, songInfo)
         GraphicalEqualizer(spectrumAnalyzer, viewModel)
         Spacer(
             modifier = Modifier
@@ -227,6 +78,244 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
                 .fillMaxWidth()
         )
         SeekBar(player, viewModel)
+    }
+}
+@Composable
+fun PlayingMediaInfo(viewModel: PlayerViewModel, songInfo: List<SongInfo>) {
+    Image( // Album art
+        bitmap = (
+                if (viewModel.playingFromSongsScreen) {
+                    songInfo[viewModel.songIterator].albumArt
+                } else {
+                    viewModel.albumSongInfo[viewModel.songIterator].albumArt
+                }
+                ),
+        modifier = Modifier
+            .size(300.dp),
+        contentDescription = null
+    )
+    Spacer(
+        modifier = Modifier
+            .height(10.dp)
+    )
+    LargePlayerScreenLcdText(
+        if (viewModel.playingFromSongsScreen) {
+            songInfo[viewModel.songIterator].name
+        } else {
+            viewModel.albumSongInfo[viewModel.songIterator].name
+        },
+        viewModel = viewModel
+    )
+    Spacer(
+        modifier = Modifier
+            .height(5.dp)
+    )
+    LargeLcdText(
+        if (viewModel.playingFromSongsScreen) {
+            songInfo[viewModel.songIterator].artist
+        } else {
+            viewModel.albumSongInfo[viewModel.songIterator].artist
+        },
+        viewModel = viewModel
+    )
+    LargeLcdText(
+        if (viewModel.playingFromSongsScreen) {
+            songInfo[viewModel.songIterator].album
+        } else {
+            viewModel.albumSongInfo[viewModel.songIterator].album
+        },
+        viewModel = viewModel
+    )
+}
+@Composable
+fun PlaybackControls(player: ExoPlayer, viewModel: PlayerViewModel, songInfo: List<SongInfo>){
+    Row( // Playback controls
+        modifier = Modifier
+            .fillMaxWidth(),
+        horizontalArrangement = Arrangement.SpaceEvenly
+    ) {
+        IconButton(
+            // Previous button
+            modifier = Modifier
+                .size(60.dp),
+            onClick = {
+                try {
+                    if (player.currentPosition < 10000L) {
+                        if (player.hasPreviousMediaItem()) {
+                            player.seekToPreviousMediaItem()
+                        } else {
+                            if (viewModel.playingFromSongsScreen) {
+                                player.moveMediaItems(0, songInfo.lastIndex + 1, 1)
+                                player.addMediaItem(
+                                    0,
+                                    MediaItem.fromUri(songInfo[viewModel.songIterator - 1].songUri)
+                                )
+                                player.seekToPreviousMediaItem()
+                            } else {
+                                player.moveMediaItems(
+                                    0,
+                                    viewModel.albumSongInfo.lastIndex + 1,
+                                    1
+                                )
+                                player.addMediaItem(
+                                    0,
+                                    MediaItem.fromUri(viewModel.albumSongInfo[viewModel.songIterator - 1].songUri)
+                                )
+                                player.seekToPreviousMediaItem()
+                            }
+                        }
+                        viewModel.incrementSongIterator(-1)
+                    } else {
+                        player.seekTo(0L)
+                    }
+                } catch (e: IndexOutOfBoundsException) {
+                }
+            },
+            colors = IconButtonColors(
+                containerColor = Color.Transparent,
+                contentColor = viewModel.iconColor,
+                disabledContentColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent
+            ),
+            content = {
+                Icon(
+                    painter = painterResource(R.drawable.skip_previous),
+                    contentDescription = "Previous"
+                )
+            },
+        )
+        IconButton( // Play & pause button
+            onClick = {
+                if (player.isPlaying) {
+                    player.pause()
+                } else {
+                    player.play()
+                }
+            },
+            modifier = Modifier
+                .size(60.dp),
+            colors = IconButtonColors(
+                containerColor = Color.Transparent,
+                contentColor = viewModel.iconColor,
+                disabledContentColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent
+            ),
+            content = {
+                Icon(
+                    painter = (
+                            if (!viewModel.isPlaying) {
+                                painterResource(R.drawable.large_play_arrow)
+                            } else {
+                                painterResource(R.drawable.pause)
+                            }
+                            ),
+                    contentDescription = "Play & pause"
+                )
+            }
+        )
+        IconButton(
+            // Skip button
+            modifier = Modifier
+                .size(60.dp),
+            onClick = {
+                if (player.hasNextMediaItem()) {
+                    player.seekToNextMediaItem()
+                    viewModel.incrementSongIterator(1)
+                }
+            },
+            colors = IconButtonColors(
+                containerColor = Color.Transparent,
+                contentColor = viewModel.iconColor,
+                disabledContentColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent
+            ),
+            content = {
+                Icon(
+                    painter = painterResource(R.drawable.skip_next),
+                    contentDescription = "Next"
+                )
+            },
+        )
+    }
+}
+@Composable
+fun RepeatShuffleControls(viewModel: PlayerViewModel, player: ExoPlayer, songInfo: List<SongInfo>) {
+    var shuffleSongInfo = listOf<SongInfo>()
+    Row(
+        modifier = Modifier
+            .fillMaxWidth(),
+    ) {
+        IconButton( // Repeat controls
+            onClick = {
+                when (viewModel.repeatMode) {
+                    "normal" -> {
+                        player.repeatMode = ExoPlayer.REPEAT_MODE_ALL
+                        viewModel.updateRepeatMode("repeatQueue")
+                    }
+                    "repeatQueue" -> {
+                        player.repeatMode = ExoPlayer.REPEAT_MODE_ONE
+                        viewModel.updateRepeatMode("repeatSong")
+                    }
+                    "repeatSong" -> {
+                        player.repeatMode = ExoPlayer.REPEAT_MODE_OFF
+                        viewModel.updateRepeatMode("normal")
+                    }
+                }
+            },
+            modifier = Modifier
+                .size(60.dp),
+            colors = IconButtonColors(
+                containerColor = Color.Transparent,
+                contentColor = viewModel.iconColor,
+                disabledContentColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent
+            ),
+            content = {
+                Icon(
+                    painter = (
+                            when (viewModel.repeatMode) {
+                                "normal" -> painterResource(R.drawable.repeat) // R.drawable.repeat
+                                "repeatQueue" -> painterResource(R.drawable.repeat_on) // R.drawable.repeat_on
+                                "repeatSong" -> painterResource(R.drawable.repeat_one_on) // R.drawable.repeat_one_on
+                                else -> painterResource(R.drawable.repeat)
+                            }
+                            ),
+                    contentDescription = "Repeat controls"
+                )
+            }
+        )
+        IconButton( // Shuffle controls
+            onClick = {
+                if (!viewModel.shuffleMode) {
+                    player.clearMediaItems()
+                    shuffleSongInfo = songInfo.shuffled()
+                    for (i in shuffleSongInfo) {
+                        player.addMediaItem(MediaItem.fromUri(i.songUri))
+                    }
+                }
+                viewModel.updateShuffleMode(!viewModel.shuffleMode)
+            },
+            modifier = Modifier
+                .size(60.dp),
+            colors = IconButtonColors(
+                containerColor = Color.Transparent,
+                contentColor = viewModel.iconColor,
+                disabledContentColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent
+            ),
+            content = {
+                Icon(
+                    painter = (
+                            if (!viewModel.shuffleMode) {
+                                painterResource(R.drawable.arrow_right)
+                            } else {
+                                painterResource(R.drawable.shuffle)
+                            }
+                            ),
+                    contentDescription = "Shuffle controls"
+                )
+            }
+        )
     }
 }
 @OptIn(UnstableApi::class)

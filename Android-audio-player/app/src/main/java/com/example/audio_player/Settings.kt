@@ -1,5 +1,6 @@
 package com.example.audio_player
 
+import android.content.Context
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
@@ -12,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -25,19 +25,17 @@ import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MenuAnchorType
-import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
-import androidx.compose.material3.TextFieldColors
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -48,6 +46,7 @@ import com.github.skydoves.colorpicker.compose.AlphaTile
 import com.github.skydoves.colorpicker.compose.BrightnessSlider
 import com.github.skydoves.colorpicker.compose.HsvColorPicker
 import com.github.skydoves.colorpicker.compose.rememberColorPickerController
+import kotlinx.coroutines.launch
 
 @Composable
 fun Settings(navController: NavController, viewModel: PlayerViewModel) {
@@ -91,7 +90,8 @@ fun Settings(navController: NavController, viewModel: PlayerViewModel) {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun ThemeChange(viewModel: PlayerViewModel, navController: NavController) {
+fun ThemeChange(viewModel: PlayerViewModel, navController: NavController, context: Context) {
+    val settingsData = SettingsData(context, context.dataStore)
     @Composable
     fun ColourListDropDownMenu(name: String, choice: String) {
         Row(
@@ -200,6 +200,19 @@ fun ThemeChange(viewModel: PlayerViewModel, navController: NavController) {
                             contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
                         )
                     }
+//                    for (i in settingsData.preferencesList) {
+//                        DropdownMenuItem(
+//                            text = {
+//                                LcdText(i, viewModel = viewModel)
+//                            },
+//                            onClick = {
+//                                selectedText = i
+//                                viewModel.updateColor(choice, viewModel.otherColorMap[i])
+//                                expanded = false
+//                            },
+//                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+//                        )
+//                    }
                 }
             }
         }
@@ -245,9 +258,11 @@ fun ThemeChange(viewModel: PlayerViewModel, navController: NavController) {
 }
 
 @Composable
-fun ColorPicker(viewModel: PlayerViewModel, navController: NavController) {
+fun ColorPicker(viewModel: PlayerViewModel, navController: NavController, context: Context) {
+    val settingsData = SettingsData(context, context.dataStore)
     val controller = rememberColorPickerController()
     var selectedColor = Color.White
+    val coroutine = rememberCoroutineScope()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -307,7 +322,6 @@ fun ColorPicker(viewModel: PlayerViewModel, navController: NavController) {
                     customColorName = it
                 },
                 modifier = Modifier,
-//                    .size(width = 80.dp, height = 30.dp),
                 placeholder = {
                     LcdText(
                         "Custom color's name",
@@ -319,7 +333,17 @@ fun ColorPicker(viewModel: PlayerViewModel, navController: NavController) {
             Button(
                 modifier = Modifier,
                 onClick = {
-                    viewModel.updateCustomColors(selectedColor, customColorName)
+                    var tmpName = customColorName
+                    if (tmpName == "") {
+                        tmpName = "Custom"
+                    }
+                    var i = 1
+                    while (tmpName in viewModel.colorMap) {
+                        tmpName = "$tmpName($i)"
+                        i ++
+                    }
+                    viewModel.updateCustomColors(selectedColor, tmpName)
+                    coroutine.launch{ settingsData.addCustomColor(tmpName, selectedColor) }
                     navController.navigate("theme_change")
                 },
                 colors = ButtonColors(

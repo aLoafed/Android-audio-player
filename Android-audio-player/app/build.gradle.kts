@@ -44,6 +44,7 @@ dependencies {
     //noinspection UseTomlInstead
     implementation("com.github.wendykierp:JTransforms:3.1")
     implementation("com.github.skydoves:colorpicker-compose:1.1.2")
+    implementation("androidx.datastore:datastore-preferences:1.0.0")
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.ui)

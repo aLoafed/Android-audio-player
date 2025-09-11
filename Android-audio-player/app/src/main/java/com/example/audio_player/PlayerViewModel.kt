@@ -2,25 +2,16 @@ package com.example.audio_player
 
 import android.content.Context
 import android.graphics.BitmapFactory
-import androidx.compose.material3.ColorScheme
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Color.Companion.hsv
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.luminance
-import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.graphics.toColorLong
 import androidx.core.graphics.ColorUtils
-import androidx.core.graphics.toColor
-import androidx.core.graphics.toColorLong
 import androidx.lifecycle.ViewModel
 import androidx.media3.exoplayer.ExoPlayer
 import com.example.audio_player.ui.theme.LcdBlueWhite
@@ -45,14 +36,13 @@ class PlayerViewModel(
         private set
     var albumSongInfo = mutableListOf<SongInfo>()
         private set
+    val settingsData = SettingsData(applicationContext, applicationContext.dataStore)
+    var shuffleMode by mutableStateOf(false)
+        private set
+    var repeatMode by mutableStateOf("normal")
+        private set
     //========================= Theme changing =========================
     //============================ Colours ===========================
-    var primaryColor = LcdGrey
-        private set
-    var secondaryColor = LcdBlueWhite
-        private set
-    var tertiaryColor = LcdOrange
-        private set
     var backgroundColor = LcdGrey
         private set
     var textColor = Color.White
@@ -78,7 +68,7 @@ class PlayerViewModel(
         "Black" to Color.Black,
         "White" to Color.White,
         "Pink" to Color(0xffFFC0CB),
-        "Purple" to Color(0xffA020F0)
+        "Purple" to Color(0xffA020F0),
     )
     val otherColorMap = mutableMapOf(
         "Default" to Color.White,
@@ -92,18 +82,25 @@ class PlayerViewModel(
         "Pink" to Color(0xffFFC0CB),
         "Purple" to Color(0xffA020F0)
     )
+//    suspend fun initColorMaps() {
+//        for (i in 0 until settingsData.preferencesList.count()) {
+//            val tmpColor = settingsData.readKey(settingsData.preferencesList[i])
+//            if (tmpColor != null) {
+//                colorMap[settingsData.preferencesList[i]] = Color(tmpColor)
+//                otherColorMap[settingsData.preferencesList[i]] = Color(tmpColor)
+//            }
+//        }
+//    }
+    //========================= Updaters =========================
+    fun updateShuffleMode(boolean: Boolean) {
+        shuffleMode = boolean
+    }
+    fun updateRepeatMode(mode: String) {
+        repeatMode = mode
+    }
     fun updateCustomColors(color: Color, name: String) {
-        var tmpName = name
-        if (tmpName == "") {
-            tmpName = "Custom"
-        }
-        var i = 1
-        while (tmpName in colorMap) {
-            tmpName = "$tmpName($i)"
-            i ++
-        }
-        colorMap[tmpName] = color
-        otherColorMap[tmpName] = color
+        colorMap[name] = color
+        otherColorMap[name] = color
     }
     fun removeCustomColors(key: String) {
         colorMap.remove(key)
@@ -118,15 +115,6 @@ class PlayerViewModel(
     fun updateColor(choice: String, color: Color?) {
         if (color != null) {
             when (choice) {
-//                "primary" -> {
-//                    primaryColor = color
-//                }
-//                "secondary" -> {
-//                    secondaryColor = color
-//                }
-//                "tertiary" -> {
-//                    tertiaryColor = color
-//                }
                 "background" -> {
                     backgroundColor = color
                 }

@@ -2,12 +2,12 @@
 
 package com.example.audio_player
 
+import android.content.Context
 import androidx.annotation.OptIn
 import androidx.collection.intListOf
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,23 +15,14 @@ import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.HorizontalPager
 import androidx.compose.foundation.pager.rememberPagerState
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.List
-import androidx.compose.material.icons.outlined.PlayArrow
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
-import androidx.compose.material3.IconButtonColors
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.NavigationBar
-import androidx.compose.material3.NavigationBarItem
 import androidx.compose.material3.Tab
 import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
@@ -45,18 +36,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.navigation.NavController
-import androidx.navigation.NavHost
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import kotlinx.coroutines.coroutineScope
+
 @OptIn(UnstableApi::class)
 @Composable
 fun NavHost(
@@ -64,7 +52,8 @@ fun NavHost(
     songInfo: List<SongInfo>,
     spectrumAnalyzer: SpectrumAnalyzer,
     viewModel: PlayerViewModel,
-    albumInfo: List<AlbumInfo>
+    albumInfo: List<AlbumInfo>,
+    context: Context
 ) {
     val navController = rememberNavController()
     NavHost(
@@ -81,10 +70,10 @@ fun NavHost(
             Settings(navController, viewModel)
         }
         composable(route = Screen.ThemeChange.route) {
-            ThemeChange(viewModel, navController)
+            ThemeChange(viewModel, navController, context)
         }
         composable(route = Screen.ColorPicker.route) {
-            ColorPicker(viewModel, navController)
+            ColorPicker(viewModel, navController, context)
         }
     }
 }
@@ -239,7 +228,7 @@ fun Pager(
         ) { currentPage ->
             when (currentPage) {
                 0 -> PlayerScreen(player, spectrumAnalyzer, viewModel, songInfo)
-                1 -> SongsScreen(songInfo, player, viewModel, pagerState, spectrumAnalyzer)
+                1 -> SongsScreen(songInfo, player, viewModel, pagerState)
                 2 -> AlbumScreen(albumInfo, songInfo, player, viewModel, pagerState, navController)
             }
         }
