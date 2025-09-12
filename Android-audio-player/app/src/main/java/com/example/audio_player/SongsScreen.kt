@@ -62,7 +62,7 @@ fun SongsScreen(songInfo: List<SongInfo>, player: ExoPlayer, viewModel: PlayerVi
                             viewModel.updateSongDuration((songInfo[i].time).toLong())
                             viewModel.updateSongIterator(i)
                             viewModel.updatePlayingFromSongsScreen(true)
-                            pagerState.requestScrollToPage(0)
+                            pagerState.requestScrollToPage(1)
                         }
                     ),
                 verticalAlignment = Alignment.CenterVertically,

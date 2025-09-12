@@ -57,6 +57,8 @@ class PlayerViewModel(
         private set
     var sliderTrackColor = Color.White
         private set
+    var lastPlayedUnshuffledSong = 0
+        private set
     val colorMap = mutableMapOf(
         "Default" to LcdGrey,
         "Red" to Color.Red,
@@ -92,6 +94,9 @@ class PlayerViewModel(
 //        }
 //    }
     //========================= Updaters =========================
+    fun updateLastPlayedUnshuffledSong() {
+        lastPlayedUnshuffledSong = songIterator
+    }
     fun updateShuffleMode(boolean: Boolean) {
         shuffleMode = boolean
     }

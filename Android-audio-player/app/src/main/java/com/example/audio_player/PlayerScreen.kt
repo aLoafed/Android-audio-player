@@ -314,19 +314,32 @@ fun RepeatShuffleControls(viewModel: PlayerViewModel, player: ExoPlayer, songInf
                         tmpSongInfo.clear()
                         player.clearMediaItems() // removeMediaItems(0, player.mediaItemCount)
                         for (i in tmpShuffledSongInfo) {
-                            if (i == songInfo[viewModel.songIterator]) {
-                            } else {
-                                tmpSongInfo.add(i)
-                            }
+                            tmpSongInfo.add(i)
                         }
                         shuffleSongInfo = tmpSongInfo
                         for (i in shuffleSongInfo) {
                             player.addMediaItem(MediaItem.fromUri(i.songUri))
                         }
                     }
+                    viewModel.updateLastPlayedUnshuffledSong()
                     viewModel.updateSongIterator(0)
                     player.prepare()
                     player.play()
+                } else {
+                    viewModel.updateSongIterator(viewModel.lastPlayedUnshuffledSong)
+                    player.clearMediaItems()
+                    if (viewModel.playingFromSongsScreen) {
+                        for (i in songInfo) {
+                            player.addMediaItem(MediaItem.fromUri(i.songUri))
+                        }
+                    } else {
+                        for ( i in viewModel.albumSongInfo) {
+                            player.addMediaItem(MediaItem.fromUri(i.songUri))
+                        }
+                    }
+                    player.prepare()
+                    player.seekTo(viewModel.songIterator, 0L)
+                    viewModel.incrementSongIterator(1)
                 }
                 viewModel.updateShuffleMode(!viewModel.shuffleMode)
             },

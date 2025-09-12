@@ -89,15 +89,16 @@ fun Pager(
     navController: NavController
 ) {
     val pagerState = rememberPagerState(
-        initialPage = 0
+        initialPage = 1
     ) {
-        3
+        4
     }
     var selectedTab by remember {
         mutableIntStateOf(pagerState.currentPage)
     }
     val iconList = intListOf(
-        R.drawable.play_arrow, R.drawable.outline_play_arrow, R.drawable.library_music, R.drawable.outline_library_music, R.drawable.album, R.drawable.outline_album
+        R.drawable.play_arrow, R.drawable.outline_play_arrow, R.drawable.library_music,
+        R.drawable.outline_library_music, R.drawable.album, R.drawable.outline_album,
     )
     LaunchedEffect(selectedTab) { // Controls tabRow inputs
         pagerState.animateScrollToPage(
@@ -144,7 +145,23 @@ fun Pager(
                     )
                 }
             ) {
-                for (i in 0 until pagerState.pageCount) {
+                Tab(
+                    modifier = Modifier
+                        .fillMaxSize(),
+                    selected = selectedTab == 0,
+                    onClick = {
+                        selectedTab = 0
+                    },
+                    icon = {
+                        Icon(
+                            painter = painterResource(R.drawable.queue_music),
+                            contentDescription = "Queue music"
+                        )
+                    },
+                    selectedContentColor = viewModel.iconColor,
+                    unselectedContentColor = viewModel.iconColor,
+                )
+                for (i in 1..3) {
                     Tab(
                         modifier = Modifier
                             .fillMaxSize(),
@@ -155,12 +172,12 @@ fun Pager(
                         icon = {
                             if (selectedTab == i) {
                                 Icon(
-                                    painter = painterResource(iconList[i * 2]),
+                                    painter = painterResource(iconList[(i - 1) * 2]),
                                     contentDescription = null
                                 )
                             } else {
                                 Icon(
-                                    painter = painterResource(iconList[i * 2 + 1]),
+                                    painter = painterResource(iconList[(i - 1) * 2 + 1]),
                                     contentDescription = null
                                 )
                             }
@@ -227,9 +244,10 @@ fun Pager(
             state = pagerState
         ) { currentPage ->
             when (currentPage) {
-                0 -> PlayerScreen(player, spectrumAnalyzer, viewModel, songInfo)
-                1 -> SongsScreen(songInfo, player, viewModel, pagerState)
-                2 -> AlbumScreen(albumInfo, songInfo, player, viewModel, pagerState, navController)
+                0 -> SongQueue(viewModel, player, songInfo)
+                1 -> PlayerScreen(player, spectrumAnalyzer, viewModel, songInfo)
+                2 -> SongsScreen(songInfo, player, viewModel, pagerState)
+                3 -> AlbumScreen(albumInfo, songInfo, player, viewModel, pagerState, navController)
             }
         }
     }
