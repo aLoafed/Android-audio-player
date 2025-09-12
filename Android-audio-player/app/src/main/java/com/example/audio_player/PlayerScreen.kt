@@ -1,6 +1,5 @@
 package com.example.audio_player
 
-import android.media.browse.MediaBrowser
 import androidx.annotation.OptIn
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.RepeatMode
@@ -27,7 +26,6 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -48,11 +46,10 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.media3.common.MediaItem
-import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import com.example.audio_player.ui.theme.dotoFamily
-
+var shuffleSongInfo = listOf<SongInfo>()
 @OptIn(UnstableApi::class)
 @Composable
 fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewModel: PlayerViewModel, songInfo: List<SongInfo>) {
@@ -68,15 +65,16 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
         )
         PlayingMediaInfo(viewModel, songInfo)
         Spacer(
-            modifier = Modifier.height(10.dp)
+            modifier = Modifier.height(5.dp)
         )
         PlaybackControls(player, viewModel, songInfo)
         GraphicalEqualizer(spectrumAnalyzer, viewModel)
-        Spacer(
-            modifier = Modifier
-                .height(30.dp)
-                .fillMaxWidth()
-        )
+//        Spacer(
+//            modifier = Modifier
+//                .height(30.dp)
+//                .fillMaxWidth()
+//        )
+        RepeatShuffleControls(viewModel, player, songInfo)
         SeekBar(player, viewModel)
     }
 }
@@ -84,7 +82,9 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
 fun PlayingMediaInfo(viewModel: PlayerViewModel, songInfo: List<SongInfo>) {
     Image( // Album art
         bitmap = (
-                if (viewModel.playingFromSongsScreen) {
+                if (viewModel.shuffleMode) {
+                    shuffleSongInfo[viewModel.songIterator].albumArt
+                } else if (viewModel.playingFromSongsScreen) {
                     songInfo[viewModel.songIterator].albumArt
                 } else {
                     viewModel.albumSongInfo[viewModel.songIterator].albumArt
@@ -99,7 +99,9 @@ fun PlayingMediaInfo(viewModel: PlayerViewModel, songInfo: List<SongInfo>) {
             .height(10.dp)
     )
     LargePlayerScreenLcdText(
-        if (viewModel.playingFromSongsScreen) {
+        if (viewModel.shuffleMode) {
+            shuffleSongInfo[viewModel.songIterator].name
+        } else if (viewModel.playingFromSongsScreen) {
             songInfo[viewModel.songIterator].name
         } else {
             viewModel.albumSongInfo[viewModel.songIterator].name
@@ -111,7 +113,9 @@ fun PlayingMediaInfo(viewModel: PlayerViewModel, songInfo: List<SongInfo>) {
             .height(5.dp)
     )
     LargeLcdText(
-        if (viewModel.playingFromSongsScreen) {
+        if (viewModel.shuffleMode) {
+            shuffleSongInfo[viewModel.songIterator].artist
+        } else if (viewModel.playingFromSongsScreen) {
             songInfo[viewModel.songIterator].artist
         } else {
             viewModel.albumSongInfo[viewModel.songIterator].artist
@@ -119,7 +123,9 @@ fun PlayingMediaInfo(viewModel: PlayerViewModel, songInfo: List<SongInfo>) {
         viewModel = viewModel
     )
     LargeLcdText(
-        if (viewModel.playingFromSongsScreen) {
+        if (viewModel.shuffleMode) {
+            shuffleSongInfo[viewModel.songIterator].album
+        } else if (viewModel.playingFromSongsScreen) {
             songInfo[viewModel.songIterator].album
         } else {
             viewModel.albumSongInfo[viewModel.songIterator].album
@@ -143,28 +149,28 @@ fun PlaybackControls(player: ExoPlayer, viewModel: PlayerViewModel, songInfo: Li
                     if (player.currentPosition < 10000L) {
                         if (player.hasPreviousMediaItem()) {
                             player.seekToPreviousMediaItem()
-                        } else {
-                            if (viewModel.playingFromSongsScreen) {
-                                player.moveMediaItems(0, songInfo.lastIndex + 1, 1)
-                                player.addMediaItem(
-                                    0,
-                                    MediaItem.fromUri(songInfo[viewModel.songIterator - 1].songUri)
-                                )
-                                player.seekToPreviousMediaItem()
-                            } else {
-                                player.moveMediaItems(
-                                    0,
-                                    viewModel.albumSongInfo.lastIndex + 1,
-                                    1
-                                )
-                                player.addMediaItem(
-                                    0,
-                                    MediaItem.fromUri(viewModel.albumSongInfo[viewModel.songIterator - 1].songUri)
-                                )
-                                player.seekToPreviousMediaItem()
-                            }
-                        }
-                        viewModel.incrementSongIterator(-1)
+                        } // else {
+//                            if (viewModel.playingFromSongsScreen) {
+//                                player.moveMediaItems(0, songInfo.lastIndex + 1, 1)
+//                                player.addMediaItem(
+//                                    0,
+//                                    MediaItem.fromUri(songInfo[viewModel.songIterator - 1].songUri)
+//                                )
+//                                player.seekToPreviousMediaItem()
+//                            } else {
+//                                player.moveMediaItems(
+//                                    0,
+//                                    viewModel.albumSongInfo.lastIndex + 1,
+//                                    1
+//                                )
+//                                player.addMediaItem(
+//                                    0,
+//                                    MediaItem.fromUri(viewModel.albumSongInfo[viewModel.songIterator - 1].songUri)
+//                                )
+//                                player.seekToPreviousMediaItem()
+//                            }
+//                        }
+//                        viewModel.incrementSongIterator(-1)
                     } else {
                         player.seekTo(0L)
                     }
@@ -220,7 +226,6 @@ fun PlaybackControls(player: ExoPlayer, viewModel: PlayerViewModel, songInfo: Li
             onClick = {
                 if (player.hasNextMediaItem()) {
                     player.seekToNextMediaItem()
-                    viewModel.incrementSongIterator(1)
                 }
             },
             colors = IconButtonColors(
@@ -240,10 +245,12 @@ fun PlaybackControls(player: ExoPlayer, viewModel: PlayerViewModel, songInfo: Li
 }
 @Composable
 fun RepeatShuffleControls(viewModel: PlayerViewModel, player: ExoPlayer, songInfo: List<SongInfo>) {
-    var shuffleSongInfo = listOf<SongInfo>()
+    val tmpSongInfo = mutableListOf<SongInfo>()
     Row(
         modifier = Modifier
-            .fillMaxWidth(),
+            .fillMaxWidth(0.85f),
+        horizontalArrangement = Arrangement.End,
+        verticalAlignment = Alignment.CenterVertically
     ) {
         IconButton( // Repeat controls
             onClick = {
@@ -286,12 +293,40 @@ fun RepeatShuffleControls(viewModel: PlayerViewModel, player: ExoPlayer, songInf
         )
         IconButton( // Shuffle controls
             onClick = {
-                if (!viewModel.shuffleMode) {
-                    player.clearMediaItems()
-                    shuffleSongInfo = songInfo.shuffled()
-                    for (i in shuffleSongInfo) {
-                        player.addMediaItem(MediaItem.fromUri(i.songUri))
+                if (!viewModel.shuffleMode) { // Switching to shuffle
+                    if (!viewModel.playingFromSongsScreen) { // Playing from albums
+                        val tmpShuffledAlbumSongInfo = viewModel.albumSongInfo.shuffled()
+                        tmpSongInfo.clear()
+                        player.clearMediaItems()  // removeMediaItems(0, player.mediaItemCount)
+                        for (i in tmpShuffledAlbumSongInfo) {
+                            if (i == viewModel.albumSongInfo[viewModel.songIterator]) {
+                                break
+                            } else {
+                                tmpSongInfo.add(i)
+                            }
+                        }
+                        shuffleSongInfo = tmpSongInfo
+                        for (i in shuffleSongInfo) {
+                            player.addMediaItem(MediaItem.fromUri(i.songUri))
+                        }
+                    } else { // Playing from songs screen
+                        val tmpShuffledSongInfo = songInfo.shuffled()
+                        tmpSongInfo.clear()
+                        player.clearMediaItems() // removeMediaItems(0, player.mediaItemCount)
+                        for (i in tmpShuffledSongInfo) {
+                            if (i == songInfo[viewModel.songIterator]) {
+                            } else {
+                                tmpSongInfo.add(i)
+                            }
+                        }
+                        shuffleSongInfo = tmpSongInfo
+                        for (i in shuffleSongInfo) {
+                            player.addMediaItem(MediaItem.fromUri(i.songUri))
+                        }
                     }
+                    viewModel.updateSongIterator(0)
+                    player.prepare()
+                    player.play()
                 }
                 viewModel.updateShuffleMode(!viewModel.shuffleMode)
             },
