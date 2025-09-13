@@ -299,11 +299,7 @@ fun RepeatShuffleControls(viewModel: PlayerViewModel, player: ExoPlayer, songInf
                         tmpSongInfo.clear()
                         player.clearMediaItems()  // removeMediaItems(0, player.mediaItemCount)
                         for (i in tmpShuffledAlbumSongInfo) {
-                            if (i == viewModel.albumSongInfo[viewModel.songIterator]) {
-                                break
-                            } else {
-                                tmpSongInfo.add(i)
-                            }
+                            tmpSongInfo.add(i)
                         }
                         shuffleSongInfo = tmpSongInfo
                         for (i in shuffleSongInfo) {
@@ -321,18 +317,21 @@ fun RepeatShuffleControls(viewModel: PlayerViewModel, player: ExoPlayer, songInf
                             player.addMediaItem(MediaItem.fromUri(i.songUri))
                         }
                     }
+                    viewModel.updateQueuedSongs(shuffleSongInfo)
                     viewModel.updateLastPlayedUnshuffledSong()
                     viewModel.updateSongIterator(0)
                     player.prepare()
                     player.play()
-                } else {
+                } else { // Switching to normal playback
                     viewModel.updateSongIterator(viewModel.lastPlayedUnshuffledSong)
                     player.clearMediaItems()
-                    if (viewModel.playingFromSongsScreen) {
+                    if (viewModel.playingFromSongsScreen) { // Playing from songs screen
+                        viewModel.updateQueuedSongs(songInfo)
                         for (i in songInfo) {
                             player.addMediaItem(MediaItem.fromUri(i.songUri))
                         }
-                    } else {
+                    } else { // Playing from albums screen
+                        viewModel.updateQueuedSongs(viewModel.albumSongInfo)
                         for ( i in viewModel.albumSongInfo) {
                             player.addMediaItem(MediaItem.fromUri(i.songUri))
                         }

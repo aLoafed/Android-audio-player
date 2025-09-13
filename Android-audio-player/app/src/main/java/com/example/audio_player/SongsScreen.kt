@@ -58,6 +58,7 @@ fun SongsScreen(songInfo: List<SongInfo>, player: ExoPlayer, viewModel: PlayerVi
                             player.prepare()
                             player.seekTo(i,0L)
                             player.play()
+                            viewModel.updateQueuedSongs(songInfo)
                             viewModel.updateAlbumArt(songInfo[i].albumArt)
                             viewModel.updateSongDuration((songInfo[i].time).toLong())
                             viewModel.updateSongIterator(i)

@@ -36,6 +36,8 @@ class PlayerViewModel(
         private set
     var albumSongInfo = mutableListOf<SongInfo>()
         private set
+    var queuedSongs = listOf<SongInfo>()
+        private set
     val settingsData = SettingsData(applicationContext, applicationContext.dataStore)
     var shuffleMode by mutableStateOf(false)
         private set
@@ -143,6 +145,9 @@ class PlayerViewModel(
                 }
             }
         }
+    }
+    fun updateQueuedSongs(list: List<SongInfo>) {
+        queuedSongs = list
     }
     fun updateAlbumSongInfo(list: MutableList<SongInfo>) {
         albumSongInfo = list

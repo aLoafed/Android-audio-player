@@ -63,9 +63,10 @@ fun AlbumSongsScreen(album: String, songInfo: List<SongInfo>, player: ExoPlayer,
                             player.prepare()
                             player.seekTo(i, 0L)
                             player.play()
+                            viewModel.updateQueuedSongs(albumSongsList)
+                            viewModel.updateSongIterator(i)
                             viewModel.updateAlbumArt(albumSongsList[i].albumArt)
                             viewModel.updateSongDuration((albumSongsList[i].time).toLong())
-                            viewModel.updateSongIterator(i)
                             viewModel.updatePlayingFromSongsScreen(false) // Shows details from albums list
                             navController.navigate("pager")
                         }

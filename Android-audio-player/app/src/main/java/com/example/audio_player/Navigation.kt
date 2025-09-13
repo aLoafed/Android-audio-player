@@ -3,6 +3,9 @@
 package com.example.audio_player
 
 import android.content.Context
+import android.content.Intent
+import android.media.audiofx.Equalizer
+import android.provider.Settings
 import androidx.annotation.OptIn
 import androidx.collection.intListOf
 import androidx.compose.animation.core.LinearEasing
@@ -18,6 +21,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -29,21 +33,26 @@ import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.unit.dp
+import androidx.core.content.ContextCompat.startActivity
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import kotlinx.coroutines.launch
 
 @OptIn(UnstableApi::class)
 @Composable
@@ -88,31 +97,17 @@ fun Pager(
     albumInfo: List<AlbumInfo>,
     navController: NavController
 ) {
+    val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState(
         initialPage = 1
     ) {
         4
     }
-    var selectedTab by remember {
-        mutableIntStateOf(pagerState.currentPage)
-    }
+    val selectedTab = remember { derivedStateOf { pagerState.currentPage } }
     val iconList = intListOf(
         R.drawable.play_arrow, R.drawable.outline_play_arrow, R.drawable.library_music,
         R.drawable.outline_library_music, R.drawable.album, R.drawable.outline_album,
     )
-    LaunchedEffect(selectedTab) { // Controls tabRow inputs
-        pagerState.animateScrollToPage(
-            page = selectedTab,
-            animationSpec = tween(
-                200,
-                0,
-                LinearEasing
-            )
-        )
-    }
-    LaunchedEffect(pagerState.currentPage) { // Controls screen swipes
-        selectedTab = pagerState.currentPage
-    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -133,7 +128,7 @@ fun Pager(
                     .fillMaxWidth() // Was 0.85f
                     .height(55.dp),
                 containerColor = viewModel.backgroundColor,
-                selectedTabIndex = selectedTab,
+                selectedTabIndex = selectedTab.value,
                 indicator =  { tabPositions ->
                     TabRowDefaults.SecondaryIndicator(
                         modifier = Modifier
@@ -148,9 +143,11 @@ fun Pager(
                 Tab(
                     modifier = Modifier
                         .fillMaxSize(),
-                    selected = selectedTab == 0,
+                    selected = selectedTab.value == 0,
                     onClick = {
-                        selectedTab = 0
+                        scope.launch {
+                            pagerState.animateScrollToPage(0)
+                        }
                     },
                     icon = {
                         Icon(
@@ -165,12 +162,14 @@ fun Pager(
                     Tab(
                         modifier = Modifier
                             .fillMaxSize(),
-                        selected = selectedTab == i,
+                        selected = selectedTab.value == i,
                         onClick = {
-                            selectedTab = i
+                            scope.launch {
+                                pagerState.animateScrollToPage(i)
+                            }
                         },
                         icon = {
-                            if (selectedTab == i) {
+                            if (selectedTab.value == i) {
                                 Icon(
                                     painter = painterResource(iconList[(i - 1) * 2]),
                                     contentDescription = null
@@ -187,7 +186,7 @@ fun Pager(
                     )
                 }
                 var dropDownMenu by remember { mutableStateOf(false) }
-                Tab(
+                Tab( // More options menu
                     modifier = Modifier
                         .fillMaxSize(0.15f),
                     selected = false,
@@ -214,15 +213,6 @@ fun Pager(
                                 onClick = {
                                     navController.navigate("settings")
                                 }
-                            )
-                            DropdownMenuItem(
-                                text = {
-                                    LcdText(
-                                        "Equaliser",
-                                        viewModel = viewModel
-                                    )
-                                },
-                                onClick = {TODO()}
                             )
                             DropdownMenuItem(
                                 text = {
