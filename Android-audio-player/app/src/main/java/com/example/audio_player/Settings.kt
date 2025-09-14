@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.statusBars
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -24,6 +26,8 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
 import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -50,6 +54,37 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun Settings(navController: NavController, viewModel: PlayerViewModel) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(60.dp)
+            .background(viewModel.backgroundColor),
+        horizontalArrangement = Arrangement.Start,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(
+            content = {
+                Icon(
+                    painterResource(R.drawable.arrow_back),
+                    contentDescription = "Back arrow"
+                )
+            },
+            onClick = {
+                navController.popBackStack()
+            },
+            colors = IconButtonColors(
+                contentColor = viewModel.iconColor,
+                containerColor = Color.Transparent,
+                disabledContentColor = viewModel.iconColor,
+                disabledContainerColor = Color.Transparent
+            )
+        )
+        Spacer(
+            modifier = Modifier
+                .width(5.dp)
+        )
+        LargeLcdText("Settings", viewModel = viewModel)
+    }
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -216,6 +251,37 @@ fun ThemeChange(viewModel: PlayerViewModel, navController: NavController, contex
                 }
             }
         }
+    }
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(60.dp)
+            .background(viewModel.backgroundColor),
+        horizontalArrangement = Arrangement.Start,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        IconButton(
+            content = {
+                Icon(
+                    painterResource(R.drawable.arrow_back),
+                    contentDescription = "Back arrow"
+                )
+            },
+            onClick = {
+                navController.popBackStack()
+            },
+            colors = IconButtonColors(
+                contentColor = viewModel.iconColor,
+                containerColor = Color.Transparent,
+                disabledContentColor = viewModel.iconColor,
+                disabledContainerColor = Color.Transparent
+            )
+        )
+        Spacer(
+            modifier = Modifier
+                .width(5.dp)
+        )
+        LargeLcdText("Theme change", viewModel = viewModel)
     }
     Column(
         modifier = Modifier
