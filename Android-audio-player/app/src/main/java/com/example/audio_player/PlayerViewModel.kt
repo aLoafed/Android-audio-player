@@ -53,7 +53,7 @@ class PlayerViewModel(
         private set
     var eqLevelColor = Color.White
         private set
-    var eqTextColor = Color.White
+    var eqTextColor = LcdBlueWhite
         private set
     var sliderThumbColor = Color.White
         private set

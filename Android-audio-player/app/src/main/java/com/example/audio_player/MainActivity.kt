@@ -17,9 +17,15 @@ import androidx.annotation.OptIn
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
@@ -30,6 +36,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.LineHeightStyle
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
@@ -53,6 +62,7 @@ import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.exoplayer.source.MediaSourceEventListener
 import androidx.media3.session.MediaSession
 import com.example.audio_player.ui.theme.Audio_playerTheme
+import com.example.audio_player.ui.theme.dotoFamily
 import com.example.audio_player.ui.theme.lcdFont
 import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
@@ -252,5 +262,62 @@ fun AlbumScreenLcdText(text: String, modifier: Modifier = Modifier, viewModel: P
         fontWeight = FontWeight.Normal,
         lineHeight = 15.sp
     )
+}
+
+@Preview
+@Composable
+fun PreviewEQIcon() {
+    Column(
+        modifier = Modifier.fillMaxSize(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(
+            modifier = Modifier
+                .size(260.dp, 140.dp)
+                .padding(horizontal = 15.dp),
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.SpaceEvenly
+        ) {
+            val heights = listOf(18,14,26,20,34,12,6)
+            for (i in heights) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .width(25.dp),
+                    verticalArrangement = Arrangement.SpaceBetween,
+                    horizontalAlignment = Alignment.CenterHorizontally
+                ) {
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy((-2).dp),
+                        verticalAlignment = Alignment.Bottom
+                    ) {
+                        Text(
+                            modifier = Modifier,
+                            text = textLevelBuilder(1..i),
+                            fontFamily = dotoFamily,
+                            fontWeight = FontWeight.W500,
+                            fontSize = 23.sp,
+                            color = Color.White,
+                            letterSpacing = 0.sp,
+                            lineHeight = 3.sp,
+                            textAlign = TextAlign.Center
+                        )
+                        Text(
+                            modifier = Modifier,
+                            text = textLevelBuilder(1..i),
+                            fontFamily = dotoFamily,
+                            fontWeight = FontWeight.W500,
+                            fontSize = 23.sp,
+                            color = Color.White,
+                            letterSpacing = 0.sp,
+                            lineHeight = 3.sp,
+                            textAlign = TextAlign.Center
+                        )
+                    }
+                }
+            }
+        }
+    }
 }
 
