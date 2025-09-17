@@ -23,6 +23,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -41,6 +42,7 @@ import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -50,6 +52,7 @@ import androidx.compose.ui.unit.sp
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import com.example.audio_player.ui.theme.LcdBlueWhite
 import com.example.audio_player.ui.theme.dotoFamily
 var shuffleSongInfo = listOf<SongInfo>()
 @OptIn(UnstableApi::class)
@@ -143,28 +146,7 @@ fun PlaybackControls(player: ExoPlayer, viewModel: PlayerViewModel, songInfo: Li
                     if (player.currentPosition < 10000L) {
                         if (player.hasPreviousMediaItem()) {
                             player.seekToPreviousMediaItem()
-                        } // else {
-//                            if (viewModel.playingFromSongsScreen) {
-//                                player.moveMediaItems(0, songInfo.lastIndex + 1, 1)
-//                                player.addMediaItem(
-//                                    0,
-//                                    MediaItem.fromUri(songInfo[viewModel.songIterator - 1].songUri)
-//                                )
-//                                player.seekToPreviousMediaItem()
-//                            } else {
-//                                player.moveMediaItems(
-//                                    0,
-//                                    viewModel.albumSongInfo.lastIndex + 1,
-//                                    1
-//                                )
-//                                player.addMediaItem(
-//                                    0,
-//                                    MediaItem.fromUri(viewModel.albumSongInfo[viewModel.songIterator - 1].songUri)
-//                                )
-//                                player.seekToPreviousMediaItem()
-//                            }
-//                        }
-//                        viewModel.incrementSongIterator(-1)
+                        }
                     } else {
                         player.seekTo(0L)
                     }
@@ -292,7 +274,7 @@ fun RepeatShuffleControls(viewModel: PlayerViewModel, player: ExoPlayer, songInf
                     if (!viewModel.playingFromSongsScreen) { // Playing from albums
                         val tmpShuffledAlbumSongInfo = viewModel.albumSongInfo.shuffled()
                         tmpSongInfo.clear()
-                        player.clearMediaItems()  // removeMediaItems(0, player.mediaItemCount)
+                        player.clearMediaItems()
                         for (i in tmpShuffledAlbumSongInfo) {
                             tmpSongInfo.add(i)
                         }
@@ -303,7 +285,7 @@ fun RepeatShuffleControls(viewModel: PlayerViewModel, player: ExoPlayer, songInf
                     } else { // Playing from songs screen
                         val tmpShuffledSongInfo = songInfo.shuffled()
                         tmpSongInfo.clear()
-                        player.clearMediaItems() // removeMediaItems(0, player.mediaItemCount)
+                        player.clearMediaItems()
                         for (i in tmpShuffledSongInfo) {
                             tmpSongInfo.add(i)
                         }
@@ -372,68 +354,103 @@ fun GraphicalEqualizer(spectrumAnalyzer: SpectrumAnalyzer, viewModel: PlayerView
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         val fieldName = listOf("63","160","400","1k","2.5k","6.3k","16k")
-//        val text = textLevelBuilder(1..10)
-//        Column( // Arbitrary measure dashes
-//            modifier = Modifier
-//                .fillMaxHeight()
-//                .width(5.dp),
-//            horizontalAlignment = Alignment.CenterHorizontally,
-//            verticalArrangement = Arrangement.Bottom
-//        ) {
-//            Row(
-//                modifier = Modifier
-//                    .fillMaxSize(),
-//                horizontalArrangement = Arrangement.spacedBy((-2).dp),
-//                verticalAlignment = Alignment.Bottom
-//            ) {
-//                Text(
-//                    modifier = Modifier,
-//                    text = text,
-//                    fontFamily = dotoFamily,
-//                    fontWeight = FontWeight.W300,
-//                    fontSize = 10.sp,
-//                    color = MaterialTheme.colorScheme.secondary,
-//                    lineHeight = 10.sp,
-//                )
-//                Text(
-//                    modifier = Modifier,
-//                    text = text,
-//                    fontFamily = dotoFamily,
-//                    fontWeight = FontWeight.W300,
-//                    fontSize = 10.sp,
-//                    color = MaterialTheme.colorScheme.secondary,
-//                    lineHeight = 10.sp,
-//                )
-//            }
-//        }
-//        Spacer(
-//            modifier = Modifier
-//                .width(15.dp)
-//        )
-//        Column(
-//            modifier = Modifier
-//                .fillMaxHeight()
-//                .width(35.dp),
-//            horizontalAlignment = Alignment.CenterHorizontally,
-//            verticalArrangement = Arrangement.Bottom
-//        ) {
-//            Row(
-//                horizontalArrangement = Arrangement.spacedBy((-2).dp)
-//            ) {
-//                val tick = viewModel.currentSongPosition
-//                if (viewModel.isPlaying) {
-//                    VolumeLevelText(spectrumAnalyzer, tick)
-//                    VolumeLevelText(spectrumAnalyzer, tick)
-//                }
-//            }
-//        }
-//        Spacer(
-//            modifier = Modifier
-//                .width(15.dp)
-//        )
-        for (i in 0..6) {
+        VolumeLevelAxis()
+        Column( // Volume level
+            modifier = Modifier
+                .fillMaxHeight()
+                .width(35.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Bottom
+        ) {
+            Row(
+                horizontalArrangement = Arrangement.spacedBy((-2).dp)
+            ) {
+                val tick = viewModel.currentSongPosition
+                if (viewModel.isPlaying) {
+                    VolumeLevelText(spectrumAnalyzer, tick)
+                    VolumeLevelText(spectrumAnalyzer, tick)
+                }
+            }
+        }
+        Spacer(
+            modifier = Modifier
+                .width(15.dp)
+        )
+        for (i in 0..6) { // 7 band EQ
             AudioLevelColumn(fieldName[i],spectrumAnalyzer, viewModel)
         }
+    }
+}
+
+@Composable
+fun VolumeLevelAxis() {
+    Column( // Arbitrary measure dashes
+        modifier = Modifier
+            .fillMaxHeight()
+            .width(5.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.SpaceEvenly
+    ) {
+        Text(
+            modifier = Modifier,
+            text = "20",
+            fontFamily = dotoFamily,
+            fontWeight = FontWeight.W300,
+            fontSize = 10.sp,
+            color = LcdBlueWhite,
+            lineHeight = 10.sp,
+        )
+        for (i in 1..4) {
+            VolumeLevelMeasure()
+        }
+        Text(
+            modifier = Modifier,
+            text = "10",
+            fontFamily = dotoFamily,
+            fontWeight = FontWeight.W300,
+            fontSize = 10.sp,
+            color = LcdBlueWhite,
+            lineHeight = 10.sp,
+        )
+        for (i in 1..4) {
+            VolumeLevelMeasure()
+        }
+        Text(
+            modifier = Modifier,
+            text = "0",
+            fontFamily = dotoFamily,
+            fontWeight = FontWeight.W300,
+            fontSize = 10.sp,
+            color = LcdBlueWhite,
+            lineHeight = 10.sp,
+        )
+    }
+}
+@Composable
+fun VolumeLevelMeasure() {
+    Row(
+        modifier = Modifier
+            .fillMaxSize(),
+        horizontalArrangement = Arrangement.spacedBy((-2).dp),
+        verticalAlignment = Alignment.Bottom
+    ) {
+        Text(
+            modifier = Modifier,
+            text = "_",
+            fontFamily = dotoFamily,
+            fontWeight = FontWeight.W300,
+            fontSize = 10.sp,
+            color = LcdBlueWhite,
+            lineHeight = 10.sp,
+        )
+        Text(
+            modifier = Modifier,
+            text = "_",
+            fontWeight = FontWeight.W300,
+            fontSize = 10.sp,
+            color = LcdBlueWhite,
+            lineHeight = 10.sp,
+        )
     }
 }
 
@@ -508,68 +525,67 @@ fun AudioLevelText(fieldName: String, spectrumAnalyzer: SpectrumAnalyzer, tick: 
         textAlign = TextAlign.Center
         )
 }
-//@OptIn(UnstableApi::class)
-//@Composable
-//fun VolumeLevelText(spectrumAnalyzer: SpectrumAnalyzer, tick: Float) {
-//    val eqTransition = rememberInfiniteTransition()
-//    val target = remember(tick) {
-//        volumeLevel(spectrumAnalyzer)
-//    }
-//    val levels by eqTransition.animateFloat(
-//        initialValue = 0f,
-//        targetValue = target,
-//        animationSpec = infiniteRepeatable(
-//            tween(
-//                10,
-//                0,
-//                EaseOut
-//            ),
-//            repeatMode = RepeatMode.Reverse
-//        )
-//    )
-//    Text(
-//        modifier = Modifier,
-//        text = textLevelBuilder(1..levels.toInt()),
-//        fontFamily = dotoFamily,
-//        fontWeight = FontWeight.W100,
-//        fontSize = 23.sp,
-//        color = Color.White,
-//        letterSpacing = 0.sp,
-//        lineHeight = 3.sp,
-//        textAlign = TextAlign.Center
-//    )
-//}
-//@OptIn(UnstableApi::class)
-//fun volumeLevel(spectrumAnalyzer: SpectrumAnalyzer): Float {
-//    var tmpSound = spectrumAnalyzer.volume
-//    Log.d("Neoplayer", "$tmpSound")
-//    if (tmpSound > 20000.0) {
-//        tmpSound = 20000.0
-//    }
-//    return when {
-//        tmpSound <= 1 -> 1f
-//        tmpSound <= 2 -> 2f
-//        tmpSound <= 3 -> 3f
-//        tmpSound <= 5 -> 4f
-//        tmpSound <= 8 -> 5f
-//        tmpSound <= 14 -> 6f
-//        tmpSound <= 23 -> 7f
-//        tmpSound <= 38 -> 8f
-//        tmpSound <= 65 -> 9f
-//        tmpSound <= 109 -> 10f
-//        tmpSound <= 184 -> 11f
-//        tmpSound <= 309 -> 12f
-//        tmpSound <= 521 -> 13f
-//        tmpSound <= 877 -> 14f
-//        tmpSound <= 1476 -> 15f
-//        tmpSound <= 2486 -> 16f
-//        tmpSound <= 4187 -> 17f
-//        tmpSound <= 7052 -> 18f
-//        tmpSound <= 11876 -> 19f
-//        tmpSound <= 20000 -> 20f
-//        else -> 0f
-//    }
-//}
+@OptIn(UnstableApi::class)
+@Composable
+fun VolumeLevelText(spectrumAnalyzer: SpectrumAnalyzer, tick: Float) {
+    val eqTransition = rememberInfiniteTransition()
+    val target = remember(tick) {
+        volumeLevel(spectrumAnalyzer)
+    }
+    val levels by eqTransition.animateFloat(
+        initialValue = 0f,
+        targetValue = target,
+        animationSpec = infiniteRepeatable(
+            tween(
+                10,
+                0,
+                EaseOut
+            ),
+            repeatMode = RepeatMode.Reverse
+        )
+    )
+    Text(
+        modifier = Modifier,
+        text = textLevelBuilder(1..levels.toInt()),
+        fontFamily = dotoFamily,
+        fontWeight = FontWeight.W100,
+        fontSize = 23.sp,
+        color = Color.White,
+        letterSpacing = 0.sp,
+        lineHeight = 3.sp,
+        textAlign = TextAlign.Center
+    )
+}
+@OptIn(UnstableApi::class)
+fun volumeLevel(spectrumAnalyzer: SpectrumAnalyzer): Float {
+    var tmpSound = spectrumAnalyzer.volume
+    if (tmpSound > 20000.0) {
+        tmpSound = 20000.0
+    }
+    return when {
+        tmpSound <= 2244 -> 2f // 1000
+        tmpSound <= 2512 -> 4f // 2000 etc.
+        tmpSound <= 2818 -> 6f
+        tmpSound <= 3162 -> 8f
+        tmpSound <= 3548 -> 10f
+        tmpSound <= 3981 -> 12f
+        tmpSound <= 4467 -> 14f
+        tmpSound <= 5012 -> 16f
+        tmpSound <= 5623 -> 18f
+        tmpSound <= 6325 -> 20f
+        tmpSound <= 7096 -> 22f
+        tmpSound <= 7943 -> 24f
+        tmpSound <= 8913 -> 26f
+        tmpSound <= 10000 -> 28f
+        tmpSound <= 11220 -> 30f
+        tmpSound <= 12589 -> 32f
+        tmpSound <= 14125 -> 34f
+        tmpSound <= 15849 -> 36f
+        tmpSound <= 17783 -> 38f
+        tmpSound <= 20000 -> 40f
+        else -> 0f
+    }
+}
 
 @OptIn(UnstableApi::class)
 fun level63(spectrumAnalyzer: SpectrumAnalyzer): Float {

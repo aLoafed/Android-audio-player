@@ -1,6 +1,7 @@
 package com.example.audio_player
 
 import androidx.media3.common.audio.AudioProcessor
+import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import org.jtransforms.fft.DoubleFFT_1D
 import java.nio.BufferUnderflowException
@@ -36,7 +37,7 @@ class SpectrumAnalyzer : AudioProcessor {
         for (i in 0 until 1024) {
             try {
                 buffer = shortBuffer.get()
-                bufferVolume += (buffer * buffer).toDouble()
+                bufferVolume += (buffer * buffer).toDouble() // To cancel out the - & + values
                 fftArray[i] = buffer / 32768.0 // Normalisation
             } catch (e: BufferUnderflowException) {
                 fftArray[i] = 0.0
@@ -60,7 +61,7 @@ class SpectrumAnalyzer : AudioProcessor {
             absValueList[i] = sqrt(real * real + imaginary * imaginary)
             i++
         }
-        bufferVolume = sqrt(bufferVolume / 1024) * 0.7
+        bufferVolume = sqrt(bufferVolume / 1024)
         eqList = frequencyCalculator(absValueList)
         volume = bufferVolume
     }
