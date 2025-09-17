@@ -2,6 +2,7 @@ package com.example.audio_player
 
 import android.content.Context
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -13,7 +14,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -54,70 +57,78 @@ import kotlinx.coroutines.launch
 
 @Composable
 fun Settings(navController: NavController, viewModel: PlayerViewModel) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(60.dp)
-            .background(viewModel.backgroundColor),
-        horizontalArrangement = Arrangement.Start,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        IconButton(
-            content = {
-                Icon(
-                    painterResource(R.drawable.arrow_back),
-                    contentDescription = "Back arrow"
-                )
-            },
-            onClick = {
-                navController.popBackStack()
-            },
-            colors = IconButtonColors(
-                contentColor = viewModel.iconColor,
-                containerColor = Color.Transparent,
-                disabledContentColor = viewModel.iconColor,
-                disabledContainerColor = Color.Transparent
-            )
-        )
-        Spacer(
-            modifier = Modifier
-                .width(5.dp)
-        )
-        LargeLcdText("Settings", viewModel = viewModel)
-    }
-    LazyColumn(
+    Column(
         modifier = Modifier
             .fillMaxSize()
-            .background(viewModel.backgroundColor)
-            .windowInsetsPadding(WindowInsets.statusBars)
-            .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(start = 10.dp),
-        contentPadding = PaddingValues(bottom = 55.dp),
+            .background(viewModel.backgroundColor),
         verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.Start
+        horizontalAlignment = Alignment.Start,
     ) {
-        item {
-            Row(
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(70.dp)
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .background(viewModel.backgroundColor),
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                content = {
+                    Icon(
+                        painterResource(R.drawable.arrow_back),
+                        contentDescription = "Back arrow"
+                    )
+                },
+                onClick = {
+                    navController.popBackStack()
+                },
+                colors = IconButtonColors(
+                    contentColor = viewModel.iconColor,
+                    containerColor = Color.Transparent,
+                    disabledContentColor = viewModel.iconColor,
+                    disabledContainerColor = Color.Transparent
+                )
+            )
+            Spacer(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .height(75.dp)
-                    .clickable(
-                        onClick = {
-                            navController.navigate("theme_change")
-                        }
-                    ),
-                horizontalArrangement = Arrangement.Start,
-                verticalAlignment = Alignment.CenterVertically,
-            ) {
-                Icon(
-                    painterResource(R.drawable.color_pallette),
-                    contentDescription = "Change theme",
-                    tint = viewModel.iconColor
-                )
-                LcdText(
-                    "Theme",
-                    viewModel = viewModel
-                )
+                    .width(5.dp)
+            )
+            LargeLcdText("Settings", viewModel = viewModel)
+        }
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(viewModel.backgroundColor)
+                .windowInsetsPadding(WindowInsets.navigationBars)
+                .padding(start = 10.dp),
+            contentPadding = PaddingValues(bottom = 55.dp),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.Start
+        ) {
+            item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(75.dp)
+                        .clickable(
+                            onClick = {
+                                navController.navigate("theme_change")
+                            }
+                        ),
+                    horizontalArrangement = Arrangement.Start,
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Icon(
+                        painterResource(R.drawable.color_pallette),
+                        contentDescription = "Change theme",
+                        tint = viewModel.iconColor
+                    )
+                    LcdText(
+                        "Theme",
+                        viewModel = viewModel
+                    )
+                }
             }
         }
     }
@@ -133,7 +144,7 @@ fun ThemeChange(viewModel: PlayerViewModel, navController: NavController, contex
             modifier = Modifier
                 .fillMaxWidth()
                 .height(70.dp)
-                .padding(vertical = 5.dp),
+                .padding(vertical = 5.dp, horizontal = 5.dp),
             horizontalArrangement = Arrangement.Start
         ) {
             var expanded by remember { mutableStateOf(false) }
@@ -190,7 +201,7 @@ fun ThemeChange(viewModel: PlayerViewModel, navController: NavController, contex
             modifier = Modifier
                 .fillMaxWidth()
                 .height(70.dp)
-                .padding(vertical = 5.dp),
+                .padding(vertical = 5.dp, horizontal = 5.dp),
             horizontalArrangement = Arrangement.Start
         ) {
             var expanded by remember { mutableStateOf(false) }
@@ -252,50 +263,50 @@ fun ThemeChange(viewModel: PlayerViewModel, navController: NavController, contex
             }
         }
     }
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .height(60.dp)
-            .background(viewModel.backgroundColor),
-        horizontalArrangement = Arrangement.Start,
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        IconButton(
-            content = {
-                Icon(
-                    painterResource(R.drawable.arrow_back),
-                    contentDescription = "Back arrow"
-                )
-            },
-            onClick = {
-                navController.popBackStack()
-            },
-            colors = IconButtonColors(
-                contentColor = viewModel.iconColor,
-                containerColor = Color.Transparent,
-                disabledContentColor = viewModel.iconColor,
-                disabledContainerColor = Color.Transparent
-            )
-        )
-        Spacer(
-            modifier = Modifier
-                .width(5.dp)
-        )
-        LargeLcdText("Theme change", viewModel = viewModel)
-    }
     Column(
         modifier = Modifier
             .fillMaxSize()
             .background(viewModel.backgroundColor)
             .windowInsetsPadding(WindowInsets.statusBars)
-            .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(
-                top = 10.dp,
-                start = 10.dp
-            ),
+            .windowInsetsPadding(WindowInsets.navigationBars),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
     ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(43.dp)
+                .background(viewModel.backgroundColor),
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                content = {
+                    Icon(
+                        painterResource(R.drawable.arrow_back),
+                        contentDescription = "Back arrow"
+                    )
+                },
+                onClick = {
+                    navController.popBackStack()
+                },
+                colors = IconButtonColors(
+                    contentColor = viewModel.iconColor,
+                    containerColor = Color.Transparent,
+                    disabledContentColor = viewModel.iconColor,
+                    disabledContainerColor = Color.Transparent
+                )
+            )
+            Spacer(
+                modifier = Modifier
+                    .width(5.dp)
+            )
+            LargeLcdText("Theme change", viewModel = viewModel)
+        }
+        Spacer(
+            modifier = Modifier
+                .height(10.dp)
+        )
         ColourListDropDownMenu("background", "background")
         ColourOtherListDropDownMenu("text", "text")
         ColourOtherListDropDownMenu("icon", "icon")
@@ -304,7 +315,7 @@ fun ThemeChange(viewModel: PlayerViewModel, navController: NavController, contex
         ColourListDropDownMenu("seek bar's thumb", "sliderThumb")
         ColourListDropDownMenu("seek bar's track", "sliderTrack")
         Button(
-            modifier = Modifier,
+            modifier = Modifier.padding(horizontal = 5.dp),
             onClick = {
                 navController.navigate("color_picker")
             },
@@ -332,12 +343,45 @@ fun ColorPicker(viewModel: PlayerViewModel, navController: NavController, contex
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(20.dp)
-            .background(LcdGrey),
+            .background(viewModel.backgroundColor),
+        verticalArrangement = Arrangement.Top
     ) {
         Row(
             modifier = Modifier
-                .fillMaxWidth(),
+                .fillMaxWidth()
+                .height(70.dp)
+                .background(viewModel.backgroundColor)
+                .windowInsetsPadding(WindowInsets.statusBars),
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            IconButton(
+                content = {
+                    Icon(
+                        painterResource(R.drawable.arrow_back),
+                        contentDescription = "Back arrow"
+                    )
+                },
+                onClick = {
+                    navController.popBackStack()
+                },
+                colors = IconButtonColors(
+                    contentColor = viewModel.iconColor,
+                    containerColor = Color.Transparent,
+                    disabledContentColor = viewModel.iconColor,
+                    disabledContainerColor = Color.Transparent
+                )
+            )
+            Spacer(
+                modifier = Modifier
+                    .width(5.dp)
+            )
+            LargeLcdText("Color picker", viewModel = viewModel)
+        }
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(10.dp),
             horizontalArrangement = Arrangement.Center,
             verticalAlignment = Alignment.CenterVertically
         ) {
@@ -374,14 +418,15 @@ fun ColorPicker(viewModel: PlayerViewModel, navController: NavController, contex
                 .height(35.dp),
             controller = controller,
         )
+        Spacer(modifier = Modifier.height(20.dp))
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(20.dp),
+                .height(60.dp),
             horizontalArrangement = Arrangement.End,
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            var customColorName = ""
+            var customColorName by remember { mutableStateOf("") }
             TextField(
                 value = customColorName,
                 onValueChange = {
@@ -397,7 +442,8 @@ fun ColorPicker(viewModel: PlayerViewModel, navController: NavController, contex
 
             )
             Button(
-                modifier = Modifier,
+                modifier = Modifier
+                    .padding(horizontal = 5.dp),
                 onClick = {
                     var tmpName = customColorName
                     if (tmpName == "") {
