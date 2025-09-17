@@ -236,7 +236,7 @@ fun LargeLcdText(text: String, modifier: Modifier = Modifier, viewModel: PlayerV
         fontSize = 20.sp,
         fontFamily = lcdFont,
         fontWeight = FontWeight.Normal,
-        lineHeight = 5.sp
+        lineHeight = 17.sp
     )
 }
 @Composable
@@ -248,7 +248,8 @@ fun LargePlayerScreenLcdText(text: String, modifier: Modifier = Modifier, viewMo
         fontSize = 30.sp,
         fontFamily = lcdFont,
         fontWeight = FontWeight.Normal,
-        lineHeight = 5.sp
+        textAlign = TextAlign.Center
+//        lineHeight = 5.sp
     )
 }
 @Composable
@@ -264,60 +265,60 @@ fun AlbumScreenLcdText(text: String, modifier: Modifier = Modifier, viewModel: P
     )
 }
 
-@Preview
-@Composable
-fun PreviewEQIcon() {
-    Column(
-        modifier = Modifier.fillMaxSize(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.CenterHorizontally
-    ) {
-        Row(
-            modifier = Modifier
-                .size(260.dp, 140.dp)
-                .padding(horizontal = 15.dp),
-            verticalAlignment = Alignment.Bottom,
-            horizontalArrangement = Arrangement.SpaceEvenly
-        ) {
-            val heights = listOf(18,14,26,20,34,12,6)
-            for (i in heights) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxHeight()
-                        .width(25.dp),
-                    verticalArrangement = Arrangement.SpaceBetween,
-                    horizontalAlignment = Alignment.CenterHorizontally
-                ) {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy((-2).dp),
-                        verticalAlignment = Alignment.Bottom
-                    ) {
-                        Text(
-                            modifier = Modifier,
-                            text = textLevelBuilder(1..i),
-                            fontFamily = dotoFamily,
-                            fontWeight = FontWeight.W500,
-                            fontSize = 23.sp,
-                            color = Color.White,
-                            letterSpacing = 0.sp,
-                            lineHeight = 3.sp,
-                            textAlign = TextAlign.Center
-                        )
-                        Text(
-                            modifier = Modifier,
-                            text = textLevelBuilder(1..i),
-                            fontFamily = dotoFamily,
-                            fontWeight = FontWeight.W500,
-                            fontSize = 23.sp,
-                            color = Color.White,
-                            letterSpacing = 0.sp,
-                            lineHeight = 3.sp,
-                            textAlign = TextAlign.Center
-                        )
-                    }
-                }
-            }
-        }
-    }
-}
+//@Preview
+//@Composable
+//fun PreviewEQIcon() {
+//    Column(
+//        modifier = Modifier.fillMaxSize(),
+//        verticalArrangement = Arrangement.Center,
+//        horizontalAlignment = Alignment.CenterHorizontally
+//    ) {
+//        Row(
+//            modifier = Modifier
+//                .size(260.dp, 140.dp)
+//                .padding(horizontal = 15.dp),
+//            verticalAlignment = Alignment.Bottom,
+//            horizontalArrangement = Arrangement.SpaceEvenly
+//        ) {
+//            val heights = listOf(18,14,26,20,34,12,6)
+//            for (i in heights) {
+//                Column(
+//                    modifier = Modifier
+//                        .fillMaxHeight()
+//                        .width(25.dp),
+//                    verticalArrangement = Arrangement.SpaceBetween,
+//                    horizontalAlignment = Alignment.CenterHorizontally
+//                ) {
+//                    Row(
+//                        horizontalArrangement = Arrangement.spacedBy((-2).dp),
+//                        verticalAlignment = Alignment.Bottom
+//                    ) {
+//                        Text(
+//                            modifier = Modifier,
+//                            text = textLevelBuilder(1..i),
+//                            fontFamily = dotoFamily,
+//                            fontWeight = FontWeight.W500,
+//                            fontSize = 23.sp,
+//                            color = Color.White,
+//                            letterSpacing = 0.sp,
+//                            lineHeight = 3.sp,
+//                            textAlign = TextAlign.Center
+//                        )
+//                        Text(
+//                            modifier = Modifier,
+//                            text = textLevelBuilder(1..i),
+//                            fontFamily = dotoFamily,
+//                            fontWeight = FontWeight.W500,
+//                            fontSize = 23.sp,
+//                            color = Color.White,
+//                            letterSpacing = 0.sp,
+//                            lineHeight = 3.sp,
+//                            textAlign = TextAlign.Center
+//                        )
+//                    }
+//                }
+//            }
+//        }
+//    }
+//}
 

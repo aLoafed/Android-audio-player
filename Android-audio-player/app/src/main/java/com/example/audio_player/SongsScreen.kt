@@ -24,6 +24,8 @@ import androidx.compose.foundation.pager.PagerState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.MediaItem
@@ -47,7 +49,7 @@ fun SongsScreen(songInfo: List<SongInfo>, player: ExoPlayer, viewModel: PlayerVi
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(75.dp)
+                    .height(80.dp)
                     .padding(5.dp)
                     .clickable(
                         onClick = {
@@ -72,7 +74,7 @@ fun SongsScreen(songInfo: List<SongInfo>, player: ExoPlayer, viewModel: PlayerVi
                 Image( // Album art
                     bitmap = songInfo[i].albumArt,
                     modifier = Modifier
-                        .size(60.dp),
+                        .size(65.dp),
                     contentDescription = null,
                     contentScale = ContentScale.Fit
                 )

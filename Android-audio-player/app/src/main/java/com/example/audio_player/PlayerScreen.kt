@@ -10,6 +10,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -35,6 +36,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
@@ -61,19 +63,11 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
     ) {
         Spacer(
             modifier = Modifier
-                .height(20.dp)
+                .height(10.dp)
         )
         PlayingMediaInfo(viewModel, songInfo)
-        Spacer(
-            modifier = Modifier.height(5.dp)
-        )
         PlaybackControls(player, viewModel, songInfo)
         GraphicalEqualizer(spectrumAnalyzer, viewModel)
-//        Spacer(
-//            modifier = Modifier
-//                .height(30.dp)
-//                .fillMaxWidth()
-//        )
         RepeatShuffleControls(viewModel, player, songInfo)
         SeekBar(player, viewModel)
     }
@@ -248,7 +242,8 @@ fun RepeatShuffleControls(viewModel: PlayerViewModel, player: ExoPlayer, songInf
     val tmpSongInfo = mutableListOf<SongInfo>()
     Row(
         modifier = Modifier
-            .fillMaxWidth(0.85f),
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp, vertical = 10.dp),
         horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -270,7 +265,7 @@ fun RepeatShuffleControls(viewModel: PlayerViewModel, player: ExoPlayer, songInf
                 }
             },
             modifier = Modifier
-                .size(60.dp),
+                .size(40.dp),
             colors = IconButtonColors(
                 containerColor = Color.Transparent,
                 contentColor = viewModel.iconColor,
@@ -343,7 +338,7 @@ fun RepeatShuffleControls(viewModel: PlayerViewModel, player: ExoPlayer, songInf
                 viewModel.updateShuffleMode(!viewModel.shuffleMode)
             },
             modifier = Modifier
-                .size(60.dp),
+                .size(40.dp),
             colors = IconButtonColors(
                 containerColor = Color.Transparent,
                 contentColor = viewModel.iconColor,
@@ -363,6 +358,7 @@ fun RepeatShuffleControls(viewModel: PlayerViewModel, player: ExoPlayer, songInf
                 )
             }
         )
+        Spacer(modifier = Modifier.width(15.dp))
     }
 }
 @OptIn(UnstableApi::class)
@@ -370,7 +366,7 @@ fun RepeatShuffleControls(viewModel: PlayerViewModel, player: ExoPlayer, songInf
 fun GraphicalEqualizer(spectrumAnalyzer: SpectrumAnalyzer, viewModel: PlayerViewModel) {
     Row(
         modifier = Modifier
-            .size(320.dp, 140.dp)
+            .size(320.dp, 140.dp) // height = 140.dp
             .padding(horizontal = 15.dp),
         verticalAlignment = Alignment.Bottom,
         horizontalArrangement = Arrangement.SpaceEvenly
@@ -410,10 +406,10 @@ fun GraphicalEqualizer(spectrumAnalyzer: SpectrumAnalyzer, viewModel: PlayerView
 //                )
 //            }
 //        }
-        Spacer(
-            modifier = Modifier
-                .width(15.dp)
-        )
+//        Spacer(
+//            modifier = Modifier
+//                .width(15.dp)
+//        )
 //        Column(
 //            modifier = Modifier
 //                .fillMaxHeight()
@@ -453,8 +449,7 @@ fun AudioLevelColumn(fieldName: String, spectrumAnalyzer: SpectrumAnalyzer, view
     ) {
         DotoText(
             fieldName,
-            Modifier
-                .offset(y = 20.dp),
+            Modifier,
             viewModel
         )
         Row(
@@ -663,7 +658,7 @@ fun SeekBar(player: ExoPlayer, viewModel: PlayerViewModel) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(50.dp),
+            .height(20.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
@@ -676,7 +671,7 @@ fun SeekBar(player: ExoPlayer, viewModel: PlayerViewModel) {
             value = viewModel.currentSongPosition,
             valueRange = 0f..viewModel.duration,
             modifier = Modifier
-                .size(250.dp, 40.dp),
+                .size(250.dp, 20.dp),
             onValueChange = {
                 currentSongPosition = it
                 viewModel.updateSongPosition(player, currentSongPosition.toLong())
