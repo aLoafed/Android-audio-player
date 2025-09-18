@@ -344,7 +344,7 @@ fun RepeatShuffleControls(viewModel: PlayerViewModel, player: ExoPlayer, songInf
 fun GraphicalEqualizer(spectrumAnalyzer: SpectrumAnalyzer, viewModel: PlayerViewModel) {
     Row(
         modifier = Modifier
-            .size(320.dp, 140.dp)
+            .size(330.dp, 140.dp)
             .padding(horizontal = 15.dp),
         verticalAlignment = Alignment.Bottom,
         horizontalArrangement = Arrangement.SpaceEvenly
@@ -372,7 +372,7 @@ fun GraphicalEqualizer(spectrumAnalyzer: SpectrumAnalyzer, viewModel: PlayerView
             modifier = Modifier
                 .width(15.dp)
         )
-        EQLevelAxis()
+        EQLevelAxis(viewModel)
         for (i in 0..6) { // 7 band EQ
             AudioLevelColumn(fieldName[i],spectrumAnalyzer, viewModel)
         }
@@ -381,7 +381,7 @@ fun GraphicalEqualizer(spectrumAnalyzer: SpectrumAnalyzer, viewModel: PlayerView
 
 @Composable
 fun VolumeLevelAxis(viewModel: PlayerViewModel) {
-    Column( // Arbitrary measure dashes
+    Column(
         modifier = Modifier
             .fillMaxHeight()
             .width(10.dp)
@@ -403,6 +403,7 @@ fun VolumeLevelAxis(viewModel: PlayerViewModel) {
         }
         Text(
             modifier = Modifier
+                .offset(y = 2.dp)
                 .padding(horizontal = 1.dp),
             text = "10",
             fontWeight = FontWeight.W300,
@@ -415,6 +416,7 @@ fun VolumeLevelAxis(viewModel: PlayerViewModel) {
         }
         Text(
             modifier = Modifier
+                .offset(y = 2.dp)
                 .padding(horizontal = 1.dp),
             text = "0",
             fontWeight = FontWeight.W300,
@@ -427,11 +429,11 @@ fun VolumeLevelAxis(viewModel: PlayerViewModel) {
         modifier = Modifier
             .fillMaxHeight()
             .width(1.dp)
-            .offset(y = 7.dp)
+            .offset(y = 15.dp)
     ) {
         drawRect(
             color = viewModel.eqTextColor,
-            size = Size(width = 1f, height = 140.dp.toPx()),
+            size = Size(width = 1f, height = 131.dp.toPx()),
         )
     }
 }
@@ -440,10 +442,10 @@ fun EQLevelAxis(viewModel: PlayerViewModel) {
     Column( // Arbitrary measure dashes
         modifier = Modifier
             .fillMaxHeight()
-            .width(10.dp)
+            .width(7.dp)
             .offset(y = 9.dp),
         horizontalAlignment = Alignment.End,
-        verticalArrangement = Arrangement.SpaceEvenly
+        verticalArrangement = Arrangement.SpaceBetween
     ) {
         for (i in 1..8) {
             VolumeLevelTick(viewModel)
@@ -453,11 +455,11 @@ fun EQLevelAxis(viewModel: PlayerViewModel) {
         modifier = Modifier
             .fillMaxHeight()
             .width(1.dp)
-            .offset(y = 7.dp)
+            .offset(y = 16.dp)
     ) {
         drawRect(
             color = viewModel.eqTextColor,
-            size = Size(width = 1f, height = 140.dp.toPx()),
+            size = Size(width = 1f, height = 130.65.dp.toPx()),
         )
     }
 }
@@ -704,7 +706,7 @@ fun DotoText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewM
         modifier = modifier,
         text = text,
         fontFamily = dotoFamily,
-        fontWeight = FontWeight.W300,
+        fontWeight = FontWeight.W600,
         fontSize = 8.sp,
         color = viewModel.eqTextColor,
     )
