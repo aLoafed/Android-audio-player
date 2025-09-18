@@ -10,7 +10,6 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -23,7 +22,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.Card
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,12 +35,10 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
@@ -348,13 +344,13 @@ fun RepeatShuffleControls(viewModel: PlayerViewModel, player: ExoPlayer, songInf
 fun GraphicalEqualizer(spectrumAnalyzer: SpectrumAnalyzer, viewModel: PlayerViewModel) {
     Row(
         modifier = Modifier
-            .size(320.dp, 140.dp) // height = 140.dp
+            .size(320.dp, 140.dp)
             .padding(horizontal = 15.dp),
         verticalAlignment = Alignment.Bottom,
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         val fieldName = listOf("63","160","400","1k","2.5k","6.3k","16k")
-        VolumeLevelAxis()
+        VolumeLevelAxis(viewModel)
         Column( // Volume level
             modifier = Modifier
                 .fillMaxHeight()
@@ -376,6 +372,7 @@ fun GraphicalEqualizer(spectrumAnalyzer: SpectrumAnalyzer, viewModel: PlayerView
             modifier = Modifier
                 .width(15.dp)
         )
+        EQLevelAxis()
         for (i in 0..6) { // 7 band EQ
             AudioLevelColumn(fieldName[i],spectrumAnalyzer, viewModel)
         }
@@ -383,74 +380,125 @@ fun GraphicalEqualizer(spectrumAnalyzer: SpectrumAnalyzer, viewModel: PlayerView
 }
 
 @Composable
-fun VolumeLevelAxis() {
+fun VolumeLevelAxis(viewModel: PlayerViewModel) {
     Column( // Arbitrary measure dashes
         modifier = Modifier
             .fillMaxHeight()
-            .width(5.dp),
-        horizontalAlignment = Alignment.CenterHorizontally,
+            .width(10.dp)
+            .offset(y = 9.dp),
+        horizontalAlignment = Alignment.End,
         verticalArrangement = Arrangement.SpaceEvenly
     ) {
         Text(
-            modifier = Modifier,
+            modifier = Modifier
+                .padding(horizontal = 1.dp),
             text = "20",
-            fontFamily = dotoFamily,
             fontWeight = FontWeight.W300,
-            fontSize = 10.sp,
-            color = LcdBlueWhite,
-            lineHeight = 10.sp,
+            fontSize = 5.sp,
+            color = viewModel.eqTextColor,
+            lineHeight = 2.sp,
         )
         for (i in 1..4) {
-            VolumeLevelMeasure()
+            VolumeLevelTick(viewModel)
         }
         Text(
-            modifier = Modifier,
+            modifier = Modifier
+                .padding(horizontal = 1.dp),
             text = "10",
-            fontFamily = dotoFamily,
             fontWeight = FontWeight.W300,
-            fontSize = 10.sp,
-            color = LcdBlueWhite,
-            lineHeight = 10.sp,
+            fontSize = 5.sp,
+            color = viewModel.eqTextColor,
+            lineHeight = 2.sp,
         )
         for (i in 1..4) {
-            VolumeLevelMeasure()
+            VolumeLevelTick(viewModel)
         }
         Text(
-            modifier = Modifier,
+            modifier = Modifier
+                .padding(horizontal = 1.dp),
             text = "0",
-            fontFamily = dotoFamily,
             fontWeight = FontWeight.W300,
-            fontSize = 10.sp,
-            color = LcdBlueWhite,
+            fontSize = 5.sp,
+            color = viewModel.eqTextColor,
             lineHeight = 10.sp,
+        )
+    }
+    Canvas(
+        modifier = Modifier
+            .fillMaxHeight()
+            .width(1.dp)
+            .offset(y = 7.dp)
+    ) {
+        drawRect(
+            color = viewModel.eqTextColor,
+            size = Size(width = 1f, height = 140.dp.toPx()),
         )
     }
 }
 @Composable
-fun VolumeLevelMeasure() {
+fun EQLevelAxis(viewModel: PlayerViewModel) {
+    Column( // Arbitrary measure dashes
+        modifier = Modifier
+            .fillMaxHeight()
+            .width(10.dp)
+            .offset(y = 9.dp),
+        horizontalAlignment = Alignment.End,
+        verticalArrangement = Arrangement.SpaceEvenly
+    ) {
+        for (i in 1..8) {
+            VolumeLevelTick(viewModel)
+        }
+    }
+    Canvas(
+        modifier = Modifier
+            .fillMaxHeight()
+            .width(1.dp)
+            .offset(y = 7.dp)
+    ) {
+        drawRect(
+            color = viewModel.eqTextColor,
+            size = Size(width = 1f, height = 140.dp.toPx()),
+        )
+    }
+}
+@Composable
+fun VolumeLevelTick(viewModel: PlayerViewModel) {
     Row(
         modifier = Modifier
-            .fillMaxSize(),
-        horizontalArrangement = Arrangement.spacedBy((-2).dp),
-        verticalAlignment = Alignment.Bottom
+            .fillMaxWidth(),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.End
     ) {
-        Text(
+        Row(
             modifier = Modifier,
-            text = "_",
-            fontFamily = dotoFamily,
-            fontWeight = FontWeight.W300,
-            fontSize = 10.sp,
-            color = LcdBlueWhite,
-            lineHeight = 10.sp,
-        )
-        Text(
-            modifier = Modifier,
-            text = "_",
-            fontWeight = FontWeight.W300,
-            fontSize = 10.sp,
-            color = LcdBlueWhite,
-            lineHeight = 10.sp,
-        )
+            horizontalArrangement = Arrangement.spacedBy((-2).dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Text(
+                modifier = Modifier,
+                text = "_",
+                fontWeight = FontWeight.W300,
+                fontSize = 7.sp,
+                color = viewModel.eqTextColor,
+                lineHeight = 10.sp,
+            )
+            Text(
+                modifier = Modifier,
+                text = "_",
+                fontWeight = FontWeight.W300,
+                fontSize = 7.sp,
+                color = viewModel.eqTextColor,
+                lineHeight = 10.sp,
+            )
+            Text(
+                modifier = Modifier,
+                text = "_",
+                fontWeight = FontWeight.W300,
+                fontSize = 7.sp,
+                color = viewModel.eqTextColor,
+                lineHeight = 10.sp,
+            )
+        }
     }
 }
 
