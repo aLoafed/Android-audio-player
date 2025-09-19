@@ -2,6 +2,7 @@ package com.example.audio_player
 
 import android.content.Context
 import android.graphics.BitmapFactory
+import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -21,8 +22,6 @@ import com.example.audio_player.ui.theme.LcdOrange
 class PlayerViewModel(
     applicationContext: Context,
 ) : ViewModel() {
-    var isPlaying by mutableStateOf(false)
-        private set
     var duration by mutableFloatStateOf(1f) // Length of song
         private set
     var currentSongPosition by mutableFloatStateOf((0f)) // Current position in song
@@ -33,18 +32,31 @@ class PlayerViewModel(
         private set
     var selectedAlbum by mutableStateOf("")
         private set
-    var playingFromSongsScreen by mutableStateOf(true)
+    // For SongOptions
+    var selectedSong by mutableStateOf<SongInfo>(SongInfo(
+        "",
+        "",
+        Uri.EMPTY,
+        0f,
+        "",
+        "",
+        ImageBitmap(1,1)
+    ))
         private set
     var albumSongInfo = mutableListOf<SongInfo>()
         private set
     var queuedSongs = listOf<SongInfo>()
         private set
     val settingsData = SettingsData(applicationContext, applicationContext.dataStore)
+    //========================= Playing modes =========================
+    var isPlaying by mutableStateOf(false)
+        private set
+    var playingFromSongsScreen by mutableStateOf(true)
+        private set
     var shuffleMode by mutableStateOf(false)
         private set
     var repeatMode by mutableStateOf("normal")
         private set
-    //========================= Theme changing =========================
     //============================ Colours ===========================
     var backgroundColor = LcdGrey
         private set
@@ -97,6 +109,9 @@ class PlayerViewModel(
 //        }
 //    }
     //========================= Updaters =========================
+    fun updateSelectedOptionsSong(songInfo: SongInfo) {
+        selectedSong = songInfo
+    }
     fun updateLastPlayedUnshuffledSong() {
         lastPlayedUnshuffledSong = songIterator
     }

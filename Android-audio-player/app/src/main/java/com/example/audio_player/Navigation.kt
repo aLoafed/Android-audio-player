@@ -84,6 +84,9 @@ fun NavHost(
         composable(route = Screen.ColorPicker.route) {
             ColorPicker(viewModel, navController, context)
         }
+        composable(route = Screen.SongOptions.route) {
+            SongOptions(viewModel.selectedSong, viewModel, player)
+        }
     }
 }
 @ExperimentalMaterial3Api
@@ -236,7 +239,7 @@ fun Pager(
             when (currentPage) {
                 0 -> SongQueue(viewModel, player, songInfo)
                 1 -> PlayerScreen(player, spectrumAnalyzer, viewModel, songInfo)
-                2 -> SongsScreen(songInfo, player, viewModel, pagerState)
+                2 -> SongsScreen(songInfo, player, viewModel, pagerState, navController)
                 3 -> AlbumScreen(albumInfo, songInfo, player, viewModel, pagerState, navController)
             }
         }

@@ -3,6 +3,7 @@ package com.example.audio_player
 import androidx.annotation.OptIn
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,20 +22,31 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.pager.PagerState
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.clipToBounds
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.navigation.NavController
 
 @OptIn(UnstableApi::class)
 @Composable
-fun SongsScreen(songInfo: List<SongInfo>, player: ExoPlayer, viewModel: PlayerViewModel, pagerState: PagerState) {
+fun SongsScreen(
+    songInfo: List<SongInfo>,
+    player: ExoPlayer,
+    viewModel: PlayerViewModel,
+    pagerState: PagerState,
+    navController: NavController
+) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -103,6 +115,29 @@ fun SongsScreen(songInfo: List<SongInfo>, player: ExoPlayer, viewModel: PlayerVi
                     LcdText( // Album name
                         text = songInfo[i].album,
                         viewModel = viewModel
+                    )
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .border(1.dp, Color.White),
+                    horizontalArrangement = Arrangement.End,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    IconButton(
+                        modifier = Modifier
+                            .size(50.dp),
+                        content = {
+                            Icon(
+                                painter = painterResource(R.drawable.more_menu),
+                                contentDescription = "More options",
+                                tint = viewModel.iconColor
+                            )
+                        },
+                        onClick = {
+                            viewModel.updateSelectedOptionsSong(songInfo[i])
+                            navController.navigate("song_options")
+                        }
                     )
                 }
             }
