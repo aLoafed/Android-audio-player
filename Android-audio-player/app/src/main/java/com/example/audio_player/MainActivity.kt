@@ -3,53 +3,27 @@ package com.example.audio_player
 import android.Manifest
 import android.content.Context
 import android.content.Intent
-import android.location.GnssAntennaInfo
 import android.os.Build
 import android.os.Bundle
 import android.os.Handler
 import androidx.activity.ComponentActivity
-import androidx.activity.OnBackPressedCallback
-import androidx.activity.OnBackPressedDispatcher
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.OptIn
-import androidx.compose.foundation.border
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.navigationBars
-import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.LineHeightStyle
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
-import androidx.lifecycle.lifecycleScope
-import androidx.lifecycle.viewmodel.CreationExtras
 import androidx.media3.common.C
-import androidx.media3.common.Effect
-import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
@@ -59,14 +33,10 @@ import androidx.media3.exoplayer.audio.AudioSink
 import androidx.media3.exoplayer.audio.DefaultAudioSink
 import androidx.media3.exoplayer.audio.MediaCodecAudioRenderer
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
-import androidx.media3.exoplayer.source.MediaSourceEventListener
 import androidx.media3.session.MediaSession
 import com.example.audio_player.ui.theme.Audio_playerTheme
-import com.example.audio_player.ui.theme.dotoFamily
 import com.example.audio_player.ui.theme.lcdFont
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.seconds
 
 val Context.dataStore by preferencesDataStore(name = "settings")
@@ -84,9 +54,52 @@ class MainActivity : ComponentActivity() {
             }
         }
     )
-    lateinit var player: ExoPlayer
-    lateinit var myAudioSink: AudioSink
     val spectrumAnalyzer = SpectrumAnalyzer()
+    //======================= Audio processor is parsed to the audio sink =======================//
+    val myAudioSink = DefaultAudioSink.Builder(applicationContext)
+        .setAudioProcessors(arrayOf(spectrumAnalyzer))
+        .build()
+    val renderersFactory = object : DefaultRenderersFactory(applicationContext) {
+        override fun buildAudioRenderers(
+            context: Context,
+            extensionRendererMode: Int,
+            mediaCodecSelector: MediaCodecSelector,
+            enableDecoderFallback: Boolean,
+            audioSink: AudioSink,
+            eventHandler: Handler,
+            eventListener: AudioRendererEventListener,
+            out: ArrayList<Renderer>
+        ) {
+            super.buildAudioRenderers(
+                context,
+                extensionRendererMode,
+                mediaCodecSelector,
+                enableDecoderFallback,
+                myAudioSink,
+                eventHandler,
+                eventListener,
+                out
+            )
+            out.add(
+                MediaCodecAudioRenderer(
+                    context,
+                    mediaCodecSelector,
+                    enableDecoderFallback,
+                    eventHandler,
+                    eventListener,
+                    myAudioSink
+                )
+            )
+        }
+    }
+    val mediaSessionCallback = object : MediaSession.Callback{}
+    val player = ExoPlayer.Builder(applicationContext) // Player declaration
+        .setRenderersFactory(renderersFactory)
+        .build()
+    val mediaSession = MediaSession.Builder(applicationContext, player)
+        .setId("media_session")
+        .setCallback(mediaSessionCallback)
+        .build()
 
     @OptIn(UnstableApi::class, ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -115,54 +128,10 @@ class MainActivity : ComponentActivity() {
                 2
             )
         }
-//        lifecycleScope.launch { viewModel.initColorMaps() }
-        val songInfo = mediaStoreSongName(applicationContext)
+        val songInfo = mediaStoreSongInfo(applicationContext)
         val albumInfo = getAlbumList(applicationContext)
-        // Audio processor is passed to the audio sink
-        myAudioSink = DefaultAudioSink.Builder(applicationContext)
-            .setAudioProcessors(arrayOf(spectrumAnalyzer))
-            .build()
-        val renderersFactory = object : DefaultRenderersFactory(applicationContext) {
-            override fun buildAudioRenderers(
-                context: Context,
-                extensionRendererMode: Int,
-                mediaCodecSelector: MediaCodecSelector,
-                enableDecoderFallback: Boolean,
-                audioSink: AudioSink,
-                eventHandler: Handler,
-                eventListener: AudioRendererEventListener,
-                out: ArrayList<Renderer>
-            ) {
-                super.buildAudioRenderers(
-                    context,
-                    extensionRendererMode,
-                    mediaCodecSelector,
-                    enableDecoderFallback,
-                    myAudioSink,
-                    eventHandler,
-                    eventListener,
-                    out
-                )
-                out.add(
-                    MediaCodecAudioRenderer(
-                        context,
-                        mediaCodecSelector,
-                        enableDecoderFallback,
-                        eventHandler,
-                        eventListener,
-                        myAudioSink
-                    )
-                )
-            }
-        }
-        val mediaSessionCallback = object : MediaSession.Callback{}
-        player = ExoPlayer.Builder(applicationContext) // Player declaration
-            .setRenderersFactory(renderersFactory)
-            .build()
-        val mediaSession = MediaSession.Builder(applicationContext, player)
-            .setId("media_session")
-            .setCallback(mediaSessionCallback)
-            .build()
+        
+
         val listener = PlayerListener(applicationContext, viewModel, player) // Do not remove, though unused
         player.addListener(listener)
         enableEdgeToEdge()
@@ -192,20 +161,19 @@ class MainActivity : ComponentActivity() {
     override fun onResume() {
         super.onResume()
         try {
-            Intent(AudioPlaybackService.Actions.STOP.toString()).also {
+            Intent(ForegroundNotificationService.Actions.STOP.toString()).also {
                 startService(it)
             }
         } catch (e: IllegalArgumentException) {
         }
     }
-    override fun onPause() {
-        super.onPause()
-        try {
-            Intent(AudioPlaybackService.Actions.START.toString()).also {
-                startService(it)
-            }
-        } catch (e: IllegalArgumentException) {
+
+    override fun onStop() {
+        super.onStop()
+        val intent = Intent(this, ForegroundNotificationService(mediaSession, player, viewModel)::class.java).apply { // Explicit intent to start notification
+            action = ForegroundNotificationService.Actions.START.toString()
         }
+        startService(intent)
     }
 
     override fun onDestroy() {// Releases the player

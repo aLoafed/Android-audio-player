@@ -27,7 +27,7 @@ data class AlbumInfo(
 )
 
 @OptIn(UnstableApi::class)
-fun mediaStoreSongName(applicationContext: Context): List<SongInfo> {
+fun mediaStoreSongInfo(applicationContext: Context): List<SongInfo> {
     val songInfo = mutableListOf<SongInfo>()
     val externalUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
     val projection = arrayOf(
