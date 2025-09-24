@@ -1,10 +1,12 @@
 package com.example.audio_player
 
 import android.app.Service
+import android.content.ComponentName
 import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.IBinder
+import android.widget.MediaController
 import androidx.annotation.OptIn
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -17,14 +19,16 @@ import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
 import androidx.media3.session.MediaStyleNotificationHelper
+import androidx.media3.session.SessionToken
 import com.example.audio_player.ui.theme.LcdGrey
 import com.example.audio_player.ui.theme.LcdOrange
+import dagger.hilt.android.AndroidEntryPoint
+import javax.inject.Inject
 
-class ForegroundNotificationService(
-    val mediaSession: MediaSession,
-    val player: ExoPlayer,
-    val viewModel: PlayerViewModel
-): Service() {
+@AndroidEntryPoint
+class ForegroundNotificationService(): Service() {
+
+    @Inject lateinit var mediaSession: MediaSession
 
     override fun onBind(p0: Intent?): IBinder? {
         return null
@@ -37,22 +41,20 @@ class ForegroundNotificationService(
         }
         return super.onStartCommand(intent, flags, startId)
     }
-
     @OptIn(UnstableApi::class)
     private fun start() {
-        val art by mutableStateOf(BitmapFactory.decodeByteArray(player.mediaMetadata.artworkData, 0, 500))
-        val title by mutableStateOf(player.mediaMetadata.title)
         val notification = NotificationCompat.Builder(this, "audio_channel")
-            .setContentTitle(title)
+            .setContentTitle("Track title")
             .setContentText("Artist - Album")
             .setSmallIcon(R.mipmap.ic_launcher)
-            .setLargeIcon(art)
+//            .setLargeIcon(R.mipmap.ic_launcher)
             .setColor(LcdGrey.toColorLong().toInt())
             .setSilent(true)
             .setOngoing(true)
-            .setStyle(MediaStyleNotificationHelper.MediaStyle(mediaSession))
+            .setStyle(MediaStyleNotificationHelper.MediaStyle())
             .build()
         startForeground(670, notification)
+
     }
 
     enum class Actions {

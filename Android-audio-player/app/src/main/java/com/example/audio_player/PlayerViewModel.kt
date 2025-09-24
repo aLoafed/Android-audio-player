@@ -1,27 +1,35 @@
 package com.example.audio_player
 
+import android.app.Notification
 import android.content.Context
 import android.graphics.BitmapFactory
+import android.media.session.MediaSession
 import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toColorLong
+import androidx.core.app.NotificationCompat
 import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.ViewModel
 import androidx.media3.exoplayer.ExoPlayer
 import com.example.audio_player.ui.theme.LcdBlueWhite
 import com.example.audio_player.ui.theme.LcdGrey
-import com.example.audio_player.ui.theme.LcdOrange
+
 class PlayerViewModel(
     applicationContext: Context,
 ) : ViewModel() {
+    lateinit var mediaSession: androidx.media3.session.MediaSession
+        private set
+    lateinit var player: ExoPlayer
+        private set
+    lateinit var notification: Notification
+        private set
     var duration by mutableFloatStateOf(1f) // Length of song
         private set
     var currentSongPosition by mutableFloatStateOf((0f)) // Current position in song
@@ -109,6 +117,15 @@ class PlayerViewModel(
 //        }
 //    }
     //========================= Updaters =========================
+    fun updateNotification(updatedNotification: Notification) {
+        notification = updatedNotification
+    }
+    fun updatePlayer(exoPlayer: ExoPlayer) {
+         player = exoPlayer
+    }
+    fun updateMediaSession(session: androidx.media3.session.MediaSession) {
+        mediaSession = session
+    }
     fun updateSelectedOptionsSong(songInfo: SongInfo) {
         selectedSong = songInfo
     }
