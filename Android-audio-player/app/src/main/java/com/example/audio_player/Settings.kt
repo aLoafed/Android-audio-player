@@ -453,7 +453,7 @@ fun ColorPicker(viewModel: PlayerViewModel, navController: NavController, contex
                     }
                     viewModel.updateCustomColors(selectedColor, tmpName)
 //                    coroutine.launch{ settingsData.addCustomColor(tmpName, selectedColor) }
-                    navController.navigate("theme_change")
+                    navController.popBackStack()
                 },
                 colors = ButtonColors(
                     containerColor = LightLcdGrey,

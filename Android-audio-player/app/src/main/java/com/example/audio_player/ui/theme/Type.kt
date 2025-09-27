@@ -44,3 +44,8 @@ val dotoFamily = FontFamily(
 val lcdFont = FontFamily(
     Font(R.font.ds_digii, FontWeight.Normal)
 )
+
+val orbitronFamily = FontFamily(
+    Font(R.font.orbitron_regular, weight = FontWeight.Normal),
+    Font(R.font.orbitron_medium, FontWeight.Medium)
+)

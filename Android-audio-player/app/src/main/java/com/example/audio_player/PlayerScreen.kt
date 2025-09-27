@@ -1,5 +1,6 @@
 package com.example.audio_player
 
+import android.graphics.Paint
 import androidx.annotation.OptIn
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.RepeatMode
@@ -22,6 +23,7 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.AlertDialogDefaults.containerColor
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -35,21 +37,33 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
+import androidx.compose.ui.graphics.Shadow
+import androidx.compose.ui.graphics.drawscope.DrawStyle
 import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.graphics.nativeCanvas
+import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.graphics.toColorLong
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
-import com.example.audio_player.ui.theme.LcdBlueWhite
+import com.example.audio_player.ui.theme.LcdGrey
 import com.example.audio_player.ui.theme.dotoFamily
+import com.example.audio_player.ui.theme.orbitronFamily
+
 var shuffleSongInfo = listOf<SongInfo>()
 @OptIn(UnstableApi::class)
 @Composable
@@ -344,12 +358,12 @@ fun RepeatShuffleControls(viewModel: PlayerViewModel, player: ExoPlayer, songInf
 fun GraphicalEqualizer(spectrumAnalyzer: SpectrumAnalyzer, viewModel: PlayerViewModel) {
     Row(
         modifier = Modifier
-            .size(330.dp, 140.dp)
+            .size(340.dp, 140.dp)
             .padding(horizontal = 15.dp),
         verticalAlignment = Alignment.Bottom,
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        val fieldName = listOf("63","160","400","1k","2.5k","6.3k","16k")
+        val fieldName = listOf("63","16O","4OO","1k","2.5k","6.3k","16k")
         VolumeLevelAxis(viewModel)
         Column( // Volume level
             modifier = Modifier
@@ -363,8 +377,8 @@ fun GraphicalEqualizer(spectrumAnalyzer: SpectrumAnalyzer, viewModel: PlayerView
             ) {
                 val tick = viewModel.currentSongPosition
                 if (viewModel.isPlaying) {
-                    VolumeLevelText(spectrumAnalyzer, tick)
-                    VolumeLevelText(spectrumAnalyzer, tick)
+                    VolumeLevelText(spectrumAnalyzer, tick, viewModel)
+                    VolumeLevelText(spectrumAnalyzer, tick, viewModel)
                 }
             }
         }
@@ -381,10 +395,11 @@ fun GraphicalEqualizer(spectrumAnalyzer: SpectrumAnalyzer, viewModel: PlayerView
 
 @Composable
 fun VolumeLevelAxis(viewModel: PlayerViewModel) {
+    val colorAlpha = 0.65f
     Column(
         modifier = Modifier
             .fillMaxHeight()
-            .width(10.dp)
+            .width(11.5.dp)
             .offset(y = 9.dp),
         horizontalAlignment = Alignment.End,
         verticalArrangement = Arrangement.SpaceEvenly
@@ -392,11 +407,19 @@ fun VolumeLevelAxis(viewModel: PlayerViewModel) {
         Text(
             modifier = Modifier
                 .padding(horizontal = 1.dp),
-            text = "20",
+            text = "2O",
             fontWeight = FontWeight.W300,
+            fontFamily = orbitronFamily,
             fontSize = 5.sp,
             color = viewModel.eqTextColor,
             lineHeight = 2.sp,
+            style = TextStyle(
+                shadow = Shadow(
+                    color = viewModel.eqTextColor.copy(alpha = colorAlpha),
+                    offset = Offset(0f,0f),
+                    blurRadius = 20f
+                )
+            )
         )
         for (i in 1..4) {
             VolumeLevelTick(viewModel)
@@ -405,11 +428,19 @@ fun VolumeLevelAxis(viewModel: PlayerViewModel) {
             modifier = Modifier
                 .offset(y = 2.dp)
                 .padding(horizontal = 1.dp),
-            text = "10",
+            text = "1O",
             fontWeight = FontWeight.W300,
+            fontFamily = orbitronFamily,
             fontSize = 5.sp,
             color = viewModel.eqTextColor,
             lineHeight = 2.sp,
+            style = TextStyle(
+                shadow = Shadow(
+                    color = viewModel.eqTextColor.copy(alpha = 0.6f),
+                    offset = Offset(0f,0f),
+                    blurRadius = 20f
+                )
+            )
         )
         for (i in 1..4) {
             VolumeLevelTick(viewModel)
@@ -418,11 +449,19 @@ fun VolumeLevelAxis(viewModel: PlayerViewModel) {
             modifier = Modifier
                 .offset(y = 2.dp)
                 .padding(horizontal = 1.dp),
-            text = "0",
+            text = "O",
+            fontFamily = orbitronFamily,
             fontWeight = FontWeight.W300,
             fontSize = 5.sp,
             color = viewModel.eqTextColor,
             lineHeight = 10.sp,
+            style = TextStyle(
+                shadow = Shadow(
+                    color = viewModel.eqTextColor.copy(alpha = colorAlpha),
+                    offset = Offset(0f,0f),
+                    blurRadius = 20f
+                )
+            )
         )
     }
     Canvas(
@@ -430,6 +469,11 @@ fun VolumeLevelAxis(viewModel: PlayerViewModel) {
             .fillMaxHeight()
             .width(1.dp)
             .offset(y = 15.dp)
+            .shadow(
+                shape = RectangleShape,
+                elevation = 2.dp,
+                ambientColor = viewModel.eqTextColor.copy(alpha = 0.8f)
+            )
     ) {
         drawRect(
             color = viewModel.eqTextColor,
@@ -456,6 +500,11 @@ fun EQLevelAxis(viewModel: PlayerViewModel) {
             .fillMaxHeight()
             .width(1.dp)
             .offset(y = 16.dp)
+            .shadow(
+                shape = RectangleShape,
+                elevation = 2.dp,
+                ambientColor = viewModel.eqTextColor.copy(alpha = 0.8f)
+            )
     ) {
         drawRect(
             color = viewModel.eqTextColor,
@@ -476,30 +525,24 @@ fun VolumeLevelTick(viewModel: PlayerViewModel) {
             horizontalArrangement = Arrangement.spacedBy((-2).dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Text(
-                modifier = Modifier,
-                text = "_",
-                fontWeight = FontWeight.W300,
-                fontSize = 7.sp,
-                color = viewModel.eqTextColor,
-                lineHeight = 10.sp,
-            )
-            Text(
-                modifier = Modifier,
-                text = "_",
-                fontWeight = FontWeight.W300,
-                fontSize = 7.sp,
-                color = viewModel.eqTextColor,
-                lineHeight = 10.sp,
-            )
-            Text(
-                modifier = Modifier,
-                text = "_",
-                fontWeight = FontWeight.W300,
-                fontSize = 7.sp,
-                color = viewModel.eqTextColor,
-                lineHeight = 10.sp,
-            )
+            for (i in 1..3) {
+                Text(
+                    modifier = Modifier,
+                    text = "_",
+                    fontWeight = FontWeight.W300,
+                    fontSize = 7.sp,
+                    color = viewModel.eqTextColor,
+                    lineHeight = 10.sp,
+                    style = TextStyle(
+                        shadow = Shadow(
+                            color = viewModel.eqTextColor.copy(alpha = 0.8f),
+                            offset = Offset(0f,0f),
+                            blurRadius = 8f
+                        )
+                    )
+                )
+            }
+
         }
     }
 }
@@ -514,7 +557,7 @@ fun AudioLevelColumn(fieldName: String, spectrumAnalyzer: SpectrumAnalyzer, view
         verticalArrangement = Arrangement.SpaceBetween,
         horizontalAlignment = Alignment.CenterHorizontally
     ) {
-        DotoText(
+        OrbitronText(
             fieldName,
             Modifier,
             viewModel
@@ -524,23 +567,23 @@ fun AudioLevelColumn(fieldName: String, spectrumAnalyzer: SpectrumAnalyzer, view
         ) {
             val tick = viewModel.currentSongPosition
             if (viewModel.isPlaying) {
-                AudioLevelText(fieldName, spectrumAnalyzer, tick, viewModel)
-                AudioLevelText(fieldName, spectrumAnalyzer, tick, viewModel)
+                EQLevelText(fieldName, spectrumAnalyzer, tick, viewModel)
+                EQLevelText(fieldName, spectrumAnalyzer, tick, viewModel)
             }
         }
     }
 }
-
+//============================== EQ level ==============================//
 @OptIn(UnstableApi::class)
 @Composable
-fun AudioLevelText(fieldName: String, spectrumAnalyzer: SpectrumAnalyzer, tick: Float, viewModel: PlayerViewModel) {
+fun EQLevelText(fieldName: String, spectrumAnalyzer: SpectrumAnalyzer, tick: Float, viewModel: PlayerViewModel) {
     val eqTransition = rememberInfiniteTransition()
     val target = remember(tick) {
         if (spectrumAnalyzer.eqList.count() != 0) {
             when (fieldName) {
                 "63" -> level63(spectrumAnalyzer)
-                "160" -> level160(spectrumAnalyzer)
-                "400" -> level400(spectrumAnalyzer)
+                "16O" -> level160(spectrumAnalyzer)
+                "4OO" -> level400(spectrumAnalyzer)
                 "1k" -> level1k(spectrumAnalyzer)
                 "2.5k" -> level2500k(spectrumAnalyzer)
                 "6.3k" -> level6300k(spectrumAnalyzer)
@@ -572,12 +615,13 @@ fun AudioLevelText(fieldName: String, spectrumAnalyzer: SpectrumAnalyzer, tick: 
         color = viewModel.eqLevelColor,
         letterSpacing = 0.sp,
         lineHeight = 3.sp,
-        textAlign = TextAlign.Center
-        )
+        textAlign = TextAlign.Center,
+    )
 }
+//============================== Volume level ==============================//
 @OptIn(UnstableApi::class)
 @Composable
-fun VolumeLevelText(spectrumAnalyzer: SpectrumAnalyzer, tick: Float) {
+fun VolumeLevelText(spectrumAnalyzer: SpectrumAnalyzer, tick: Float, viewModel: PlayerViewModel) {
     val eqTransition = rememberInfiniteTransition()
     val target = remember(tick) {
         volumeLevel(spectrumAnalyzer)
@@ -600,7 +644,7 @@ fun VolumeLevelText(spectrumAnalyzer: SpectrumAnalyzer, tick: Float) {
         fontFamily = dotoFamily,
         fontWeight = FontWeight.W100,
         fontSize = 23.sp,
-        color = Color.White,
+        color = viewModel.eqLevelColor,
         letterSpacing = 0.sp,
         lineHeight = 3.sp,
         textAlign = TextAlign.Center
@@ -700,6 +744,7 @@ fun level16k(spectrumAnalyzer: SpectrumAnalyzer): Float {
     tempValue = tempValue / 0.075 * 2
     return tempValue.toFloat()
 }
+//============================== Text presets ==============================//
 @Composable
 fun DotoText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel) {
     Text(
@@ -709,6 +754,31 @@ fun DotoText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewM
         fontWeight = FontWeight.W600,
         fontSize = 8.sp,
         color = viewModel.eqTextColor,
+        style = TextStyle(
+            shadow = Shadow(
+                color = viewModel.eqTextColor.copy(alpha = 0.8f),
+                offset = Offset(0f,0f),
+                blurRadius = 20f
+            )
+        )
+    )
+}
+@Composable
+fun OrbitronText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel) {
+    Text(
+        modifier = modifier,
+        text = text,
+        fontFamily = orbitronFamily,
+        fontWeight = FontWeight.Normal,
+        fontSize = 8.sp,
+        color = viewModel.eqTextColor,
+        style = TextStyle(
+            shadow = Shadow(
+                color = viewModel.eqTextColor.copy(alpha = 0.8f),
+                offset = Offset(0f,0f),
+                blurRadius = 20f
+            )
+        )
     )
 }
 fun textLevelBuilder(n: IntRange): String {
@@ -718,6 +788,7 @@ fun textLevelBuilder(n: IntRange): String {
     }
     return tempText
 }
+//============================== Seek bar ==============================//
 @kotlin.OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SeekBar(player: ExoPlayer, viewModel: PlayerViewModel) {

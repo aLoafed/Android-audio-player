@@ -5,13 +5,10 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.content.Context
 import android.os.Build
-import dagger.hilt.android.HiltAndroidApp
+import androidx.media3.common.util.UnstableApi
 
-@HiltAndroidApp
-class AudioApp: Application() {
-
-    val testInjection = "test"
-
+@UnstableApi
+class MusicApp: Application() {
     override fun onCreate() {
         super.onCreate()
         if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
