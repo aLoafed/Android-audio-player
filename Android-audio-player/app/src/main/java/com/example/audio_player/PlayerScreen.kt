@@ -1,6 +1,5 @@
 package com.example.audio_player
 
-import android.graphics.Paint
 import androidx.annotation.OptIn
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.RepeatMode
@@ -23,7 +22,6 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.material3.AlertDialogDefaults.containerColor
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -37,7 +35,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -45,29 +42,24 @@ import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shadow
-import androidx.compose.ui.graphics.drawscope.DrawStyle
 import androidx.compose.ui.graphics.drawscope.Fill
-import androidx.compose.ui.graphics.nativeCanvas
-import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.graphics.toColorLong
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
-import com.example.audio_player.ui.theme.LcdGrey
+import androidx.media3.session.MediaController
 import com.example.audio_player.ui.theme.dotoFamily
 import com.example.audio_player.ui.theme.orbitronFamily
 
 var shuffleSongInfo = listOf<SongInfo>()
 @OptIn(UnstableApi::class)
 @Composable
-fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewModel: PlayerViewModel, songInfo: List<SongInfo>) {
+fun PlayerScreen(mediaController: MediaController?, spectrumAnalyzer: SpectrumAnalyzer, viewModel: PlayerViewModel, songInfo: List<SongInfo>) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -79,10 +71,10 @@ fun PlayerScreen(player: ExoPlayer, spectrumAnalyzer: SpectrumAnalyzer, viewMode
                 .height(10.dp)
         )
         PlayingMediaInfo(viewModel, songInfo)
-        PlaybackControls(player, viewModel, songInfo)
+        PlaybackControls(mediaController, viewModel, songInfo)
         GraphicalEqualizer(spectrumAnalyzer, viewModel)
-        RepeatShuffleControls(viewModel, player, songInfo)
-        SeekBar(player, viewModel)
+        RepeatShuffleControls(viewModel, mediaController, songInfo)
+        SeekBar(mediaController, viewModel)
     }
 }
 @Composable
@@ -141,7 +133,7 @@ fun PlayingMediaInfo(viewModel: PlayerViewModel, songInfo: List<SongInfo>) {
     )
 }
 @Composable
-fun PlaybackControls(player: ExoPlayer, viewModel: PlayerViewModel, songInfo: List<SongInfo>){
+fun PlaybackControls(mediaController: MediaController?, viewModel: PlayerViewModel, songInfo: List<SongInfo>){
     Row( // Playback controls
         modifier = Modifier
             .fillMaxWidth(),
@@ -152,15 +144,17 @@ fun PlaybackControls(player: ExoPlayer, viewModel: PlayerViewModel, songInfo: Li
             modifier = Modifier
                 .size(60.dp),
             onClick = {
-                try {
-                    if (player.currentPosition < 10000L) {
-                        if (player.hasPreviousMediaItem()) {
-                            player.seekToPreviousMediaItem()
+                if (mediaController != null) {
+                    try {
+                        if (mediaController.currentPosition < 10000L) {
+                            if (mediaController.hasPreviousMediaItem()) {
+                                mediaController.seekToPreviousMediaItem()
+                            }
+                        } else {
+                            mediaController.seekTo(0L)
                         }
-                    } else {
-                        player.seekTo(0L)
+                    } catch (e: IndexOutOfBoundsException) {
                     }
-                } catch (e: IndexOutOfBoundsException) {
                 }
             },
             colors = IconButtonColors(
@@ -178,10 +172,12 @@ fun PlaybackControls(player: ExoPlayer, viewModel: PlayerViewModel, songInfo: Li
         )
         IconButton( // Play & pause button
             onClick = {
-                if (player.isPlaying) {
-                    player.pause()
-                } else {
-                    player.play()
+                if (mediaController != null) {
+                    if (mediaController.isPlaying) {
+                        mediaController.pause()
+                    } else {
+                        mediaController.play()
+                    }
                 }
             },
             modifier = Modifier
@@ -210,8 +206,10 @@ fun PlaybackControls(player: ExoPlayer, viewModel: PlayerViewModel, songInfo: Li
             modifier = Modifier
                 .size(60.dp),
             onClick = {
-                if (player.hasNextMediaItem()) {
-                    player.seekToNextMediaItem()
+                if (mediaController != null) {
+                    if (mediaController.hasNextMediaItem()) {
+                        mediaController.seekToNextMediaItem()
+                    }
                 }
             },
             colors = IconButtonColors(
@@ -230,7 +228,7 @@ fun PlaybackControls(player: ExoPlayer, viewModel: PlayerViewModel, songInfo: Li
     }
 }
 @Composable
-fun RepeatShuffleControls(viewModel: PlayerViewModel, player: ExoPlayer, songInfo: List<SongInfo>) {
+fun RepeatShuffleControls(viewModel: PlayerViewModel, mediaController: MediaController?, songInfo: List<SongInfo>) {
     val tmpSongInfo = mutableListOf<SongInfo>()
     Row(
         modifier = Modifier
@@ -243,15 +241,15 @@ fun RepeatShuffleControls(viewModel: PlayerViewModel, player: ExoPlayer, songInf
             onClick = {
                 when (viewModel.repeatMode) {
                     "normal" -> {
-                        player.repeatMode = ExoPlayer.REPEAT_MODE_ALL
+                        mediaController?.repeatMode = ExoPlayer.REPEAT_MODE_ALL
                         viewModel.updateRepeatMode("repeatQueue")
                     }
                     "repeatQueue" -> {
-                        player.repeatMode = ExoPlayer.REPEAT_MODE_ONE
+                        mediaController?.repeatMode = ExoPlayer.REPEAT_MODE_ONE
                         viewModel.updateRepeatMode("repeatSong")
                     }
                     "repeatSong" -> {
-                        player.repeatMode = ExoPlayer.REPEAT_MODE_OFF
+                        mediaController?.repeatMode = ExoPlayer.REPEAT_MODE_OFF
                         viewModel.updateRepeatMode("normal")
                     }
                 }
@@ -284,47 +282,47 @@ fun RepeatShuffleControls(viewModel: PlayerViewModel, player: ExoPlayer, songInf
                     if (!viewModel.playingFromSongsScreen) { // Playing from albums
                         val tmpShuffledAlbumSongInfo = viewModel.albumSongInfo.shuffled()
                         tmpSongInfo.clear()
-                        player.clearMediaItems()
+                        mediaController?.clearMediaItems()
                         for (i in tmpShuffledAlbumSongInfo) {
                             tmpSongInfo.add(i)
                         }
                         shuffleSongInfo = tmpSongInfo
                         for (i in shuffleSongInfo) {
-                            player.addMediaItem(MediaItem.fromUri(i.songUri))
+                            mediaController?.addMediaItem(MediaItem.fromUri(i.songUri))
                         }
                     } else { // Playing from songs screen
                         val tmpShuffledSongInfo = songInfo.shuffled()
                         tmpSongInfo.clear()
-                        player.clearMediaItems()
+                        mediaController?.clearMediaItems()
                         for (i in tmpShuffledSongInfo) {
                             tmpSongInfo.add(i)
                         }
                         shuffleSongInfo = tmpSongInfo
                         for (i in shuffleSongInfo) {
-                            player.addMediaItem(MediaItem.fromUri(i.songUri))
+                            mediaController?.addMediaItem(MediaItem.fromUri(i.songUri))
                         }
                     }
                     viewModel.updateQueuedSongs(shuffleSongInfo)
                     viewModel.updateLastPlayedUnshuffledSong()
                     viewModel.updateSongIterator(0)
-                    player.prepare()
-                    player.play()
+                    mediaController?.prepare()
+                    mediaController?.play()
                 } else { // Switching to normal playback
                     viewModel.updateSongIterator(viewModel.lastPlayedUnshuffledSong)
-                    player.clearMediaItems()
+                    mediaController?.clearMediaItems()
                     if (viewModel.playingFromSongsScreen) { // Playing from songs screen
                         viewModel.updateQueuedSongs(songInfo)
                         for (i in songInfo) {
-                            player.addMediaItem(MediaItem.fromUri(i.songUri))
+                            mediaController?.addMediaItem(MediaItem.fromUri(i.songUri))
                         }
                     } else { // Playing from albums screen
                         viewModel.updateQueuedSongs(viewModel.albumSongInfo)
                         for ( i in viewModel.albumSongInfo) {
-                            player.addMediaItem(MediaItem.fromUri(i.songUri))
+                            mediaController?.addMediaItem(MediaItem.fromUri(i.songUri))
                         }
                     }
-                    player.prepare()
-                    player.seekTo(viewModel.songIterator, 0L)
+                    mediaController?.prepare()
+                    mediaController?.seekTo(viewModel.songIterator, 0L)
                     viewModel.incrementSongIterator(1)
                 }
                 viewModel.updateShuffleMode(!viewModel.shuffleMode)
@@ -791,7 +789,7 @@ fun textLevelBuilder(n: IntRange): String {
 //============================== Seek bar ==============================//
 @kotlin.OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SeekBar(player: ExoPlayer, viewModel: PlayerViewModel) {
+fun SeekBar(mediaController: MediaController?, viewModel: PlayerViewModel) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -811,7 +809,7 @@ fun SeekBar(player: ExoPlayer, viewModel: PlayerViewModel) {
                 .size(250.dp, 20.dp),
             onValueChange = {
                 currentSongPosition = it
-                viewModel.updateSongPosition(player, currentSongPosition.toLong())
+                viewModel.updateSongPosition(mediaController, currentSongPosition.toLong())
             },
             thumb = {
                 SliderThumb(viewModel)

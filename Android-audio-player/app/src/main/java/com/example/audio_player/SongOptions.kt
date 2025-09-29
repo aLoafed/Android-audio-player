@@ -1,6 +1,5 @@
 package com.example.audio_player
 
-import android.media.browse.MediaBrowser
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -17,9 +16,10 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.MediaController
 
 @Composable
-fun SongOptions(songInfo: SongInfo, viewModel: PlayerViewModel, player: ExoPlayer) {
+fun SongOptions(songInfo: SongInfo, viewModel: PlayerViewModel, mediaController: MediaController?) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -37,7 +37,7 @@ fun SongOptions(songInfo: SongInfo, viewModel: PlayerViewModel, player: ExoPlaye
                     .height(70.dp)
                     .clickable(
                         onClick = {
-                            player.addMediaItem(MediaItem.fromUri(songInfo.songUri))
+                            mediaController?.addMediaItem(MediaItem.fromUri(songInfo.songUri))
                         }
                     ),
                 verticalAlignment = Alignment.CenterVertically,
@@ -56,9 +56,11 @@ fun SongOptions(songInfo: SongInfo, viewModel: PlayerViewModel, player: ExoPlaye
                     .height(70.dp)
                     .clickable(
                         onClick = {
-                            player.removeMediaItems(player.mediaItemCount, player.currentMediaItemIndex)
-                            player.removeMediaItems(player.currentMediaItemIndex - 1, -1)
-                            player.addMediaItem(MediaItem.fromUri(songInfo.songUri))
+                            if (mediaController != null) {
+                                mediaController.removeMediaItems(mediaController.mediaItemCount, mediaController.currentMediaItemIndex)
+                                mediaController.removeMediaItems(mediaController.currentMediaItemIndex - 1, -1)
+                                mediaController.addMediaItem(MediaItem.fromUri(songInfo.songUri))
+                            }
                         }
                     ),
                 verticalAlignment = Alignment.CenterVertically,

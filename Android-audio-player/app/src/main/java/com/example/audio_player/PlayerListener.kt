@@ -6,14 +6,13 @@ import androidx.annotation.OptIn
 import androidx.media3.common.MediaItem
 import androidx.media3.common.PlaybackException
 import androidx.media3.common.Player
-import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.MediaController
 
 class PlayerListener(
     private val applicationContext: Context,
     private val viewModel: PlayerViewModel,
-    private val player: ExoPlayer,
+    private val mediaController: MediaController?,
 ) : Player.Listener {
     @OptIn(UnstableApi::class)
     override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -30,10 +29,12 @@ class PlayerListener(
         if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) {
             viewModel.incrementSongIterator(1)
         } else if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_SEEK) {
-            if (player.currentMediaItemIndex > viewModel.songIterator) {
-                viewModel.incrementSongIterator(1)
-            } else {
-                viewModel.incrementSongIterator(-1)
+            mediaController?.let {
+                if (it.currentMediaItemIndex > viewModel.songIterator) {
+                    viewModel.incrementSongIterator(1)
+                } else {
+                    viewModel.incrementSongIterator(-1)
+                }
             }
         }
     }

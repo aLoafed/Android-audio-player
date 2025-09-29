@@ -27,22 +27,22 @@ import androidx.compose.material3.IconButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.MediaItem
+import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.MediaController
 import androidx.navigation.NavController
 
 @OptIn(UnstableApi::class)
 @Composable
 fun SongsScreen(
     songInfo: List<SongInfo>,
-    player: ExoPlayer,
+    mediaController: MediaController?,
     viewModel: PlayerViewModel,
     pagerState: PagerState,
     navController: NavController
@@ -65,13 +65,13 @@ fun SongsScreen(
                     .padding(5.dp)
                     .clickable(
                         onClick = {
-                            player.clearMediaItems()
+                            mediaController?.clearMediaItems()
                             for (j in 0 until songInfo.count()) {
-                                player.addMediaItem(MediaItem.fromUri(songInfo[j].songUri))
+                                mediaController?.addMediaItem(MediaItem.fromUri(songInfo[j].songUri))
                             }
-                            player.prepare()
-                            player.seekTo(i,0L)
-                            player.play()
+                            mediaController?.prepare()
+                            mediaController?.seekTo(i,0L)
+                            mediaController?.play()
                             viewModel.updateQueuedSongs(songInfo)
                             viewModel.updateAlbumArt(songInfo[i].albumArt)
                             viewModel.updateSongDuration((songInfo[i].time).toLong())

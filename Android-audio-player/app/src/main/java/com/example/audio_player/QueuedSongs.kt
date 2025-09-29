@@ -1,6 +1,5 @@
 package com.example.audio_player
 
-import android.graphics.drawable.shapes.Shape
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
@@ -26,14 +25,14 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.MediaController
 
 @Composable
-fun SongQueue(viewModel: PlayerViewModel, player: ExoPlayer, songInfo: List<SongInfo>) {
+fun SongQueue(viewModel: PlayerViewModel, mediaController: MediaController?, songInfo: List<SongInfo>) {
     LazyColumn(
         modifier = Modifier
             .fillMaxSize()
@@ -64,13 +63,13 @@ fun SongQueue(viewModel: PlayerViewModel, player: ExoPlayer, songInfo: List<Song
                     .padding(5.dp)
                     .clickable(
                         onClick = {
-                            player.clearMediaItems()
+                            mediaController?.clearMediaItems()
                             for (j in 0 until viewModel.queuedSongs.count()) {
-                                player.addMediaItem(MediaItem.fromUri(viewModel.queuedSongs[j].songUri))
+                                mediaController?.addMediaItem(MediaItem.fromUri(viewModel.queuedSongs[j].songUri))
                             }
-                            player.prepare()
-                            player.seekTo(i, 0L)
-                            player.play()
+                            mediaController?.prepare()
+                            mediaController?.seekTo(i, 0L)
+                            mediaController?.play()
                             viewModel.updateAlbumArt(viewModel.queuedSongs[i].albumArt)
                             viewModel.updateSongDuration((viewModel.queuedSongs[i].time).toLong())
                             viewModel.updateSongIterator(i)

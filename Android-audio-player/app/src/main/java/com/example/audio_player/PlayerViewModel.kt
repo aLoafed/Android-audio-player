@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.toColorLong
 import androidx.core.graphics.ColorUtils
 import androidx.lifecycle.ViewModel
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.MediaController
 import com.example.audio_player.ui.theme.LcdBlueWhite
 import com.example.audio_player.ui.theme.LcdGrey
 
@@ -191,7 +192,7 @@ class PlayerViewModel(
     fun updateSongDuration(time: Long) {
         duration = time.toFloat()
     }
-    fun updateSongPosition(player: ExoPlayer, time: Long) {
-        player.seekTo(time * 1000)
+    fun updateSongPosition(mediaController: MediaController?, time: Long) {
+        mediaController?.seekTo(time * 1000)
     }
 }

@@ -1,6 +1,5 @@
 package com.example.audio_player
 
-import android.view.Window
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -10,7 +9,6 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -25,23 +23,21 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.layout.ContentScale
-import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.MediaItem
 import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.MediaController
 import androidx.navigation.NavController
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AlbumSongsScreen(album: String, songInfo: List<SongInfo>, player: ExoPlayer, viewModel: PlayerViewModel, navController: NavController) {
+fun AlbumSongsScreen(album: String, songInfo: List<SongInfo>, mediaController: MediaController?, viewModel: PlayerViewModel, navController: NavController) {
     val albumSongsList = mutableListOf<SongInfo>()
     for (i in 0 until songInfo.count()) {
         if (songInfo[i].album == album) {
@@ -107,20 +103,26 @@ fun AlbumSongsScreen(album: String, songInfo: List<SongInfo>, player: ExoPlayer,
                         .padding(5.dp)
                         .clickable(
                             onClick = {
-                                player.clearMediaItems()
-                                viewModel.updateAlbumSongInfo(albumSongsList)
-                                for (j in 0 until albumSongsList.count()) {
-                                    player.addMediaItem(MediaItem.fromUri(albumSongsList[j].songUri))
+                                if (mediaController != null) {
+                                    mediaController.clearMediaItems()
+                                    viewModel.updateAlbumSongInfo(albumSongsList)
+                                    for (j in 0 until albumSongsList.count()) {
+                                        mediaController.addMediaItem(
+                                            MediaItem.fromUri(
+                                                albumSongsList[j].songUri
+                                            )
+                                        )
+                                    }
+                                    mediaController.prepare()
+                                    mediaController.seekTo(i, 0L)
+                                    mediaController.play()
+                                    viewModel.updateQueuedSongs(albumSongsList)
+                                    viewModel.updateSongIterator(i)
+                                    viewModel.updateAlbumArt(albumSongsList[i].albumArt)
+                                    viewModel.updateSongDuration((albumSongsList[i].time).toLong())
+                                    viewModel.updatePlayingFromSongsScreen(false) // Shows details from albums list
+                                    navController.navigate("pager")
                                 }
-                                player.prepare()
-                                player.seekTo(i, 0L)
-                                player.play()
-                                viewModel.updateQueuedSongs(albumSongsList)
-                                viewModel.updateSongIterator(i)
-                                viewModel.updateAlbumArt(albumSongsList[i].albumArt)
-                                viewModel.updateSongDuration((albumSongsList[i].time).toLong())
-                                viewModel.updatePlayingFromSongsScreen(false) // Shows details from albums list
-                                navController.navigate("pager")
                             }
                         ),
                     verticalAlignment = Alignment.CenterVertically,
@@ -164,31 +166,4 @@ fun AlbumSongsScreen(album: String, songInfo: List<SongInfo>, player: ExoPlayer,
             }
         }
     }
-
-//    TopAppBar(
-//        title = {
-//            LcdText(album, viewModel = viewModel)
-//        },
-//        modifier = Modifier
-//            .fillMaxWidth(),
-////            .height(6.dp),
-//        navigationIcon = {
-//            IconButton(
-//                content = {
-//                    painterResource(R.drawable.arrow_back)
-//                },
-//                onClick = {
-//                    navController.popBackStack()
-//                },
-//                colors = IconButtonColors(
-//                    contentColor = Color.White,
-//                    containerColor = Color.Transparent,
-//                    disabledContentColor = Color.White,
-//                    disabledContainerColor = Color.White
-//                )
-//            )
-//        },
-//        windowInsets = WindowInsets.statusBars,
-//        expandedHeight = 40.dp
-//    )
 }

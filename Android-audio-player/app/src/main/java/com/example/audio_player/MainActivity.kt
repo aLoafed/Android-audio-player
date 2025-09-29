@@ -1,11 +1,11 @@
 package com.example.audio_player
 
 import android.Manifest
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.os.Handler
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -27,21 +27,17 @@ import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.C
 import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.DefaultRenderersFactory
-import androidx.media3.exoplayer.ExoPlayer
-import androidx.media3.exoplayer.Renderer
-import androidx.media3.exoplayer.audio.AudioRendererEventListener
-import androidx.media3.exoplayer.audio.AudioSink
-import androidx.media3.exoplayer.audio.DefaultAudioSink
-import androidx.media3.exoplayer.audio.MediaCodecAudioRenderer
-import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.session.MediaController
-import androidx.media3.session.MediaSession
-import androidx.media3.session.MediaSessionService
+import androidx.media3.session.SessionToken
 import com.example.audio_player.ui.theme.Audio_playerTheme
 import com.example.audio_player.ui.theme.lcdFont
+import com.google.common.util.concurrent.ListenableFuture
+import com.google.common.util.concurrent.MoreExecutors
+import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.lang.Thread.sleep
+import kotlin.text.get
 import kotlin.time.Duration.Companion.seconds
 
 val Context.dataStore by preferencesDataStore(name = "settings")
@@ -51,7 +47,7 @@ val Context.dataStore by preferencesDataStore(name = "settings")
 class MainActivity : ComponentActivity() {
     val viewModel by viewModels<PlayerViewModel>(
         factoryProducer = {
-            object : ViewModelProvider.Factory{
+            object : ViewModelProvider.Factory {
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
                     return PlayerViewModel(
                         applicationContext
@@ -60,14 +56,22 @@ class MainActivity : ComponentActivity() {
             }
         }
     )
-    val service = ForegroundNotificationService()
-    val spectrumAnalyzer = service.spectrumAnalyzer
-    lateinit var player: ExoPlayer
-    lateinit var mediaSession: MediaSession
+//    private var mediaController: MediaController? = null
+//    private val controllerFuture: com.google.common.util.concurrent.ListenableFuture<MediaController> by lazy {
+//        MediaController.Builder(
+//            this,
+//            SessionToken(this, ComponentName(this, ForegroundNotificationService::class.java))
+//        ).buildAsync()
+//    }
+    val spectrumAnalyzer = SpectrumAnalyzer()
 
     @OptIn(UnstableApi::class, ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+//        startService(Intent(this, ForegroundNotificationService::class.java))
+
+        //=============================== Permissions ===============================//
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Permissions
             ActivityCompat.requestPermissions(
                 this,
@@ -80,117 +84,154 @@ class MainActivity : ComponentActivity() {
                 0
             )
         }
-        if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        ActivityCompat.requestPermissions(
-            this,
-            arrayOf(Manifest.permission.READ_MEDIA_AUDIO),
-            1
-        ) } else {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            ActivityCompat.requestPermissions(
+                this,
+                arrayOf(Manifest.permission.READ_MEDIA_AUDIO),
+                1
+            )
+        } else {
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
                 2
             )
         }
+        //=============================== Media Declarations ===============================//
+        var mediaController: MediaController? = null
+        val sessionToken = SessionToken(
+            this,
+            ComponentName(this, ForegroundNotificationService::class.java)
+        )
+        val controllerFuture = MediaController.Builder(
+            this,
+            sessionToken
+        ).buildAsync()
+
+        controllerFuture.addListener(
+            { mediaController = controllerFuture.get() },
+            MoreExecutors.directExecutor()
+        )
+
         val songInfo = mediaStoreSongInfo(applicationContext)
         val albumInfo = getAlbumList(applicationContext)
-        player = service.playerInit(applicationContext)
-        mediaSession = service.mediaSessionInit(applicationContext)
-        val mediaController = MediaController.Builder(applicationContext, mediaSession.token)
-            .buildAsync()
-        val listener = PlayerListener(applicationContext, viewModel, player)
-        player.addListener(listener)
-        enableEdgeToEdge()
-        setContent {
-            Audio_playerTheme {
-                NavHost(player, songInfo, spectrumAnalyzer, viewModel, albumInfo, applicationContext)
-                if (viewModel.isPlaying) {
-                    LaunchedEffect(Unit) {
-                        while (true) {
-                            viewModel.updateCurrentSongPosition(player.currentPosition)
-                            delay(1.seconds / 30)
-                        }
-                    }
-                    LaunchedEffect(Unit) {
-                        while (true) {
-                            if (player.duration != C.TIME_UNSET) {
-                                viewModel.updateSongDuration(time = player.duration / 1000)
+        lifecycleScope.launch {
+            while (mediaController == null) {
+                delay(100)
+            }
+            val listener = PlayerListener(applicationContext, viewModel, mediaController)
+            mediaController.addListener(listener)
+
+            enableEdgeToEdge()
+            setContent {
+                Audio_playerTheme {
+                    NavHost(
+                        mediaController,
+                        songInfo,
+                        spectrumAnalyzer,
+                        viewModel,
+                        albumInfo,
+                        applicationContext
+                    )
+                    if (viewModel.isPlaying) {
+                        LaunchedEffect(Unit) {
+                            while (true) {
+                                mediaController.let { viewModel.updateCurrentSongPosition(it.currentPosition) }
+                                delay(1.seconds / 30)
                             }
-                            delay(1.seconds / 30)
+                        }
+                        LaunchedEffect(Unit) {
+                            while (true) {
+                                mediaController.let {
+                                    if (it.duration != C.TIME_UNSET) {
+                                        viewModel.updateSongDuration(time = mediaController.duration / 1000)
+                                    }
+                                }
+                                delay(1.seconds / 30)
+                            }
                         }
                     }
                 }
             }
         }
     }
-
-    override fun onResume() {
-        super.onResume()
-        val intent = Intent(this, service::class.java).apply { // Explicit intent to start notification
-            action = ForegroundNotificationService.Actions.STOP.toString()
-        }
-        startService(intent)
+//    override fun onResume() {
+//        super.onResume()
+//        val intent = Intent(this, service::class.java).apply { // Explicit intent to start notification
+//            action = ForegroundNotificationService.Actions.STOP.toString()
+//        }
+//        startService(intent)
+//    }
+//
+//    override fun onStop() {
+//        super.onStop()
+//        val intent = Intent(this, service::class.java).apply { // Explicit intent to start notification
+//            action = ForegroundNotificationService.Actions.START.toString()
+//        }
+//        startService(intent)
+//    }
     }
 
-    override fun onStop() {
-        super.onStop()
-        val intent = Intent(this, service::class.java).apply { // Explicit intent to start notification
-            action = ForegroundNotificationService.Actions.START.toString()
-        }
-        startService(intent)
+    @Composable
+    fun LcdText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel) {
+        Text(
+            modifier = modifier,
+            text = text,
+            color = viewModel.textColor,
+            fontSize = 15.sp,
+            fontFamily = lcdFont,
+            fontWeight = FontWeight.Normal,
+            lineHeight = 4.sp
+        )
     }
-}
 
-@Composable
-fun LcdText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel) {
-    Text(
-        modifier = modifier,
-        text = text,
-        color = viewModel.textColor,
-        fontSize = 15.sp,
-        fontFamily = lcdFont,
-        fontWeight = FontWeight.Normal,
-        lineHeight = 4.sp
-    )
-}
+    @Composable
+    fun LargeLcdText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel) {
+        Text(
+            modifier = modifier,
+            text = text,
+            color = viewModel.textColor,
+            fontSize = 20.sp,
+            fontFamily = lcdFont,
+            fontWeight = FontWeight.Normal,
+            lineHeight = 17.sp
+        )
+    }
 
-@Composable
-fun LargeLcdText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel) {
-    Text(
-        modifier = modifier,
-        text = text,
-        color = viewModel.textColor,
-        fontSize = 20.sp,
-        fontFamily = lcdFont,
-        fontWeight = FontWeight.Normal,
-        lineHeight = 17.sp
-    )
-}
-@Composable
-fun LargePlayerScreenLcdText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel) {
-    Text(
-        modifier = modifier,
-        text = text,
-        color = viewModel.textColor,
-        fontSize = 30.sp,
-        fontFamily = lcdFont,
-        fontWeight = FontWeight.Normal,
-        textAlign = TextAlign.Center
+    @Composable
+    fun LargePlayerScreenLcdText(
+        text: String,
+        modifier: Modifier = Modifier,
+        viewModel: PlayerViewModel
+    ) {
+        Text(
+            modifier = modifier,
+            text = text,
+            color = viewModel.textColor,
+            fontSize = 30.sp,
+            fontFamily = lcdFont,
+            fontWeight = FontWeight.Normal,
+            textAlign = TextAlign.Center
 //        lineHeight = 5.sp
-    )
-}
-@Composable
-fun AlbumScreenLcdText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel) {
-    Text(
-        modifier = modifier,
-        text = text,
-        color = viewModel.textColor,
-        fontSize = 15.sp,
-        fontFamily = lcdFont,
-        fontWeight = FontWeight.Normal,
-        lineHeight = 15.sp
-    )
-}
+        )
+    }
+
+    @Composable
+    fun AlbumScreenLcdText(
+        text: String,
+        modifier: Modifier = Modifier,
+        viewModel: PlayerViewModel
+    ) {
+        Text(
+            modifier = modifier,
+            text = text,
+            color = viewModel.textColor,
+            fontSize = 15.sp,
+            fontFamily = lcdFont,
+            fontWeight = FontWeight.Normal,
+            lineHeight = 15.sp
+        )
+    }
 
 //@Preview
 //@Composable

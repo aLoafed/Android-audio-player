@@ -3,13 +3,8 @@
 package com.example.audio_player
 
 import android.content.Context
-import android.content.Intent
-import android.media.audiofx.Equalizer
-import android.provider.Settings
 import androidx.annotation.OptIn
 import androidx.collection.intListOf
-import androidx.compose.animation.core.LinearEasing
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -21,7 +16,6 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.pager.HorizontalPager
-import androidx.compose.foundation.pager.PagerDefaults
 import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
@@ -32,10 +26,8 @@ import androidx.compose.material3.TabRow
 import androidx.compose.material3.TabRowDefaults
 import androidx.compose.material3.TabRowDefaults.tabIndicatorOffset
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -43,11 +35,10 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.text.font.FontVariation
 import androidx.compose.ui.unit.dp
-import androidx.core.content.ContextCompat.startActivity
+import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
-import androidx.media3.exoplayer.ExoPlayer
+import androidx.media3.session.MediaController
 import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
@@ -57,7 +48,7 @@ import kotlinx.coroutines.launch
 @OptIn(UnstableApi::class)
 @Composable
 fun NavHost(
-    player: ExoPlayer,
+    mediaController: MediaController?,
     songInfo: List<SongInfo>,
     spectrumAnalyzer: SpectrumAnalyzer,
     viewModel: PlayerViewModel,
@@ -70,10 +61,10 @@ fun NavHost(
         startDestination = Screen.Pager.route,
     ) {
         composable(route = Screen.Pager.route) {
-            Pager(player, spectrumAnalyzer, viewModel, songInfo, albumInfo, navController)
+            Pager(mediaController, spectrumAnalyzer, viewModel, songInfo, albumInfo, navController)
         }
         composable(route = Screen.AlbumSongsScreen.route) {
-            AlbumSongsScreen(viewModel.selectedAlbum, songInfo, player, viewModel, navController)
+            AlbumSongsScreen(viewModel.selectedAlbum, songInfo, mediaController, viewModel, navController)
         }
         composable(route = Screen.Settings.route) {
             Settings(navController, viewModel)
@@ -85,7 +76,10 @@ fun NavHost(
             ColorPicker(viewModel, navController, context)
         }
         composable(route = Screen.SongOptions.route) {
-            SongOptions(viewModel.selectedSong, viewModel, player)
+            SongOptions(viewModel.selectedSong, viewModel, mediaController)
+        }
+        composable(route = Screen.InfoScreen.route) {
+            InfoScreen(viewModel)
         }
     }
 }
@@ -93,13 +87,16 @@ fun NavHost(
 @OptIn(UnstableApi::class)
 @Composable
 fun Pager(
-    player: ExoPlayer,
+    mediaController: MediaController?,
     spectrumAnalyzer: SpectrumAnalyzer,
     viewModel: PlayerViewModel,
     songInfo: List<SongInfo>,
     albumInfo: List<AlbumInfo>,
     navController: NavController
 ) {
+    if (mediaController == null) {
+        Log.d("Neoplayer", "Pager media controller is null")
+    }
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState(
         initialPage = 1
@@ -224,7 +221,9 @@ fun Pager(
                                         viewModel = viewModel
                                     )
                                 },
-                                onClick = {TODO()}
+                                onClick = {
+                                    navController.navigate("info_screen")
+                                }
                             )
                         }
                     },
@@ -237,10 +236,10 @@ fun Pager(
             state = pagerState
         ) { currentPage ->
             when (currentPage) {
-                0 -> SongQueue(viewModel, player, songInfo)
-                1 -> PlayerScreen(player, spectrumAnalyzer, viewModel, songInfo)
-                2 -> SongsScreen(songInfo, player, viewModel, pagerState, navController)
-                3 -> AlbumScreen(albumInfo, songInfo, player, viewModel, pagerState, navController)
+                0 -> SongQueue(viewModel, mediaController, songInfo)
+                1 -> PlayerScreen(mediaController, spectrumAnalyzer, viewModel, songInfo)
+                2 -> SongsScreen(songInfo, mediaController, viewModel, pagerState, navController)
+                3 -> AlbumScreen(albumInfo, viewModel, navController)
             }
         }
     }
