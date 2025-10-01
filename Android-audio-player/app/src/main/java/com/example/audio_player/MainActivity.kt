@@ -3,7 +3,6 @@ package com.example.audio_player
 import android.Manifest
 import android.content.ComponentName
 import android.content.Context
-import android.content.Intent
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -25,19 +24,14 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.C
-import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.example.audio_player.ui.theme.Audio_playerTheme
 import com.example.audio_player.ui.theme.lcdFont
-import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
-import kotlinx.coroutines.coroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import java.lang.Thread.sleep
-import kotlin.text.get
 import kotlin.time.Duration.Companion.seconds
 
 val Context.dataStore by preferencesDataStore(name = "settings")
@@ -56,21 +50,12 @@ class MainActivity : ComponentActivity() {
             }
         }
     )
-//    private var mediaController: MediaController? = null
-//    private val controllerFuture: com.google.common.util.concurrent.ListenableFuture<MediaController> by lazy {
-//        MediaController.Builder(
-//            this,
-//            SessionToken(this, ComponentName(this, ForegroundNotificationService::class.java))
-//        ).buildAsync()
-//    }
-    val spectrumAnalyzer = SpectrumAnalyzer()
+
+    val mediaSessionService = ForegroundNotificationService()
 
     @OptIn(UnstableApi::class, ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-//        startService(Intent(this, ForegroundNotificationService::class.java))
-
         //=============================== Permissions ===============================//
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Permissions
             ActivityCompat.requestPermissions(
@@ -101,7 +86,7 @@ class MainActivity : ComponentActivity() {
         var mediaController: MediaController? = null
         val sessionToken = SessionToken(
             this,
-            ComponentName(this, ForegroundNotificationService::class.java)
+            ComponentName(this, mediaSessionService::class.java)
         )
         val controllerFuture = MediaController.Builder(
             this,
@@ -115,10 +100,12 @@ class MainActivity : ComponentActivity() {
 
         val songInfo = mediaStoreSongInfo(applicationContext)
         val albumInfo = getAlbumList(applicationContext)
+        
         lifecycleScope.launch {
             while (mediaController == null) {
-                delay(100)
+                delay(50)
             }
+            val spectrumAnalyzer = mediaSessionService.getSpectrumAnalyzer()
             val listener = PlayerListener(applicationContext, viewModel, mediaController)
             mediaController.addListener(listener)
 
@@ -155,22 +142,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-//    override fun onResume() {
-//        super.onResume()
-//        val intent = Intent(this, service::class.java).apply { // Explicit intent to start notification
-//            action = ForegroundNotificationService.Actions.STOP.toString()
-//        }
-//        startService(intent)
-//    }
-//
-//    override fun onStop() {
-//        super.onStop()
-//        val intent = Intent(this, service::class.java).apply { // Explicit intent to start notification
-//            action = ForegroundNotificationService.Actions.START.toString()
-//        }
-//        startService(intent)
-//    }
-    }
+}
 
     @Composable
     fun LcdText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel) {

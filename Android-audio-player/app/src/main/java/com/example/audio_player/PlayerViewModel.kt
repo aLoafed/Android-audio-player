@@ -33,7 +33,7 @@ class PlayerViewModel(
     var selectedAlbum by mutableStateOf("")
         private set
     // For SongOptions
-    var selectedSong by mutableStateOf<SongInfo>(SongInfo(
+    var selectedSong by mutableStateOf(SongInfo(
         "",
         "",
         Uri.EMPTY,

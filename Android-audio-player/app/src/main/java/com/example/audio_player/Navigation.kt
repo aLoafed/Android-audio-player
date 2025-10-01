@@ -50,7 +50,7 @@ import kotlinx.coroutines.launch
 fun NavHost(
     mediaController: MediaController?,
     songInfo: List<SongInfo>,
-    spectrumAnalyzer: SpectrumAnalyzer,
+    spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer,
     viewModel: PlayerViewModel,
     albumInfo: List<AlbumInfo>,
     context: Context
@@ -88,7 +88,7 @@ fun NavHost(
 @Composable
 fun Pager(
     mediaController: MediaController?,
-    spectrumAnalyzer: SpectrumAnalyzer,
+    spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer,
     viewModel: PlayerViewModel,
     songInfo: List<SongInfo>,
     albumInfo: List<AlbumInfo>,

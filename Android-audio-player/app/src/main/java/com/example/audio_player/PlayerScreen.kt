@@ -59,7 +59,7 @@ import com.example.audio_player.ui.theme.orbitronFamily
 var shuffleSongInfo = listOf<SongInfo>()
 @OptIn(UnstableApi::class)
 @Composable
-fun PlayerScreen(mediaController: MediaController?, spectrumAnalyzer: SpectrumAnalyzer, viewModel: PlayerViewModel, songInfo: List<SongInfo>) {
+fun PlayerScreen(mediaController: MediaController?, spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer, viewModel: PlayerViewModel, songInfo: List<SongInfo>) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -353,7 +353,7 @@ fun RepeatShuffleControls(viewModel: PlayerViewModel, mediaController: MediaCont
 }
 @OptIn(UnstableApi::class)
 @Composable
-fun GraphicalEqualizer(spectrumAnalyzer: SpectrumAnalyzer, viewModel: PlayerViewModel) {
+fun GraphicalEqualizer(spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer, viewModel: PlayerViewModel) {
     Row(
         modifier = Modifier
             .size(340.dp, 140.dp)
@@ -547,7 +547,7 @@ fun VolumeLevelTick(viewModel: PlayerViewModel) {
 
 @OptIn(UnstableApi::class)
 @Composable
-fun AudioLevelColumn(fieldName: String, spectrumAnalyzer: SpectrumAnalyzer, viewModel: PlayerViewModel) {
+fun AudioLevelColumn(fieldName: String, spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer, viewModel: PlayerViewModel) {
     Column(
         modifier = Modifier
             .fillMaxHeight()
@@ -574,7 +574,7 @@ fun AudioLevelColumn(fieldName: String, spectrumAnalyzer: SpectrumAnalyzer, view
 //============================== EQ level ==============================//
 @OptIn(UnstableApi::class)
 @Composable
-fun EQLevelText(fieldName: String, spectrumAnalyzer: SpectrumAnalyzer, tick: Float, viewModel: PlayerViewModel) {
+fun EQLevelText(fieldName: String, spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer, tick: Float, viewModel: PlayerViewModel) {
     val eqTransition = rememberInfiniteTransition()
     val target = remember(tick) {
         if (spectrumAnalyzer.eqList.count() != 0) {
@@ -619,7 +619,7 @@ fun EQLevelText(fieldName: String, spectrumAnalyzer: SpectrumAnalyzer, tick: Flo
 //============================== Volume level ==============================//
 @OptIn(UnstableApi::class)
 @Composable
-fun VolumeLevelText(spectrumAnalyzer: SpectrumAnalyzer, tick: Float, viewModel: PlayerViewModel) {
+fun VolumeLevelText(spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer, tick: Float, viewModel: PlayerViewModel) {
     val eqTransition = rememberInfiniteTransition()
     val target = remember(tick) {
         volumeLevel(spectrumAnalyzer)
@@ -649,7 +649,7 @@ fun VolumeLevelText(spectrumAnalyzer: SpectrumAnalyzer, tick: Float, viewModel: 
     )
 }
 @OptIn(UnstableApi::class)
-fun volumeLevel(spectrumAnalyzer: SpectrumAnalyzer): Float {
+fun volumeLevel(spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer): Float {
     var tmpSound = spectrumAnalyzer.volume
     if (tmpSound > 20000.0) {
         tmpSound = 20000.0
@@ -680,7 +680,7 @@ fun volumeLevel(spectrumAnalyzer: SpectrumAnalyzer): Float {
 }
 
 @OptIn(UnstableApi::class)
-fun level63(spectrumAnalyzer: SpectrumAnalyzer): Float {
+fun level63(spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer): Float {
     var tempValue = spectrumAnalyzer.eqList[0]
     if (tempValue > 110.0) {
        tempValue = 110.0
@@ -689,7 +689,7 @@ fun level63(spectrumAnalyzer: SpectrumAnalyzer): Float {
     return tempValue.toFloat()
 }
 @OptIn(UnstableApi::class)
-fun level160(spectrumAnalyzer: SpectrumAnalyzer): Float {
+fun level160(spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer): Float {
     var tempValue = spectrumAnalyzer.eqList[1]
     if (tempValue > 55.0) {
         tempValue = 55.0
@@ -698,7 +698,7 @@ fun level160(spectrumAnalyzer: SpectrumAnalyzer): Float {
     return tempValue.toFloat()
 }
 @OptIn(UnstableApi::class)
-fun level400(spectrumAnalyzer: SpectrumAnalyzer): Float {
+fun level400(spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer): Float {
     var tempValue = spectrumAnalyzer.eqList[2]
     if (tempValue > 40.0) {
         tempValue = 40.0
@@ -707,7 +707,7 @@ fun level400(spectrumAnalyzer: SpectrumAnalyzer): Float {
     return tempValue.toFloat()
 }
 @OptIn(UnstableApi::class)
-fun level1k(spectrumAnalyzer: SpectrumAnalyzer): Float {
+fun level1k(spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer): Float {
     var tempValue = spectrumAnalyzer.eqList[3]
     if (tempValue > 13.0) {
         tempValue = 13.0
@@ -716,7 +716,7 @@ fun level1k(spectrumAnalyzer: SpectrumAnalyzer): Float {
     return tempValue.toFloat()
 }
 @OptIn(UnstableApi::class)
-fun level2500k(spectrumAnalyzer: SpectrumAnalyzer): Float {
+fun level2500k(spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer): Float {
     var tempValue = spectrumAnalyzer.eqList[4]
     if (tempValue > 5.0) {
         tempValue = 5.0
@@ -725,7 +725,7 @@ fun level2500k(spectrumAnalyzer: SpectrumAnalyzer): Float {
     return tempValue.toFloat()
 }
 @OptIn(UnstableApi::class)
-fun level6300k(spectrumAnalyzer: SpectrumAnalyzer): Float {
+fun level6300k(spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer): Float {
     var tempValue = spectrumAnalyzer.eqList[5]
     if (tempValue > 1.5) {
         tempValue = 1.5
@@ -734,7 +734,7 @@ fun level6300k(spectrumAnalyzer: SpectrumAnalyzer): Float {
     return tempValue.toFloat()
 }
 @OptIn(UnstableApi::class)
-fun level16k(spectrumAnalyzer: SpectrumAnalyzer): Float {
+fun level16k(spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer): Float {
     var tempValue = spectrumAnalyzer.eqList[6]
     if (tempValue > 1.5) {
         tempValue = 1.5
