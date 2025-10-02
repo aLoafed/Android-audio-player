@@ -50,12 +50,23 @@ class MainActivity : ComponentActivity() {
             }
         }
     )
-
     val mediaSessionService = ForegroundNotificationService()
+    var mediaController: MediaController? = null
+    val controllerFuture = MediaController.Builder(
+        this,
+        SessionToken(
+            this,
+            ComponentName(this, mediaSessionService::class.java)
+        )
+    ).buildAsync()
 
     @OptIn(UnstableApi::class, ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        controllerFuture.addListener(
+            { mediaController = controllerFuture.get() },
+            MoreExecutors.directExecutor()
+        )
         //=============================== Permissions ===============================//
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) { // Permissions
             ActivityCompat.requestPermissions(
@@ -83,31 +94,17 @@ class MainActivity : ComponentActivity() {
             )
         }
         //=============================== Media Declarations ===============================//
-        var mediaController: MediaController? = null
-        val sessionToken = SessionToken(
-            this,
-            ComponentName(this, mediaSessionService::class.java)
-        )
-        val controllerFuture = MediaController.Builder(
-            this,
-            sessionToken
-        ).buildAsync()
-
-        controllerFuture.addListener(
-            { mediaController = controllerFuture.get() },
-            MoreExecutors.directExecutor()
-        )
 
         val songInfo = mediaStoreSongInfo(applicationContext)
         val albumInfo = getAlbumList(applicationContext)
         
         lifecycleScope.launch {
             while (mediaController == null) {
-                delay(50)
+                delay(10)
             }
             val spectrumAnalyzer = mediaSessionService.getSpectrumAnalyzer()
             val listener = PlayerListener(applicationContext, viewModel, mediaController)
-            mediaController.addListener(listener)
+            mediaController!!.addListener(listener)
 
             enableEdgeToEdge()
             setContent {
@@ -123,15 +120,15 @@ class MainActivity : ComponentActivity() {
                     if (viewModel.isPlaying) {
                         LaunchedEffect(Unit) {
                             while (true) {
-                                mediaController.let { viewModel.updateCurrentSongPosition(it.currentPosition) }
+                                mediaController.let { viewModel.updateCurrentSongPosition(it!!.currentPosition) }
                                 delay(1.seconds / 30)
                             }
                         }
                         LaunchedEffect(Unit) {
                             while (true) {
                                 mediaController.let {
-                                    if (it.duration != C.TIME_UNSET) {
-                                        viewModel.updateSongDuration(time = mediaController.duration / 1000)
+                                    if (it!!.duration != C.TIME_UNSET) {
+                                        viewModel.updateSongDuration(time = mediaController!!.duration / 1000)
                                     }
                                 }
                                 delay(1.seconds / 30)
