@@ -10,13 +10,22 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.OptIn
+import androidx.compose.foundation.Canvas
+import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Path
+import androidx.compose.ui.graphics.drawscope.DrawStyle
+import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.graphics.drawscope.draw
+import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.datastore.preferences.preferencesDataStore
@@ -28,6 +37,8 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.example.audio_player.ui.theme.Audio_playerTheme
+import com.example.audio_player.ui.theme.LcdBlueWhite
+import com.example.audio_player.ui.theme.LcdOrange
 import com.example.audio_player.ui.theme.lcdFont
 import com.google.common.util.concurrent.MoreExecutors
 import kotlinx.coroutines.delay
@@ -51,18 +62,18 @@ class MainActivity : ComponentActivity() {
         }
     )
     val mediaSessionService = ForegroundNotificationService()
-    var mediaController: MediaController? = null
-    val controllerFuture = MediaController.Builder(
-        this,
-        SessionToken(
-            this,
-            ComponentName(this, mediaSessionService::class.java)
-        )
-    ).buildAsync()
 
     @OptIn(UnstableApi::class, ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        var mediaController: MediaController? = null
+        val controllerFuture = MediaController.Builder(
+            this,
+            SessionToken(
+                this,
+                ComponentName(this, mediaSessionService::class.java)
+            )
+        ).buildAsync()
         controllerFuture.addListener(
             { mediaController = controllerFuture.get() },
             MoreExecutors.directExecutor()
@@ -99,163 +110,127 @@ class MainActivity : ComponentActivity() {
         val albumInfo = getAlbumList(applicationContext)
         
         lifecycleScope.launch {
-            while (mediaController == null) {
-                delay(10)
-            }
             val spectrumAnalyzer = mediaSessionService.getSpectrumAnalyzer()
             val listener = PlayerListener(applicationContext, viewModel, mediaController)
-            mediaController!!.addListener(listener)
-
             enableEdgeToEdge()
+//            while (mediaController == null) {
+//                delay(10)
+//            }
+//            mediaController.addListener(listener)
             setContent {
                 Audio_playerTheme {
-                    NavHost(
-                        mediaController,
-                        songInfo,
-                        spectrumAnalyzer,
-                        viewModel,
-                        albumInfo,
-                        applicationContext
-                    )
-                    if (viewModel.isPlaying) {
-                        LaunchedEffect(Unit) {
-                            while (true) {
-                                mediaController.let { viewModel.updateCurrentSongPosition(it!!.currentPosition) }
-                                delay(1.seconds / 30)
-                            }
-                        }
-                        LaunchedEffect(Unit) {
-                            while (true) {
-                                mediaController.let {
-                                    if (it!!.duration != C.TIME_UNSET) {
-                                        viewModel.updateSongDuration(time = mediaController!!.duration / 1000)
-                                    }
-                                }
-                                delay(1.seconds / 30)
-                            }
-                        }
-                    }
+                    LoadingScreen()
+//                    NavHost(
+//                        mediaController,
+//                        songInfo,
+//                        spectrumAnalyzer,
+//                        viewModel,
+//                        albumInfo,
+//                        applicationContext
+//                    )
+//                    if (viewModel.isPlaying) {
+//                        LaunchedEffect(Unit) {
+//                            while (true) {
+//                                mediaController.let { viewModel.updateCurrentSongPosition(it.currentPosition) }
+//                                delay(1.seconds / 30)
+//                            }
+//                        }
+//                        LaunchedEffect(Unit) {
+//                            while (true) {
+//                                mediaController.let {
+//                                    if (it!!.duration != C.TIME_UNSET) {
+//                                        viewModel.updateSongDuration(time = mediaController!!.duration / 1000)
+//                                    }
+//                                }
+//                                delay(1.seconds / 30)
+//                            }
+//                        }
+//                    }
                 }
             }
         }
     }
 }
 
-    @Composable
-    fun LcdText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel) {
-        Text(
-            modifier = modifier,
-            text = text,
-            color = viewModel.textColor,
-            fontSize = 15.sp,
-            fontFamily = lcdFont,
-            fontWeight = FontWeight.Normal,
-            lineHeight = 4.sp
-        )
-    }
+@Composable
+fun LcdText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel) {
+    Text(
+        modifier = modifier,
+        text = text,
+        color = viewModel.textColor,
+        fontSize = 15.sp,
+        fontFamily = lcdFont,
+        fontWeight = FontWeight.Normal,
+        lineHeight = 4.sp
+    )
+}
 
-    @Composable
-    fun LargeLcdText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel) {
-        Text(
-            modifier = modifier,
-            text = text,
-            color = viewModel.textColor,
-            fontSize = 20.sp,
-            fontFamily = lcdFont,
-            fontWeight = FontWeight.Normal,
-            lineHeight = 17.sp
-        )
-    }
+@Composable
+fun LargeLcdText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel) {
+    Text(
+        modifier = modifier,
+        text = text,
+        color = viewModel.textColor,
+        fontSize = 20.sp,
+        fontFamily = lcdFont,
+        fontWeight = FontWeight.Normal,
+        lineHeight = 17.sp
+    )
+}
 
-    @Composable
-    fun LargePlayerScreenLcdText(
-        text: String,
-        modifier: Modifier = Modifier,
-        viewModel: PlayerViewModel
-    ) {
-        Text(
-            modifier = modifier,
-            text = text,
-            color = viewModel.textColor,
-            fontSize = 30.sp,
-            fontFamily = lcdFont,
-            fontWeight = FontWeight.Normal,
-            textAlign = TextAlign.Center
+@Composable
+fun LargePlayerScreenLcdText(
+    text: String,
+    modifier: Modifier = Modifier,
+    viewModel: PlayerViewModel
+) {
+    Text(
+        modifier = modifier,
+        text = text,
+        color = viewModel.textColor,
+        fontSize = 30.sp,
+        fontFamily = lcdFont,
+        fontWeight = FontWeight.Normal,
+        textAlign = TextAlign.Center
 //        lineHeight = 5.sp
-        )
-    }
+    )
+}
 
-    @Composable
-    fun AlbumScreenLcdText(
-        text: String,
-        modifier: Modifier = Modifier,
-        viewModel: PlayerViewModel
-    ) {
-        Text(
-            modifier = modifier,
-            text = text,
-            color = viewModel.textColor,
-            fontSize = 15.sp,
-            fontFamily = lcdFont,
-            fontWeight = FontWeight.Normal,
-            lineHeight = 15.sp
-        )
-    }
+@Composable
+fun AlbumScreenLcdText(
+    text: String,
+    modifier: Modifier = Modifier,
+    viewModel: PlayerViewModel
+) {
+    Text(
+        modifier = modifier,
+        text = text,
+        color = viewModel.textColor,
+        fontSize = 15.sp,
+        fontFamily = lcdFont,
+        fontWeight = FontWeight.Normal,
+        lineHeight = 15.sp
+    )
+}
 
 //@Preview
 //@Composable
-//fun PreviewEQIcon() {
-//    Column(
-//        modifier = Modifier.fillMaxSize(),
-//        verticalArrangement = Arrangement.Center,
-//        horizontalAlignment = Alignment.CenterHorizontally
+//fun PreviewLoadingParallelogram() {
+//    Canvas(
+//        modifier = Modifier
+//            .size(30.dp)
 //    ) {
-//        Row(
-//            modifier = Modifier
-//                .size(260.dp, 140.dp)
-//                .padding(horizontal = 15.dp),
-//            verticalAlignment = Alignment.Bottom,
-//            horizontalArrangement = Arrangement.SpaceEvenly
-//        ) {
-//            val heights = listOf(18,14,26,20,34,12,6)
-//            for (i in heights) {
-//                Column(
-//                    modifier = Modifier
-//                        .fillMaxHeight()
-//                        .width(25.dp),
-//                    verticalArrangement = Arrangement.SpaceBetween,
-//                    horizontalAlignment = Alignment.CenterHorizontally
-//                ) {
-//                    Row(
-//                        horizontalArrangement = Arrangement.spacedBy((-2).dp),
-//                        verticalAlignment = Alignment.Bottom
-//                    ) {
-//                        Text(
-//                            modifier = Modifier,
-//                            text = textLevelBuilder(1..i),
-//                            fontFamily = dotoFamily,
-//                            fontWeight = FontWeight.W500,
-//                            fontSize = 23.sp,
-//                            color = Color.White,
-//                            letterSpacing = 0.sp,
-//                            lineHeight = 3.sp,
-//                            textAlign = TextAlign.Center
-//                        )
-//                        Text(
-//                            modifier = Modifier,
-//                            text = textLevelBuilder(1..i),
-//                            fontFamily = dotoFamily,
-//                            fontWeight = FontWeight.W500,
-//                            fontSize = 23.sp,
-//                            color = Color.White,
-//                            letterSpacing = 0.sp,
-//                            lineHeight = 3.sp,
-//                            textAlign = TextAlign.Center
-//                        )
-//                    }
-//                }
-//            }
-//        }
+//        val path = Path()
+//        path.moveTo(10f,50f)
+//        path.relativeLineTo(0f,15f)
+//        path.relativeLineTo(45f,-30f)
+//        path.relativeLineTo(0f,-15f)
+//        path.close()
+//
+//        drawPath(
+//            path = path,
+//            color = LcdOrange,
+//            style = Fill
+//        )
 //    }
 //}
-

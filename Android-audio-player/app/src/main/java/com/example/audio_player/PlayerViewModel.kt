@@ -22,6 +22,8 @@ import com.example.audio_player.ui.theme.LcdGrey
 class PlayerViewModel(
     applicationContext: Context,
 ) : ViewModel() {
+    var loadingFinished by mutableStateOf(false)
+        private set
     var duration by mutableFloatStateOf(1f) // Length of song
         private set
     var currentSongPosition by mutableFloatStateOf((0f)) // Current position in song
@@ -109,6 +111,9 @@ class PlayerViewModel(
 //        }
 //    }
     //========================= Updaters =========================
+    fun updateFinishedLoading(state: Boolean) {
+        loadingFinished = state
+    }
     fun updateSelectedOptionsSong(songInfo: SongInfo) {
         selectedSong = songInfo
     }
