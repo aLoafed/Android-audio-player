@@ -10,22 +10,15 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.viewModels
 import androidx.annotation.OptIn
-import androidx.compose.foundation.Canvas
-import androidx.compose.foundation.layout.size
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Path
-import androidx.compose.ui.graphics.drawscope.DrawStyle
-import androidx.compose.ui.graphics.drawscope.Fill
-import androidx.compose.ui.graphics.drawscope.draw
-import androidx.compose.ui.layout.ModifierLocalBeyondBoundsLayout
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.datastore.preferences.preferencesDataStore
@@ -37,8 +30,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.example.audio_player.ui.theme.Audio_playerTheme
-import com.example.audio_player.ui.theme.LcdBlueWhite
-import com.example.audio_player.ui.theme.LcdOrange
 import com.example.audio_player.ui.theme.lcdFont
 import com.google.common.util.concurrent.MoreExecutors
 import kotlinx.coroutines.delay
@@ -111,41 +102,46 @@ class MainActivity : ComponentActivity() {
         
         lifecycleScope.launch {
             val spectrumAnalyzer = mediaSessionService.getSpectrumAnalyzer()
-            val listener = PlayerListener(applicationContext, viewModel, mediaController)
             enableEdgeToEdge()
-//            while (mediaController == null) {
-//                delay(10)
-//            }
-//            mediaController.addListener(listener)
+            setContent {
+                LoadingScreen(viewModel)
+            }
+            while (mediaController == null) {
+                delay(50)
+            }
+            while (!viewModel.loadingFinished) {
+                delay(5)
+            }
+            val listener = PlayerListener(applicationContext, viewModel, mediaController)
+            mediaController.addListener(listener)
             setContent {
                 Audio_playerTheme {
-                    LoadingScreen()
-//                    NavHost(
-//                        mediaController,
-//                        songInfo,
-//                        spectrumAnalyzer,
-//                        viewModel,
-//                        albumInfo,
-//                        applicationContext
-//                    )
-//                    if (viewModel.isPlaying) {
-//                        LaunchedEffect(Unit) {
-//                            while (true) {
-//                                mediaController.let { viewModel.updateCurrentSongPosition(it.currentPosition) }
-//                                delay(1.seconds / 30)
-//                            }
-//                        }
-//                        LaunchedEffect(Unit) {
-//                            while (true) {
-//                                mediaController.let {
-//                                    if (it!!.duration != C.TIME_UNSET) {
-//                                        viewModel.updateSongDuration(time = mediaController!!.duration / 1000)
-//                                    }
-//                                }
-//                                delay(1.seconds / 30)
-//                            }
-//                        }
-//                    }
+                    NavHost(
+                        mediaController,
+                        songInfo,
+                        spectrumAnalyzer,
+                        viewModel,
+                        albumInfo,
+                        applicationContext
+                    )
+                    if (viewModel.isPlaying) {
+                        LaunchedEffect(Unit) {
+                            while (true) {
+                                mediaController.let { viewModel.updateCurrentSongPosition(it.currentPosition) }
+                                delay(1.seconds / 30)
+                            }
+                        }
+                        LaunchedEffect(Unit) {
+                            while (true) {
+                                mediaController.let {
+                                    if (it.duration != C.TIME_UNSET) {
+                                        viewModel.updateSongDuration(time = mediaController.duration / 1000)
+                                    }
+                                }
+                                delay(1.seconds / 30)
+                            }
+                        }
+                    }
                 }
             }
         }
@@ -179,10 +175,11 @@ fun LargeLcdText(text: String, modifier: Modifier = Modifier, viewModel: PlayerV
 }
 
 @Composable
-fun LargePlayerScreenLcdText(
+fun ExtraLargeLcdText(
     text: String,
     modifier: Modifier = Modifier,
-    viewModel: PlayerViewModel
+    viewModel: PlayerViewModel,
+    style: TextStyle = LocalTextStyle.current
 ) {
     Text(
         modifier = modifier,
@@ -191,8 +188,8 @@ fun LargePlayerScreenLcdText(
         fontSize = 30.sp,
         fontFamily = lcdFont,
         fontWeight = FontWeight.Normal,
-        textAlign = TextAlign.Center
-//        lineHeight = 5.sp
+        textAlign = TextAlign.Center,
+        style = style
     )
 }
 

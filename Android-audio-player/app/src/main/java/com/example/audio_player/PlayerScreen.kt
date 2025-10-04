@@ -97,7 +97,7 @@ fun PlayingMediaInfo(viewModel: PlayerViewModel, songInfo: List<SongInfo>) {
         modifier = Modifier
             .height(10.dp)
     )
-    LargePlayerScreenLcdText(
+    ExtraLargeLcdText(
         if (viewModel.shuffleMode) {
             shuffleSongInfo[viewModel.songIterator].name
         } else if (viewModel.playingFromSongsScreen) {
