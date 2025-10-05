@@ -32,7 +32,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
@@ -48,6 +47,7 @@ import androidx.core.graphics.ColorUtils
 import com.example.audio_player.ui.theme.LcdBlueWhite
 import com.example.audio_player.ui.theme.LcdGrey
 import kotlinx.coroutines.delay
+import java.util.logging.LogRecord
 
 @Composable
 fun LoadingScreen(viewModel: PlayerViewModel) {
@@ -101,12 +101,13 @@ fun LoadingBars(viewModel: PlayerViewModel) {
         for (i in 1..flippedLoadingColumn) {
             when (i) {
                 2 -> {
-                    LoadingColumn()
-                    MultiConnectingBar()
+                    LoadingColumn(i)
+                    SecondConnectingBar()
                 }
                 3 -> {
                     Spacer(Modifier.width(15.dp))
-                    FlippedLoadingColumn()
+                    FlippedLoadingColumn(index = i)
+                    Spacer(Modifier.width(10.dp))
                 }
                 4 -> {
                     Box(
@@ -116,24 +117,28 @@ fun LoadingBars(viewModel: PlayerViewModel) {
                         contentAlignment = Alignment.TopStart
                     ) {
                         FourthConnectingBar()
-                        LoadingColumn()
+                        LoadingColumn(i, 10)
                     }
                 }
                 5 -> {
                     Spacer(Modifier.width(31.dp))
-                    FlippedLoadingColumn(offset = 24.dp)
+                    FlippedLoadingColumn(offset = 24.dp, i, 10)
                     LaunchedEffect(Unit) {
                         delay(550)
                         viewModel.updateFinishedLoading(true)
                     }
                 }
                 else -> {
-                    LoadingColumn()
+                    LoadingColumn(i)
                     FirstConnectingBar()
                 }
             }
         }
     }
+}
+@Composable
+fun FifthConnector() {
+    Canvas(modifier = Modifier ) { }
 }
 @Composable
 fun FourthConnectingBar() {
@@ -164,7 +169,7 @@ fun FourthConnectingBar() {
     ) {
         drawRect(
             color = changeBrightness(LcdBlueWhite.toArgb(), brightness),
-            size = Size(1f, this.size.height - 285f),
+            size = Size(1f, this.size.height - 183f),
         )
         drawPath(
             path = path,
@@ -194,6 +199,8 @@ fun FirstConnectingBar() {
     val path = Path()
     path.moveTo(0f, 1727f)
     path.relativeLineTo(86f,0f)
+    path.moveTo(0f,0f)
+    path.relativeLineTo(-150f,0f)
 
     LaunchedEffect(Unit) {
         brightnessLevel = 1f
@@ -214,14 +221,6 @@ fun FirstConnectingBar() {
             color = changeBrightness(LcdBlueWhite.toArgb(), brightness),
             size = Size(1f, this.size.height - 100f),
         )
-//        drawRoundRect(
-//            color = changeBrightness(LcdBlueWhite.toArgb(), brightness).copy(alpha = 0.8f),
-//            size = Size(1f, this.size.height - 50f),
-//            style = Stroke(
-//                4f
-//            ),
-//            cornerRadius = CornerRadius(20f,20f)
-//        )
         drawPath(
             path = path,
             color = changeBrightness(LcdBlueWhite.toArgb(), brightness),
@@ -232,7 +231,7 @@ fun FirstConnectingBar() {
     }
 }
 @Composable
-fun MultiConnectingBar() {
+fun SecondConnectingBar() {
     var brightnessLevel by remember { mutableFloatStateOf(0f) }
     val path = Path()
     path.moveTo(18f,75f)
@@ -241,6 +240,10 @@ fun MultiConnectingBar() {
         path.relativeMoveTo(-112f, 0f)
         path.relativeMoveTo(0f, 113f)
     }
+    path.moveTo(0f,100f)
+    path.relativeLineTo(0f,1700f)
+    path.relativeLineTo(345f,0f)
+
     LaunchedEffect(Unit) {
         brightnessLevel = 1f
     }
@@ -257,10 +260,6 @@ fun MultiConnectingBar() {
             .size(5.dp, 650.dp)
             .offset(x = (-17).dp)
     ) {
-        drawRect(
-            color = changeBrightness(LcdBlueWhite.toArgb(), brightness),
-            size = Size(1f, this.size.height)
-        )
         drawPath(
             path = path,
             color = changeBrightness(LcdBlueWhite.toArgb(), brightness),
@@ -272,11 +271,11 @@ fun MultiConnectingBar() {
 }
 
 @Composable
-fun LoadingColumn() {
+fun LoadingColumn(index: Int, range: Int = 15) {
     var loadingLevelRange by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(Unit) {
-        loadingLevelRange = 15
+        loadingLevelRange = range
     }
 
     Column(
@@ -291,6 +290,7 @@ fun LoadingColumn() {
             animationSpec = TweenSpec(
                 durationMillis = 100,
                 easing = LinearEasing,
+                delay = index * 50
             ),
         )
         for (i in 1..loadingParellelogram) {
@@ -299,11 +299,11 @@ fun LoadingColumn() {
     }
 }
 @Composable
-fun FlippedLoadingColumn(offset: Dp = 0.dp) {
+fun FlippedLoadingColumn(offset: Dp = 0.dp, index: Int, range: Int = 15) {
     var loadingLevelRange by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(Unit) {
-        loadingLevelRange = 15
+        loadingLevelRange = range
     }
 
     Column(
@@ -319,6 +319,7 @@ fun FlippedLoadingColumn(offset: Dp = 0.dp) {
             animationSpec = TweenSpec(
                 durationMillis = 100,
                 easing = LinearEasing,
+                delay = index * 50
             ),
         )
         for (i in 1..loadingParellelogram) {
@@ -330,7 +331,6 @@ fun FlippedLoadingColumn(offset: Dp = 0.dp) {
 @Composable
 fun LoadingParallelogram(index: Int) {
     var brightnessLevel by remember { mutableFloatStateOf(0f) }
-    val factor = 2.5f
 
     LaunchedEffect(Unit) {
         brightnessLevel = 1f
@@ -364,7 +364,7 @@ fun LoadingParallelogram(index: Int) {
             path = secondaryPath,
             color = LcdGrey,
             style = Stroke(
-                3f
+                4f
             )
         )
         drawPath(
@@ -411,7 +411,7 @@ fun FlippedLoadingParallelogram(index: Int) {
             path = secondaryPath,
             color = LcdGrey,
             style = Stroke(
-                2f
+                4f
             )
         )
         drawPath(

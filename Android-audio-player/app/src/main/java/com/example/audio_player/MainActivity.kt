@@ -114,36 +114,36 @@ class MainActivity : ComponentActivity() {
             }
             val listener = PlayerListener(applicationContext, viewModel, mediaController)
             mediaController.addListener(listener)
-            setContent {
-                Audio_playerTheme {
-                    NavHost(
-                        mediaController,
-                        songInfo,
-                        spectrumAnalyzer,
-                        viewModel,
-                        albumInfo,
-                        applicationContext
-                    )
-                    if (viewModel.isPlaying) {
-                        LaunchedEffect(Unit) {
-                            while (true) {
-                                mediaController.let { viewModel.updateCurrentSongPosition(it.currentPosition) }
-                                delay(1.seconds / 30)
-                            }
-                        }
-                        LaunchedEffect(Unit) {
-                            while (true) {
-                                mediaController.let {
-                                    if (it.duration != C.TIME_UNSET) {
-                                        viewModel.updateSongDuration(time = mediaController.duration / 1000)
-                                    }
-                                }
-                                delay(1.seconds / 30)
-                            }
-                        }
-                    }
-                }
-            }
+//            setContent {
+//                Audio_playerTheme {
+//                    NavHost(
+//                        mediaController,
+//                        songInfo,
+//                        spectrumAnalyzer,
+//                        viewModel,
+//                        albumInfo,
+//                        applicationContext
+//                    )
+//                    if (viewModel.isPlaying) {
+//                        LaunchedEffect(Unit) {
+//                            while (true) {
+//                                mediaController.let { viewModel.updateCurrentSongPosition(it.currentPosition) }
+//                                delay(1.seconds / 30)
+//                            }
+//                        }
+//                        LaunchedEffect(Unit) {
+//                            while (true) {
+//                                mediaController.let {
+//                                    if (it.duration != C.TIME_UNSET) {
+//                                        viewModel.updateSongDuration(time = mediaController.duration / 1000)
+//                                    }
+//                                }
+//                                delay(1.seconds / 30)
+//                            }
+//                        }
+//                    }
+//                }
+//            }
         }
     }
 }
