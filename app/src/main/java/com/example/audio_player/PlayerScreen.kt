@@ -744,24 +744,6 @@ fun level16k(spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer): 
 }
 //============================== Text presets ==============================//
 @Composable
-fun DotoText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel) {
-    Text(
-        modifier = modifier,
-        text = text,
-        fontFamily = dotoFamily,
-        fontWeight = FontWeight.W600,
-        fontSize = 8.sp,
-        color = viewModel.eqTextColor,
-        style = TextStyle(
-            shadow = Shadow(
-                color = viewModel.eqTextColor.copy(alpha = 0.8f),
-                offset = Offset(0f,0f),
-                blurRadius = 20f
-            )
-        )
-    )
-}
-@Composable
 fun OrbitronText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel) {
     Text(
         modifier = modifier,

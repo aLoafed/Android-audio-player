@@ -8,7 +8,6 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -52,7 +51,7 @@ import com.example.audio_player.ui.theme.LcdGrey
 import kotlinx.coroutines.delay
 
 @Composable
-fun LoadingScreen(viewModel: PlayerViewModel) {
+fun DetailedLoadingScreen(viewModel: PlayerViewModel) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -134,7 +133,7 @@ fun LoadingBars(viewModel: PlayerViewModel) {
                         FifthSection()
                     }
                     LaunchedEffect(Unit) {
-                        delay(550)
+                        delay(750)
                         viewModel.updateFinishedLoading(true)
                     }
                 }

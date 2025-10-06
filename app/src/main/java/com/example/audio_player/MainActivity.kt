@@ -104,7 +104,8 @@ class MainActivity : ComponentActivity() {
             val spectrumAnalyzer = mediaSessionService.getSpectrumAnalyzer()
             enableEdgeToEdge()
             setContent {
-                LoadingScreen(viewModel)
+                BasicLoadingScreen(viewModel)
+//                DetailedLoadingScreen(viewModel)
             }
             while (mediaController == null) {
                 delay(50)
