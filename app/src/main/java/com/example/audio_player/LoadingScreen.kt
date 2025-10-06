@@ -8,6 +8,7 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -32,7 +33,9 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.RoundRect
 import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.Path
@@ -47,7 +50,6 @@ import androidx.core.graphics.ColorUtils
 import com.example.audio_player.ui.theme.LcdBlueWhite
 import com.example.audio_player.ui.theme.LcdGrey
 import kotlinx.coroutines.delay
-import java.util.logging.LogRecord
 
 @Composable
 fun LoadingScreen(viewModel: PlayerViewModel) {
@@ -79,10 +81,10 @@ fun LoadingScreen(viewModel: PlayerViewModel) {
 
 @Composable
 fun LoadingBars(viewModel: PlayerViewModel) {
-    var flippedLoadingColumnRange by remember { mutableIntStateOf(0) }
+    var loadingColumnRange by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(Unit) {
-        flippedLoadingColumnRange = 5
+        loadingColumnRange = 5
     }
 
     Row(
@@ -91,14 +93,14 @@ fun LoadingBars(viewModel: PlayerViewModel) {
         verticalAlignment = Alignment.Top,
         horizontalArrangement = Arrangement.Start
     ) {
-        val flippedLoadingColumn by animateIntAsState(
-            targetValue = flippedLoadingColumnRange,
+        val loadingColumns by animateIntAsState(
+            targetValue = loadingColumnRange,
             animationSpec = TweenSpec(
                 durationMillis = 500,
                 easing = LinearEasing,
             ),
         )
-        for (i in 1..flippedLoadingColumn) {
+        for (i in 1..loadingColumns) {
             when (i) {
                 2 -> {
                     LoadingColumn(i)
@@ -122,7 +124,15 @@ fun LoadingBars(viewModel: PlayerViewModel) {
                 }
                 5 -> {
                     Spacer(Modifier.width(31.dp))
-                    FlippedLoadingColumn(offset = 24.dp, i, 10)
+                    Box(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .width(60.dp),
+                        contentAlignment = Alignment.TopCenter
+                    ) {
+                        FlippedLoadingColumn(offset = 24.dp, i, 10)
+                        FifthSection()
+                    }
                     LaunchedEffect(Unit) {
                         delay(550)
                         viewModel.updateFinishedLoading(true)
@@ -137,8 +147,163 @@ fun LoadingBars(viewModel: PlayerViewModel) {
     }
 }
 @Composable
+fun FifthSection() {
+    Box(
+        modifier = Modifier
+            .size(60.dp, 125.dp)
+            .offset((-70).dp, 440.dp),
+        contentAlignment = Alignment.TopCenter
+    ) {
+        FifthSectionElements()
+        FifthConnector()
+    }
+}
+@Composable
+fun FifthSectionElements() {
+    Column(
+        modifier = Modifier
+            .size(60.dp,80.dp)
+            .offset(y = 2.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        Row(
+            modifier = Modifier
+                .size(60.dp, 20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            FlippedLoadingParallelogram(5)
+            Spacer(modifier = Modifier.width(20.dp))
+            LoadingParallelogram(5)
+        }
+        Spacer(modifier = Modifier.height(5.dp))
+        Row(
+            modifier = Modifier
+                .size(60.dp, 20.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.Center
+        ) {
+            FlippedLoadingParallelogram(5)
+            Spacer(modifier = Modifier.width(20.dp))
+            LoadingParallelogram(5)
+        }
+        LoadingRectangle(5)
+    }
+}
+@Composable
 fun FifthConnector() {
-    Canvas(modifier = Modifier ) { }
+    var brightnessLevel by remember { mutableFloatStateOf(0f) }
+    val path = Path()
+    // Main to elements
+    path.moveTo(-17f,20f)
+    path.relativeLineTo(85f,0f)
+    path.relativeLineTo(0f,114f)
+    path.moveTo(268f,-29f)
+    path.relativeLineTo(0f,157f)
+    // Interconnection
+    path.relativeMoveTo(-80f,73f)
+    path.relativeLineTo(-15f,0f)
+    path.relativeLineTo(0f,70f)
+    path.relativeLineTo(15f,0f)
+    path.relativeMoveTo(-49f,-70f)
+    path.relativeLineTo(15f,0f)
+    path.relativeLineTo(0f,70f)
+    path.relativeLineTo(-15f,0f)
+    // Interconnection to next element
+    path.relativeMoveTo(-35f,0f)
+    path.relativeLineTo(0f,120f)
+    path.relativeMoveTo(119f,-120f)
+    path.relativeLineTo(0f,120f)
+    // Last element to screen edge
+    path.relativeMoveTo(10f,25f)
+    path.relativeLineTo(160f,0f)
+
+    LaunchedEffect(Unit) {
+        brightnessLevel = 1f
+    }
+    val brightness by animateFloatAsState(
+        targetValue = brightnessLevel,
+        animationSpec = TweenSpec(
+            500,
+            easing = EaseOutElastic
+        )
+    )
+    Canvas(
+        modifier = Modifier
+            .size(60.dp)
+    ) {
+        drawPath(
+            path = path,
+            color = changeBrightness(LcdBlueWhite.toArgb(), brightness),
+            style = Stroke(
+                1f,
+            )
+        )
+    }
+}
+@Composable
+fun LoadingRectangle(index: Int) {
+    var brightnessLevel by remember { mutableFloatStateOf(0f) }
+
+    LaunchedEffect(Unit) {
+        brightnessLevel = 1f
+    }
+
+    val brightness by animateFloatAsState(
+        targetValue = brightnessLevel,
+        animationSpec = TweenSpec(
+            400,
+            easing = EaseOutBounce,
+            delay = index * 10
+        )
+    )
+    Canvas(
+        modifier = Modifier
+            .size(1.dp)
+            .offset(x = 3.dp, y = 75.dp)
+    ) {
+        val mainPath = Path()
+        rectanglePath(mainPath, 2.5f)
+        val secondaryPath = Path()
+        rectanglePath(secondaryPath, 0.55f)
+        val tertiaryPath = Path()
+        rectanglePath(tertiaryPath, 0.5f)
+
+        drawPath(
+            path = mainPath,
+            color = changeBrightness(LcdBlueWhite.toArgb(), brightness),
+            style = Fill
+        )
+        drawPath(
+            path = secondaryPath,
+            color = LcdGrey,
+            style = Stroke(
+                4f
+            )
+        )
+        drawPath(
+            path = tertiaryPath,
+            color = Color.White,
+            style = Fill
+        )
+    }
+}
+
+fun rectanglePath(path: Path, factor: Float) {
+    path.addRoundRect(
+        RoundRect(
+            left = 0f * factor,
+            top = 20f * factor,
+            right = 60f * factor,
+            bottom = 0f * factor,
+            cornerRadius = CornerRadius(1f,1f)
+        )
+    )
+//    path.relativeLineTo(35f * factor, 0f) // Upper left
+//    path.relativeLineTo(0f, 25f * factor) // Upper right
+//    path.relativeLineTo(-35f * factor, 0f) // Lower right
+//    path.close() // Lower left
 }
 @Composable
 fun FourthConnectingBar() {
