@@ -11,10 +11,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
-import androidx.compose.ui.graphics.toColorLong
-import androidx.core.graphics.ColorUtils
+import androidx.compose.ui.graphics.toArgb
 import androidx.lifecycle.ViewModel
-import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaController
 import com.example.audio_player.ui.theme.LcdBlueWhite
 import com.example.audio_player.ui.theme.LcdGrey
@@ -22,8 +20,7 @@ import com.example.audio_player.ui.theme.LcdGrey
 class PlayerViewModel(
     applicationContext: Context,
 ) : ViewModel() {
-    var loadingFinished by mutableStateOf(false)
-        private set
+    //========================= Media info =========================
     var duration by mutableFloatStateOf(1f) // Length of song
         private set
     var currentSongPosition by mutableFloatStateOf((0f)) // Current position in song
@@ -49,7 +46,9 @@ class PlayerViewModel(
         private set
     var queuedSongs = listOf<SongInfo>()
         private set
-    val settingsData = SettingsData(applicationContext, applicationContext.dataStore)
+
+    var lastPlayedUnshuffledSong = 0
+        private set
     //========================= Playing modes =========================
     var isPlaying by mutableStateOf(false)
         private set
@@ -73,8 +72,6 @@ class PlayerViewModel(
     var sliderThumbColor = Color.White
         private set
     var sliderTrackColor = Color.White
-        private set
-    var lastPlayedUnshuffledSong = 0
         private set
     val colorMap = mutableMapOf(
         "Default" to LcdGrey,
@@ -101,16 +98,36 @@ class PlayerViewModel(
         "Pink" to Color(0xffFFC0CB),
         "Purple" to Color(0xffA020F0)
     )
-//    suspend fun initColorMaps() {
-//        for (i in 0 until settingsData.preferencesList.count()) {
-//            val tmpColor = settingsData.readKey(settingsData.preferencesList[i])
-//            if (tmpColor != null) {
-//                colorMap[settingsData.preferencesList[i]] = Color(tmpColor)
-//                otherColorMap[settingsData.preferencesList[i]] = Color(tmpColor)
-//            }
-//        }
-//    }
+    val customColorMap = mutableMapOf<String, Int>()
+    //========================= Miscellaneous =========================
+    var loadingFinished by mutableStateOf(false)
+        private set
+
+    var showBasicLoadingScreen = true
+        private set
     //========================= Updaters =========================
+    fun initViewModel(context: Context) {
+        val settingsManager = SettingsManager(context)
+        val settings = settingsManager.loadSettings()
+        backgroundColor = Color(settings.backgroundColor)
+        textColor = Color(settings.backgroundColor)
+        iconColor = Color(settings.iconColor)
+        eqTextColor = Color(settings.eqTextColor)
+        eqLevelColor = Color(settings.eqLevelColor)
+        sliderThumbColor = Color(settings.sliderThumbColor)
+        sliderTrackColor = Color(settings.sliderTrackColor)
+        customColorMap.putAll(settings.customColors)
+        val intToColorMap = mutableMapOf<String, Color>()
+        for (i in settings.customColors.keys) {
+            intToColorMap[i] = Color(settings.customColors[i]!!)
+        }
+        colorMap.putAll(intToColorMap)
+        showBasicLoadingScreen = settings.showBasicLoadingScreen
+    }
+    //========================= Init from Json =========================
+    fun updateLoadingScreenChoice(state: Boolean) {
+        showBasicLoadingScreen = state
+    }
     fun updateFinishedLoading(state: Boolean) {
         loadingFinished = state
     }
@@ -129,17 +146,13 @@ class PlayerViewModel(
     fun updateCustomColors(color: Color, name: String) {
         colorMap[name] = color
         otherColorMap[name] = color
+        customColorMap[name] = color.toArgb()
     }
     fun removeCustomColors(key: String) {
         colorMap.remove(key)
         otherColorMap.remove(key)
     }
-    fun darkenColor(color: Color, factor: Float): Color {
-        val hslArray = FloatArray(3)
-        ColorUtils.colorToHSL(color.toColorLong().toInt(), hslArray)
-        hslArray[2] = (hslArray[2] * factor).coerceIn(0f,1f)
-        return Color(ColorUtils.HSLToColor(hslArray))
-    }
+
     fun updateColor(choice: String, color: Color?) {
         if (color != null) {
             when (choice) {

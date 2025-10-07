@@ -2,7 +2,6 @@ package com.example.audio_player
 
 import android.Manifest
 import android.content.ComponentName
-import android.content.Context
 import android.os.Build
 import android.os.Bundle
 import androidx.activity.ComponentActivity
@@ -21,7 +20,6 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
-import androidx.datastore.preferences.preferencesDataStore
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
@@ -35,8 +33,6 @@ import com.google.common.util.concurrent.MoreExecutors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.seconds
-
-val Context.dataStore by preferencesDataStore(name = "settings")
 
 @kotlin.OptIn(ExperimentalMaterial3Api::class)
 @UnstableApi
@@ -57,6 +53,7 @@ class MainActivity : ComponentActivity() {
     @OptIn(UnstableApi::class, ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        viewModel.initViewModel(applicationContext)
         var mediaController: MediaController? = null
         val controllerFuture = MediaController.Builder(
             this,
@@ -104,8 +101,11 @@ class MainActivity : ComponentActivity() {
             val spectrumAnalyzer = mediaSessionService.getSpectrumAnalyzer()
             enableEdgeToEdge()
             setContent {
-                BasicLoadingScreen(viewModel)
-//                DetailedLoadingScreen(viewModel)
+                if (viewModel.showBasicLoadingScreen) {
+                    BasicLoadingScreen(viewModel)
+                } else {
+                    DetailedLoadingScreen(viewModel)
+                }
             }
             while (mediaController == null) {
                 delay(50)

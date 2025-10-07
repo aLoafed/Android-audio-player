@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    kotlin("plugin.serialization") version "2.2.0"
 }
 
 android {
@@ -42,9 +43,9 @@ android {
 dependencies {
 
     //noinspection UseTomlInstead
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
     implementation("com.github.wendykierp:JTransforms:3.1")
     implementation("com.github.skydoves:colorpicker-compose:1.1.2")
-    implementation("androidx.datastore:datastore-preferences:1.1.7")
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.ui)

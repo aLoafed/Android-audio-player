@@ -32,15 +32,14 @@ import androidx.compose.material3.MenuAnchorType
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -50,7 +49,6 @@ import com.github.skydoves.colorpicker.compose.AlphaTile
 import com.github.skydoves.colorpicker.compose.BrightnessSlider
 import com.github.skydoves.colorpicker.compose.HsvColorPicker
 import com.github.skydoves.colorpicker.compose.rememberColorPickerController
-import kotlinx.coroutines.launch
 
 @Composable
 fun Settings(navController: NavController, viewModel: PlayerViewModel) {
@@ -134,132 +132,10 @@ fun Settings(navController: NavController, viewModel: PlayerViewModel) {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ThemeChange(viewModel: PlayerViewModel, navController: NavController, context: Context) {
-    val settingsData = SettingsData(context, context.dataStore)
-    @Composable
-    fun ColourListDropDownMenu(name: String, choice: String) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(70.dp)
-                .padding(vertical = 5.dp, horizontal = 5.dp),
-            horizontalArrangement = Arrangement.Start
-        ) {
-            var expanded by remember { mutableStateOf(false) }
-            var selectedText by remember { mutableStateOf("Default") }
-            LcdText(
-                "Change $name colour: ",
-                viewModel = viewModel
-            )
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded }
-            ) {
-                TextField(
-                    modifier = Modifier
-                        .menuAnchor(
-                            type = MenuAnchorType.PrimaryNotEditable,
-                            enabled = true
-                        ),
-                    value = selectedText,
-                    onValueChange = {},
-                    readOnly = true,
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(
-                            expanded = expanded
-                        )
-                    }
-                )
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    for (i in viewModel.colorMap.keys) {
-                        DropdownMenuItem(
-                            text = {
-                                LcdText(i, viewModel = viewModel)
-                            },
-                            onClick = {
-                                selectedText = i
-                                viewModel.updateColor(choice, viewModel.colorMap[i])
-                                expanded = false
-                            },
-                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-                        )
-                    }
-                }
-            }
-        }
-    }
+    val tmpColorSettings = mutableMapOf<String, Int>()
+    val tmpLoadingScreenSettings = true
+    val tmpColorListKeys = arrayOf("background","eqText","sliderThumb","sliderTrack")
 
-    @OptIn(ExperimentalMaterial3Api::class)
-    @Composable
-    fun ColourOtherListDropDownMenu(name: String, choice: String) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(70.dp)
-                .padding(vertical = 5.dp, horizontal = 5.dp),
-            horizontalArrangement = Arrangement.Start
-        ) {
-            var expanded by remember { mutableStateOf(false) }
-            var selectedText by remember { mutableStateOf("Default") }
-            LcdText(
-                "Change $name colour: ",
-                viewModel = viewModel
-            )
-            ExposedDropdownMenuBox(
-                expanded = expanded,
-                onExpandedChange = { expanded = !expanded }
-            ) {
-                TextField(
-                    modifier = Modifier
-                        .menuAnchor(
-                            type = MenuAnchorType.PrimaryNotEditable,
-                            enabled = true
-                        ),
-                    value = selectedText,
-                    onValueChange = {},
-                    readOnly = true,
-                    trailingIcon = {
-                        ExposedDropdownMenuDefaults.TrailingIcon(
-                            expanded = expanded
-                        )
-                    }
-                )
-                ExposedDropdownMenu(
-                    expanded = expanded,
-                    onDismissRequest = { expanded = false }
-                ) {
-                    for (i in viewModel.otherColorMap.keys) {
-                        DropdownMenuItem(
-                            text = {
-                                LcdText(i, viewModel = viewModel)
-                            },
-                            onClick = {
-                                selectedText = i
-                                viewModel.updateColor(choice, viewModel.otherColorMap[i])
-                                expanded = false
-                            },
-                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-                        )
-                    }
-//                    for (i in settingsData.preferencesList) {
-//                        DropdownMenuItem(
-//                            text = {
-//                                LcdText(i, viewModel = viewModel)
-//                            },
-//                            onClick = {
-//                                selectedText = i
-//                                viewModel.updateColor(choice, viewModel.otherColorMap[i])
-//                                expanded = false
-//                            },
-//                            contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
-//                        )
-//                    }
-                }
-            }
-        }
-    }
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -269,6 +145,7 @@ fun ThemeChange(viewModel: PlayerViewModel, navController: NavController, contex
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
     ) {
+        // Back arrow
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -304,39 +181,238 @@ fun ThemeChange(viewModel: PlayerViewModel, navController: NavController, contex
             modifier = Modifier
                 .height(10.dp)
         )
-        ColourListDropDownMenu("background", "background")
-        ColourOtherListDropDownMenu("text", "text")
-        ColourOtherListDropDownMenu("icon", "icon")
-        ColourOtherListDropDownMenu("equaliser's level", "eqLevel")
-        ColourListDropDownMenu("equaliser's text", "eqText")
-        ColourListDropDownMenu("seek bar's thumb", "sliderThumb")
-        ColourListDropDownMenu("seek bar's track", "sliderTrack")
-        Button(
-            modifier = Modifier.padding(horizontal = 5.dp),
-            onClick = {
-                navController.navigate("color_picker")
-            },
-            colors = ButtonColors(
-                containerColor = LightLcdGrey,
-                contentColor = Color.White,
-                disabledContainerColor = LightLcdGrey,
-                disabledContentColor = Color.White
-            )
+        // To choose the colors for UI
+        ColourListDropDownMenu("background", "background", viewModel, tmpColorSettings, viewModel.backgroundColor)
+        ColourOtherListDropDownMenu("text", "text", viewModel, tmpColorSettings, viewModel.textColor)
+        ColourOtherListDropDownMenu("icon", "icon", viewModel, tmpColorSettings, viewModel.iconColor)
+        ColourOtherListDropDownMenu("equaliser's level","eqLevel", viewModel, tmpColorSettings, viewModel.eqLevelColor)
+        ColourListDropDownMenu("equaliser's text","eqText", viewModel, tmpColorSettings, viewModel.eqTextColor)
+        ColourListDropDownMenu("seek bar's thumb","sliderThumb", viewModel, tmpColorSettings, viewModel.sliderThumbColor)
+        ColourListDropDownMenu("seek bar's track","sliderTrack", viewModel, tmpColorSettings, viewModel.sliderTrackColor)
+        /// Add loading screen choice here ///
+        // Button row for adding a custom color and saving changes
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(60.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            LcdText(
-                "Add a custom color",
-                viewModel = viewModel
-            )
+            Button(
+                modifier = Modifier.padding(horizontal = 5.dp),
+                onClick = {
+                    navController.navigate("color_picker")
+                },
+                colors = ButtonColors(
+                    containerColor = LightLcdGrey,
+                    contentColor = Color.White,
+                    disabledContainerColor = LightLcdGrey,
+                    disabledContentColor = Color.White
+                )
+            ) {
+                LcdText(
+                    "Add a custom color",
+                    viewModel = viewModel
+                )
+            }
+            Button(
+                modifier = Modifier.padding(horizontal = 5.dp),
+                onClick = {
+                    for (i in tmpColorSettings.keys) {
+                        if (i in tmpColorListKeys) {
+                            viewModel.updateColor(i, viewModel.colorMap[i])
+                        } else {
+                            viewModel.updateColor(i, viewModel.otherColorMap[i])
+                        }
+                    }
+                    saveChanges(viewModel, context)
+                },
+                colors = ButtonColors(
+                    containerColor = LightLcdGrey,
+                    contentColor = Color.White,
+                    disabledContainerColor = LightLcdGrey,
+                    disabledContentColor = Color.White
+                )
+            ) {
+                LcdText(
+                    "Save changes",
+                    viewModel = viewModel
+                )
+            }
         }
     }
 }
 
+fun saveChanges(viewModel: PlayerViewModel, context: Context) {
+    val data = SettingsData(
+        viewModel.backgroundColor.toArgb(),
+        viewModel.textColor.toArgb(),
+        viewModel.iconColor.toArgb(),
+        viewModel.eqLevelColor.toArgb(),
+        viewModel.eqTextColor.toArgb(),
+        viewModel.sliderThumbColor.toArgb(),
+        viewModel.sliderTrackColor.toArgb(),
+        viewModel.customColorMap,
+        viewModel.showBasicLoadingScreen
+    )
+    val settingsManager = SettingsManager(context)
+    settingsManager.saveSettings(data)
+}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ColourListDropDownMenu(
+    name: String,
+    choice: String,
+    viewModel: PlayerViewModel,
+    tmpColorSettings: MutableMap<String, Int>,
+    currentColor: Color
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(70.dp)
+            .padding(vertical = 5.dp, horizontal = 5.dp),
+        horizontalArrangement = Arrangement.Start
+    ) {
+        var expanded by remember { mutableStateOf(false) }
+        var selectedText by remember { mutableStateOf(getKeyOfColorMap(currentColor, viewModel)) }
+        LcdText(
+            "Change $name colour: ",
+            viewModel = viewModel
+        )
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded }
+        ) {
+            TextField(
+                modifier = Modifier
+                    .menuAnchor(
+                        type = MenuAnchorType.PrimaryNotEditable,
+                        enabled = true
+                    ),
+                value = selectedText,
+                onValueChange = {},
+                readOnly = true,
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(
+                        expanded = expanded
+                    )
+                }
+            )
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                for (i in viewModel.colorMap.keys) {
+                    DropdownMenuItem(
+                        text = {
+                            LcdText(i, viewModel = viewModel)
+                        },
+                        onClick = {
+                            selectedText = i
+                            if (choice !in tmpColorSettings.keys) {
+                                tmpColorSettings[choice] = viewModel.colorMap[i]!!.toArgb()
+                            } else {
+                                tmpColorSettings.remove(choice)
+                                tmpColorSettings[choice] = viewModel.colorMap[i]!!.toArgb()
+                            }
+                            expanded = false
+                        },
+                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                    )
+                }
+            }
+        }
+    }
+}
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun ColourOtherListDropDownMenu(
+    name: String,
+    choice: String,
+    viewModel: PlayerViewModel,
+    tmpColorSettings: MutableMap<String, Int>,
+    currentColor: Color
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(70.dp)
+            .padding(vertical = 5.dp, horizontal = 5.dp),
+        horizontalArrangement = Arrangement.Start
+    ) {
+        var expanded by remember { mutableStateOf(false) }
+        var selectedText by remember { mutableStateOf(getKeyOfOtherColorMap(currentColor,viewModel)) }
+        LcdText(
+            "Change $name colour: ",
+            viewModel = viewModel
+        )
+        ExposedDropdownMenuBox(
+            expanded = expanded,
+            onExpandedChange = { expanded = !expanded }
+        ) {
+            TextField(
+                modifier = Modifier
+                    .menuAnchor(
+                        type = MenuAnchorType.PrimaryNotEditable,
+                        enabled = true
+                    ),
+                value = selectedText,
+                onValueChange = {},
+                readOnly = true,
+                trailingIcon = {
+                    ExposedDropdownMenuDefaults.TrailingIcon(
+                        expanded = expanded
+                    )
+                }
+            )
+            ExposedDropdownMenu(
+                expanded = expanded,
+                onDismissRequest = { expanded = false }
+            ) {
+                for (i in viewModel.otherColorMap.keys) {
+                    DropdownMenuItem(
+                        text = {
+                            LcdText(i, viewModel = viewModel)
+                        },
+                        onClick = {
+                            selectedText = i
+                            if (choice !in tmpColorSettings.keys) {
+                                tmpColorSettings[choice] = viewModel.otherColorMap[i]!!.toArgb()
+                            } else {
+                                tmpColorSettings.remove(choice)
+                                tmpColorSettings[choice] = viewModel.otherColorMap[i]!!.toArgb()
+                            }
+                            expanded = false
+                        },
+                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                    )
+                }
+            }
+        }
+    }
+}
+
+fun getKeyOfColorMap(colorKey: Color, viewModel: PlayerViewModel): String {
+    for (i in viewModel.colorMap.keys) {
+        if (viewModel.colorMap[i] == colorKey) {
+            return i
+        }
+    }
+    return "Error: Empty map"
+}
+fun getKeyOfOtherColorMap(colorKey: Color, viewModel: PlayerViewModel): String {
+    for (i in viewModel.otherColorMap.keys) {
+        if (viewModel.otherColorMap[i] == colorKey) {
+            return i
+        }
+    }
+    return "Error: Empty map"
+}
 @Composable
 fun ColorPicker(viewModel: PlayerViewModel, navController: NavController, context: Context) {
-    val settingsData = SettingsData(context, context.dataStore)
     val controller = rememberColorPickerController()
     var selectedColor by remember { mutableStateOf(Color.White) }
-    val coroutine = rememberCoroutineScope()
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -452,7 +528,6 @@ fun ColorPicker(viewModel: PlayerViewModel, navController: NavController, contex
                         i ++
                     }
                     viewModel.updateCustomColors(selectedColor, tmpName)
-//                    coroutine.launch{ settingsData.addCustomColor(tmpName, selectedColor) }
                     navController.popBackStack()
                 },
                 colors = ButtonColors(
