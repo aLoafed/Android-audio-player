@@ -1,6 +1,7 @@
 package com.example.audio_player
 
 import android.content.Context
+import android.util.Log
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import com.example.audio_player.ui.theme.LcdBlueWhite
@@ -26,10 +27,7 @@ class SettingsManager(context: Context) {
     private val settingsFilePath = File(context.filesDir, "app_settings.json")
     private val json = Json { prettyPrint = true }
     fun saveSettings(settingsData: SettingsData) {
-        val jsonColorData = json.encodeToString(settingsData)
-        // val writer = settingsFilePath.writer()
-        settingsFilePath.writeText(jsonColorData)
-        // writer.write(jsonColorData)
+        settingsFilePath.writeText(json.encodeToString(settingsData))
     }
 
     fun loadSettings(): SettingsData {
@@ -48,7 +46,6 @@ class SettingsManager(context: Context) {
             )
             saveSettings(settingsData)
         }
-
         return json.decodeFromString<SettingsData>(settingsFilePath.readText())
     }
 }

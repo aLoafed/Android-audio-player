@@ -3,6 +3,7 @@ package com.example.audio_player
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.net.Uri
+import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
@@ -109,8 +110,9 @@ class PlayerViewModel(
     fun initViewModel(context: Context) {
         val settingsManager = SettingsManager(context)
         val settings = settingsManager.loadSettings()
+        Log.d("Neoplayer","$settings")
         backgroundColor = Color(settings.backgroundColor)
-        textColor = Color(settings.backgroundColor)
+        textColor = Color(settings.textColor)
         iconColor = Color(settings.iconColor)
         eqTextColor = Color(settings.eqTextColor)
         eqLevelColor = Color(settings.eqLevelColor)
