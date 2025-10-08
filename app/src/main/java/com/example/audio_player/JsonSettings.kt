@@ -27,7 +27,9 @@ class SettingsManager(context: Context) {
     private val json = Json { prettyPrint = true }
     fun saveSettings(settingsData: SettingsData) {
         val jsonColorData = json.encodeToString(settingsData)
+        // val writer = settingsFilePath.writer()
         settingsFilePath.writeText(jsonColorData)
+        // writer.write(jsonColorData)
     }
 
     fun loadSettings(): SettingsData {
@@ -46,8 +48,7 @@ class SettingsManager(context: Context) {
             )
             saveSettings(settingsData)
         }
-        val jsonText = json.encodeToString(settingsFilePath.readText())
 
-        return json.decodeFromString<SettingsData>(jsonText)
+        return json.decodeFromString<SettingsData>(settingsFilePath.readText())
     }
 }
