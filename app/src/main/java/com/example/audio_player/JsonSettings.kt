@@ -11,16 +11,16 @@ import kotlinx.serialization.json.*
 import java.io.File
 
 @Serializable
-data class SettingsData( // May want to add default values in the future
-    val backgroundColor: Int,
-    val textColor: Int,
-    val iconColor: Int,
-    val eqLevelColor: Int,
-    val eqTextColor: Int,
-    val sliderThumbColor: Int,
-    val sliderTrackColor: Int,
+data class SettingsData(
+    val backgroundColor: Int = LcdGrey.toArgb(),
+    val textColor: Int = Color.White.toArgb(),
+    val iconColor: Int = Color.White.toArgb(),
+    val eqLevelColor: Int = Color.White.toArgb(),
+    val eqTextColor: Int = LcdBlueWhite.toArgb(),
+    val sliderThumbColor: Int = Color.White.toArgb(),
+    val sliderTrackColor: Int = changeBrightness(Color.White.toArgb(), 0.8f).toArgb(),
     val customColors: Map<String, Int>,
-    val showBasicLoadingScreen: Boolean,
+    val showBasicLoadingScreen: Boolean = true,
 )
 
 class SettingsManager(context: Context) {

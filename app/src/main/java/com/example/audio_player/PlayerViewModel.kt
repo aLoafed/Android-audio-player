@@ -156,6 +156,7 @@ class PlayerViewModel(
     }
 
     fun updateColor(choice: String, color: Color?) {
+        Log.d("Neoplayer", "Choice: $choice, Color: $color")
         if (color != null) {
             when (choice) {
                 "background" -> {

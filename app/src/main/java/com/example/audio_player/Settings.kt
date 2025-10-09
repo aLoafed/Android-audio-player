@@ -29,6 +29,8 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.Switch
+import androidx.compose.material3.SwitchColors
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -41,6 +43,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.audio_player.ui.theme.LightLcdGrey
@@ -116,11 +119,11 @@ fun Settings(navController: NavController, viewModel: PlayerViewModel) {
                 ) {
                     Icon(
                         painterResource(R.drawable.color_pallette),
-                        contentDescription = "Change theme",
+                        contentDescription = "Customisation",
                         tint = viewModel.iconColor
                     )
                     LcdText(
-                        "Theme",
+                        "Customisation",
                         viewModel = viewModel
                     )
                 }
@@ -134,7 +137,6 @@ fun Settings(navController: NavController, viewModel: PlayerViewModel) {
 fun ThemeChange(viewModel: PlayerViewModel, navController: NavController, context: Context) {
     val tmpColorSettings = mutableMapOf<String, Int>()
     val tmpLoadingScreenSettings = true
-    val tmpColorListKeys = arrayOf("background","eqText","sliderThumb","sliderTrack")
 
     Column(
         modifier = Modifier
@@ -189,8 +191,9 @@ fun ThemeChange(viewModel: PlayerViewModel, navController: NavController, contex
         ColourListDropDownMenu("equaliser's text","eqText", viewModel, tmpColorSettings, viewModel.eqTextColor)
         ColourListDropDownMenu("seek bar's thumb","sliderThumb", viewModel, tmpColorSettings, viewModel.sliderThumbColor)
         ColourListDropDownMenu("seek bar's track","sliderTrack", viewModel, tmpColorSettings, viewModel.sliderTrackColor)
+        LoadingScreenTypeSwitch(viewModel)
         /// Add loading screen choice here ///
-        // Button row for adding a custom color and saving changes
+        // Customisation buttons
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -198,48 +201,127 @@ fun ThemeChange(viewModel: PlayerViewModel, navController: NavController, contex
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
-            Button(
-                modifier = Modifier.padding(horizontal = 5.dp),
-                onClick = {
-                    navController.navigate("color_picker")
-                },
-                colors = ButtonColors(
-                    containerColor = LightLcdGrey,
-                    contentColor = Color.White,
-                    disabledContainerColor = LightLcdGrey,
-                    disabledContentColor = Color.White
-                )
-            ) {
-                LcdText(
-                    "Add a custom color",
-                    viewModel = viewModel
-                )
-            }
-            Button(
-                modifier = Modifier.padding(horizontal = 5.dp),
-                onClick = {
-                    for (i in tmpColorSettings.keys) {
-                        if (i in tmpColorListKeys) {
-                            viewModel.updateColor(i, viewModel.colorMap[i])
-                        } else {
-                            viewModel.updateColor(i, viewModel.otherColorMap[i])
-                        }
-                    }
-                    saveChanges(viewModel, context)
-                },
-                colors = ButtonColors(
-                    containerColor = LightLcdGrey,
-                    contentColor = Color.White,
-                    disabledContainerColor = LightLcdGrey,
-                    disabledContentColor = Color.White
-                )
-            ) {
-                LcdText(
-                    "Save changes",
-                    viewModel = viewModel
-                )
-            }
+            CustomColorButton(viewModel, navController)
+            ResetToDefaultsButton(viewModel, context)
         }
+        SaveChangesButton(tmpColorSettings, context, viewModel)
+    }
+}
+@Composable
+fun LoadingScreenTypeSwitch(viewModel: PlayerViewModel) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(70.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        var switched by remember { mutableStateOf(viewModel.showBasicLoadingScreen) }
+        LcdText(
+            "Basic loading screen",
+            viewModel = viewModel
+        )
+        Switch(
+            checked = switched,
+            onCheckedChange = {
+                switched = !switched
+                viewModel.updateLoadingScreenChoice(switched)
+            },
+            colors = SwitchColors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = LightLcdGrey,
+                checkedBorderColor = Color.White,
+                checkedIconColor = viewModel.iconColor,
+                uncheckedThumbColor = Color.White,
+                uncheckedTrackColor = LightLcdGrey,
+                uncheckedBorderColor = Color.White,
+                uncheckedIconColor = viewModel.iconColor,
+                disabledCheckedThumbColor = Color.White,
+                disabledCheckedTrackColor = Color.White,
+                disabledCheckedBorderColor = Color.White,
+                disabledCheckedIconColor = Color.White,
+                disabledUncheckedThumbColor = Color.White,
+                disabledUncheckedTrackColor = Color.White,
+                disabledUncheckedBorderColor = Color.White,
+                disabledUncheckedIconColor = Color.White
+            )
+        )
+    }
+}
+@Composable
+fun ResetToDefaultsButton(viewModel: PlayerViewModel, context: Context) {
+    Button(
+        modifier = Modifier.padding(horizontal = 5.dp),
+        onClick = {
+            val settingsManager = SettingsManager(context)
+            val defaultData = SettingsData(
+                customColors = viewModel.customColorMap
+            )
+            settingsManager.saveSettings(defaultData)
+        },
+        colors = ButtonColors(
+            containerColor = LightLcdGrey,
+            contentColor = Color.White,
+            disabledContainerColor = LightLcdGrey,
+            disabledContentColor = Color.White
+        )
+    ) {
+        LcdText(
+            "Reset to defaults",
+            viewModel = viewModel
+        )
+    }
+}
+@Composable
+fun CustomColorButton(
+    viewModel: PlayerViewModel,
+    navController: NavController,
+) {
+    Button(
+        modifier = Modifier.padding(horizontal = 5.dp),
+        onClick = {
+            navController.navigate("color_picker")
+        },
+        colors = ButtonColors(
+            containerColor = LightLcdGrey,
+            contentColor = Color.White,
+            disabledContainerColor = LightLcdGrey,
+            disabledContentColor = Color.White
+        )
+    ) {
+        LcdText(
+            "Add a custom color",
+            viewModel = viewModel
+        )
+    }
+}
+@Composable
+fun SaveChangesButton(
+    tmpColorSettings: MutableMap<String, Int>,
+    context: Context,
+    viewModel: PlayerViewModel
+) {
+    Button(
+        modifier = Modifier.padding(horizontal = 5.dp),
+        onClick = {
+            for (i in tmpColorSettings.keys) {
+                if (tmpColorSettings[i] != null) {
+                    viewModel.updateColor(i, Color(tmpColorSettings[i]!!))
+                }
+            }
+            saveChanges(viewModel, context)
+        },
+        colors = ButtonColors(
+            containerColor = LightLcdGrey,
+            contentColor = Color.White,
+            disabledContainerColor = LightLcdGrey,
+            disabledContentColor = Color.White
+        )
+    ) {
+        LcdText(
+            "Save changes",
+            viewModel = viewModel
+        )
     }
 }
 
