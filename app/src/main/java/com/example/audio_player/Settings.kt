@@ -13,7 +13,9 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.navigationBars
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
@@ -29,6 +31,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.MenuAnchorType
+import androidx.compose.material3.MenuItemColors
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchColors
 import androidx.compose.material3.TextField
@@ -46,6 +49,7 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
+import com.example.audio_player.ui.theme.LcdGrey
 import com.example.audio_player.ui.theme.LightLcdGrey
 import com.github.skydoves.colorpicker.compose.AlphaSlider
 import com.github.skydoves.colorpicker.compose.AlphaTile
@@ -143,7 +147,8 @@ fun ThemeChange(viewModel: PlayerViewModel, navController: NavController, contex
             .fillMaxSize()
             .background(viewModel.backgroundColor)
             .windowInsetsPadding(WindowInsets.statusBars)
-            .windowInsetsPadding(WindowInsets.navigationBars),
+            .windowInsetsPadding(WindowInsets.navigationBars)
+            .padding(horizontal = 5.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
     ) {
@@ -192,7 +197,6 @@ fun ThemeChange(viewModel: PlayerViewModel, navController: NavController, contex
         ColourListDropDownMenu("seek bar's thumb","sliderThumb", viewModel, tmpColorSettings, viewModel.sliderThumbColor)
         ColourListDropDownMenu("seek bar's track","sliderTrack", viewModel, tmpColorSettings, viewModel.sliderTrackColor)
         LoadingScreenTypeSwitch(viewModel)
-        /// Add loading screen choice here ///
         // Customisation buttons
         Row(
             modifier = Modifier
@@ -204,7 +208,16 @@ fun ThemeChange(viewModel: PlayerViewModel, navController: NavController, contex
             CustomColorButton(viewModel, navController)
             ResetToDefaultsButton(viewModel, context)
         }
-        SaveChangesButton(tmpColorSettings, context, viewModel)
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(50.dp)
+                .offset(y = 40.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.End
+        ) {
+            SaveChangesButton(tmpColorSettings, context, viewModel)
+        }
     }
 }
 @Composable
@@ -257,6 +270,13 @@ fun ResetToDefaultsButton(viewModel: PlayerViewModel, context: Context) {
             val defaultData = SettingsData(
                 customColors = viewModel.customColorMap
             )
+            viewModel.updateColor("background", Color(defaultData.backgroundColor))
+            viewModel.updateColor("text", Color(defaultData.textColor))
+            viewModel.updateColor("icon", Color(defaultData.iconColor))
+            viewModel.updateColor("eqLevel", Color(defaultData.eqLevelColor))
+            viewModel.updateColor("eqText", Color(defaultData.eqTextColor))
+            viewModel.updateColor("sliderThumb", Color(defaultData.sliderThumbColor))
+            viewModel.updateColor("sliderTrack", Color(defaultData.sliderTrackColor))
             settingsManager.saveSettings(defaultData)
         },
         colors = ButtonColors(
@@ -302,7 +322,8 @@ fun SaveChangesButton(
     viewModel: PlayerViewModel
 ) {
     Button(
-        modifier = Modifier.padding(horizontal = 5.dp),
+        modifier = Modifier
+            .padding(horizontal = 5.dp),
         onClick = {
             for (i in tmpColorSettings.keys) {
                 if (tmpColorSettings[i] != null) {
@@ -353,7 +374,7 @@ fun ColourListDropDownMenu(
         modifier = Modifier
             .fillMaxWidth()
             .height(70.dp)
-            .padding(vertical = 5.dp, horizontal = 5.dp),
+            .padding(vertical = 5.dp),
         horizontalArrangement = Arrangement.Start
     ) {
         var expanded by remember { mutableStateOf(false) }
@@ -364,7 +385,9 @@ fun ColourListDropDownMenu(
         )
         ExposedDropdownMenuBox(
             expanded = expanded,
-            onExpandedChange = { expanded = !expanded }
+            onExpandedChange = { expanded = !expanded },
+            modifier = Modifier
+                .size(width = 200.dp, height = 50.dp)
         ) {
             TextField(
                 modifier = Modifier
@@ -383,7 +406,8 @@ fun ColourListDropDownMenu(
             )
             ExposedDropdownMenu(
                 expanded = expanded,
-                onDismissRequest = { expanded = false }
+                onDismissRequest = { expanded = false },
+                containerColor = LcdGrey,
             ) {
                 for (i in viewModel.colorMap.keys) {
                     DropdownMenuItem(
@@ -400,7 +424,7 @@ fun ColourListDropDownMenu(
                             }
                             expanded = false
                         },
-                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding
+                        contentPadding = ExposedDropdownMenuDefaults.ItemContentPadding,
                     )
                 }
             }
@@ -420,7 +444,7 @@ fun ColourOtherListDropDownMenu(
         modifier = Modifier
             .fillMaxWidth()
             .height(70.dp)
-            .padding(vertical = 5.dp, horizontal = 5.dp),
+            .padding(vertical = 5.dp),
         horizontalArrangement = Arrangement.Start
     ) {
         var expanded by remember { mutableStateOf(false) }
