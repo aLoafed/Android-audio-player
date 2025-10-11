@@ -104,6 +104,7 @@ fun AlbumSongsScreen(album: String, songInfo: List<SongInfo>, mediaController: M
                         .clickable(
                             onClick = {
                                 if (mediaController != null) {
+                                    viewModel.updateShuffleMode(false)
                                     mediaController.clearMediaItems()
                                     viewModel.updateAlbumSongInfo(albumSongsList)
                                     for (j in 0 until albumSongsList.count()) {

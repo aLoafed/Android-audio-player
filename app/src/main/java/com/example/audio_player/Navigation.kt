@@ -193,6 +193,7 @@ fun Pager(
                     onClick = {
                         dropDownMenu = !dropDownMenu
                     },
+                    // More options i.e. settings button
                     content = {
                         Icon(
                             painterResource(R.drawable.more_menu),
@@ -211,6 +212,7 @@ fun Pager(
                                     )
                                 },
                                 onClick = {
+                                    dropDownMenu = false
                                     navController.navigate("settings")
                                 }
                             )
@@ -222,6 +224,7 @@ fun Pager(
                                     )
                                 },
                                 onClick = {
+                                    dropDownMenu = false
                                     navController.navigate("info_screen")
                                 }
                             )

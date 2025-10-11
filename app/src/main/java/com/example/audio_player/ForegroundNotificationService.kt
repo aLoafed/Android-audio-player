@@ -2,7 +2,9 @@ package com.example.audio_player
 
 import android.content.Context
 import android.os.Handler
+import androidx.annotation.FloatRange
 import androidx.media3.common.audio.AudioProcessor
+import androidx.media3.common.audio.SonicAudioProcessor
 import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultRenderersFactory
@@ -29,6 +31,7 @@ class ForegroundNotificationService : MediaSessionService() {
         return mediaSession
     }
     object SpectrumAnalyzer : AudioProcessor {
+        private val sonicAudioProcessor = SonicAudioProcessor()
         private var outputBuffer: ByteBuffer = AudioProcessor.EMPTY_BUFFER
         private var fft = DoubleFFT_1D(1024) // Creates FFT instance
         private var endOfStreamQueued = false
@@ -36,6 +39,9 @@ class ForegroundNotificationService : MediaSessionService() {
         var eqList = DoubleArray(7)
         var volume = 0.0
         override fun configure(inputAudioFormat: AudioProcessor.AudioFormat): AudioProcessor.AudioFormat {
+            sonicAudioProcessor.configure(inputAudioFormat)
+            sonicAudioProcessor.setPitch(1f)
+            sonicAudioProcessor.setSpeed(1f)
             return inputAudioFormat
         }
 
@@ -44,11 +50,13 @@ class ForegroundNotificationService : MediaSessionService() {
         }
 
         override fun queueInput(inputBuffer: ByteBuffer) {
-            outputBuffer = inputBuffer // Default audio
+            // outputBuffer = inputBuffer // Default audio
             if (!inputBuffer.hasRemaining()) {
                 return
             }
-            //================================ Collecting buffer data ================================//
+            //============================ Sonic Processor ============================//
+            sonicAudioProcessor.queueInput(inputBuffer)
+            //============================ Collecting buffer data ============================//
             val shortBuffer = inputBuffer.asShortBuffer()
             val fftArray = DoubleArray(1024) //512 as it's a power of 2 and isn't too laggy
             var bufferVolume = 0.0
@@ -83,14 +91,17 @@ class ForegroundNotificationService : MediaSessionService() {
             bufferVolume = sqrt(bufferVolume / 1024)
             eqList = frequencyCalculator(absValueList)
             volume = bufferVolume
+//            outputBuffer = sonicAudioProcessor.output
         }
 
         override fun queueEndOfStream() {
             endOfStreamQueued = true
+            sonicAudioProcessor.queueEndOfStream()
         }
 
         override fun getOutput(): ByteBuffer {
-            val result = outputBuffer
+//            val result = outputBuffer
+            val result = sonicAudioProcessor.output
             outputBuffer = AudioProcessor.EMPTY_BUFFER
             if (outputBuffer == AudioProcessor.EMPTY_BUFFER && endOfStreamQueued) {
                 isEnded = true
@@ -103,12 +114,14 @@ class ForegroundNotificationService : MediaSessionService() {
         }
 
         override fun flush() {
+            sonicAudioProcessor.flush()
             isEnded = false
             endOfStreamQueued = false
             outputBuffer = AudioProcessor.EMPTY_BUFFER
         }
 
         override fun reset() {
+            sonicAudioProcessor.reset()
             isEnded = false
             endOfStreamQueued = false
             outputBuffer = AudioProcessor.EMPTY_BUFFER
@@ -123,7 +136,6 @@ class ForegroundNotificationService : MediaSessionService() {
             tempList[5] = (absValueList[80 * 2])
             tempList[6] = (absValueList[205 * 2])
             return tempList
-
         }
     }
 

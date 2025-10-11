@@ -55,7 +55,8 @@ fun SongsScreen(
             .windowInsetsPadding(WindowInsets.navigationBars),
         contentPadding = PaddingValues(bottom = 55.dp),
         verticalArrangement = Arrangement.Top,
-        horizontalAlignment = Alignment.Start
+        horizontalAlignment = Alignment.Start,
+
     ) {
         items(songInfo.count()) { i ->
             Row(
@@ -65,12 +66,13 @@ fun SongsScreen(
                     .padding(5.dp)
                     .clickable(
                         onClick = {
+                            viewModel.updateShuffleMode(false)
                             mediaController?.clearMediaItems()
                             for (j in 0 until songInfo.count()) {
                                 mediaController?.addMediaItem(MediaItem.fromUri(songInfo[j].songUri))
                             }
                             mediaController?.prepare()
-                            mediaController?.seekTo(i,0L)
+                            mediaController?.seekTo(i, 0L)
                             mediaController?.play()
                             viewModel.updateQueuedSongs(songInfo)
                             viewModel.updateAlbumArt(songInfo[i].albumArt)
