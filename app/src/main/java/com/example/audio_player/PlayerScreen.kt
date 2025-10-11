@@ -53,6 +53,7 @@ import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaController
+import androidx.navigation.NavController
 import com.example.audio_player.ui.theme.dotoFamily
 import com.example.audio_player.ui.theme.orbitronFamily
 
@@ -226,6 +227,25 @@ fun PlaybackControls(mediaController: MediaController?, viewModel: PlayerViewMod
             },
         )
     }
+}
+@Composable
+fun ChangeSpeedButton(viewModel: PlayerViewModel, navController: NavController) {
+    IconButton(
+        onClick = {
+            navController.navigate("sonic_audio_controller_controls")
+        },
+        modifier = Modifier
+            .size(40.dp),
+        colors = IconButtonColors(
+            containerColor = Color.Transparent,
+            contentColor = viewModel.iconColor,
+            disabledContentColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent
+        ),
+        content = {
+
+        }
+    )
 }
 @Composable
 fun RepeatShuffleControls(viewModel: PlayerViewModel, mediaController: MediaController?, songInfo: List<SongInfo>) {

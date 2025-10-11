@@ -103,14 +103,12 @@ class PlayerViewModel(
     //========================= Miscellaneous =========================
     var loadingFinished by mutableStateOf(false)
         private set
-
     var showBasicLoadingScreen = true
         private set
-    //========================= Updaters =========================
+    //========================= Init from Json =========================
     fun initViewModel(context: Context) {
         val settingsManager = SettingsManager(context)
         val settings = settingsManager.loadSettings()
-        Log.d("Neoplayer","$settings")
         backgroundColor = Color(settings.backgroundColor)
         textColor = Color(settings.textColor)
         iconColor = Color(settings.iconColor)
@@ -126,7 +124,7 @@ class PlayerViewModel(
         colorMap.putAll(intToColorMap)
         showBasicLoadingScreen = settings.showBasicLoadingScreen
     }
-    //========================= Init from Json =========================
+    //========================= Setters =========================
     fun updateLoadingScreenChoice(state: Boolean) {
         showBasicLoadingScreen = state
     }

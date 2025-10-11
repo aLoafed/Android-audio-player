@@ -2,7 +2,6 @@ package com.example.audio_player
 
 import android.content.Context
 import android.os.Handler
-import androidx.annotation.FloatRange
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.SonicAudioProcessor
 import androidx.media3.common.util.Log
@@ -30,6 +29,7 @@ class ForegroundNotificationService : MediaSessionService() {
     override fun onGetSession(controllerInfo: MediaSession.ControllerInfo): MediaSession? {
         return mediaSession
     }
+
     object SpectrumAnalyzer : AudioProcessor {
         private val sonicAudioProcessor = SonicAudioProcessor()
         private var outputBuffer: ByteBuffer = AudioProcessor.EMPTY_BUFFER
@@ -38,10 +38,14 @@ class ForegroundNotificationService : MediaSessionService() {
         private var isEnded = false
         var eqList = DoubleArray(7)
         var volume = 0.0
+        var usingSonicProcessor = true // Is true for testing it atm
         override fun configure(inputAudioFormat: AudioProcessor.AudioFormat): AudioProcessor.AudioFormat {
-            sonicAudioProcessor.configure(inputAudioFormat)
-            sonicAudioProcessor.setPitch(1f)
-            sonicAudioProcessor.setSpeed(1f)
+            if (usingSonicProcessor) {
+                sonicAudioProcessor.configure(inputAudioFormat)
+                // Factor must not be 1f or else null pointer exception
+                sonicAudioProcessor.setPitch(0.8f)
+                sonicAudioProcessor.setSpeed(0.8f)
+            }
             return inputAudioFormat
         }
 
@@ -50,14 +54,30 @@ class ForegroundNotificationService : MediaSessionService() {
         }
 
         override fun queueInput(inputBuffer: ByteBuffer) {
-            // outputBuffer = inputBuffer // Default audio
+            // To counter the buffer from being consumed by sonic processor
+            if (usingSonicProcessor) {
+                sonicAudioProcessor.queueInput(inputBuffer)
+            } else {
+                outputBuffer = inputBuffer // Default audio buffer processing
+            }
             if (!inputBuffer.hasRemaining()) {
                 return
             }
-            //============================ Sonic Processor ============================//
-            sonicAudioProcessor.queueInput(inputBuffer)
+        }
+
+        override fun queueEndOfStream() {
+            endOfStreamQueued = true
+            sonicAudioProcessor.queueEndOfStream()
+        }
+
+        override fun getOutput(): ByteBuffer {
+            val result = if (usingSonicProcessor) {
+                sonicAudioProcessor.output
+            } else {
+                outputBuffer
+            }
             //============================ Collecting buffer data ============================//
-            val shortBuffer = inputBuffer.asShortBuffer()
+            val shortBuffer = result.asShortBuffer()// analysisBuffer.asShortBuffer()
             val fftArray = DoubleArray(1024) //512 as it's a power of 2 and isn't too laggy
             var bufferVolume = 0.0
             var buffer: Short
@@ -77,7 +97,7 @@ class ForegroundNotificationService : MediaSessionService() {
                 val window = 0.5 * (1 - kotlin.math.cos(2.0 * Math.PI * i / (1024 - 1))) // Hann window to reduce sound leakage
                 fftArray[i] = fftArray[i] * window
             }
-            //================================= Graphical Equaliser =================================//
+            //================================= Graphical equaliser data =================================//
             fft.realForward(fftArray) // Input array has the output array
 
             val absValueList = DoubleArray(fftArray.count() / 2)
@@ -91,19 +111,9 @@ class ForegroundNotificationService : MediaSessionService() {
             bufferVolume = sqrt(bufferVolume / 1024)
             eqList = frequencyCalculator(absValueList)
             volume = bufferVolume
-//            outputBuffer = sonicAudioProcessor.output
-        }
-
-        override fun queueEndOfStream() {
-            endOfStreamQueued = true
-            sonicAudioProcessor.queueEndOfStream()
-        }
-
-        override fun getOutput(): ByteBuffer {
-//            val result = outputBuffer
-            val result = sonicAudioProcessor.output
+            //================================= End of equaliser processing =================================//
             outputBuffer = AudioProcessor.EMPTY_BUFFER
-            if (outputBuffer == AudioProcessor.EMPTY_BUFFER && endOfStreamQueued) {
+            if (endOfStreamQueued) {
                 isEnded = true
             }
             return result
@@ -114,27 +124,31 @@ class ForegroundNotificationService : MediaSessionService() {
         }
 
         override fun flush() {
-            sonicAudioProcessor.flush()
+            if (usingSonicProcessor) {
+                sonicAudioProcessor.flush()
+            }
             isEnded = false
             endOfStreamQueued = false
             outputBuffer = AudioProcessor.EMPTY_BUFFER
         }
 
         override fun reset() {
-            sonicAudioProcessor.reset()
+            if (usingSonicProcessor) {
+                sonicAudioProcessor.reset()
+            }
             isEnded = false
             endOfStreamQueued = false
             outputBuffer = AudioProcessor.EMPTY_BUFFER
         }
         fun frequencyCalculator(absValueList: DoubleArray): DoubleArray {
             val tempList = DoubleArray(7)
-            tempList[0] = (absValueList[1 * 2])
-            tempList[1] = (absValueList[2 * 2])
-            tempList[2] = (absValueList[5 * 2])
-            tempList[3] = (absValueList[13 * 2])
-            tempList[4] = (absValueList[32 * 2])
-            tempList[5] = (absValueList[80 * 2])
-            tempList[6] = (absValueList[205 * 2])
+            tempList[0] = (absValueList[2])
+            tempList[1] = (absValueList[4])
+            tempList[2] = (absValueList[10])
+            tempList[3] = (absValueList[26])
+            tempList[4] = (absValueList[64])
+            tempList[5] = (absValueList[160])
+            tempList[6] = (absValueList[410])
             return tempList
         }
     }

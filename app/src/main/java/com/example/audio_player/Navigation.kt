@@ -58,28 +58,31 @@ fun NavHost(
     val navController = rememberNavController()
     NavHost(
         navController = navController,
-        startDestination = Screen.Pager.route,
+        startDestination = "pager",
     ) {
-        composable(route = Screen.Pager.route) {
+        composable(route = "pager") {
             Pager(mediaController, spectrumAnalyzer, viewModel, songInfo, albumInfo, navController)
         }
-        composable(route = Screen.AlbumSongsScreen.route) {
+        composable(route = "album_songs_screen") {
             AlbumSongsScreen(viewModel.selectedAlbum, songInfo, mediaController, viewModel, navController)
         }
-        composable(route = Screen.Settings.route) {
+        composable(route = "settings") {
             Settings(navController, viewModel)
         }
-        composable(route = Screen.ThemeChange.route) {
+        composable(route = "theme_change") {
             ThemeChange(viewModel, navController, context)
         }
-        composable(route = Screen.ColorPicker.route) {
+        composable(route = "color_picker") {
             ColorPicker(viewModel, navController, context)
         }
-        composable(route = Screen.SongOptions.route) {
+        composable(route = "song_options") {
             SongOptions(viewModel.selectedSong, viewModel, mediaController)
         }
-        composable(route = Screen.InfoScreen.route) {
+        composable(route = "info_screen") {
             InfoScreen(viewModel)
+        }
+        composable(route = "sonic_audio_processor_controls") {
+            SonicAudioProcessorControls(viewModel)
         }
     }
 }
