@@ -82,7 +82,7 @@ fun NavHost(
             InfoScreen(viewModel)
         }
         composable(route = "sonic_audio_processor_controls") {
-            SonicAudioProcessorControls(viewModel, spectrumAnalyzer)
+            SonicAudioProcessorControls(viewModel, spectrumAnalyzer, navController, mediaController)
         }
     }
 }

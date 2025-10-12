@@ -29,8 +29,10 @@ import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.Slider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -56,6 +58,7 @@ import androidx.media3.session.MediaController
 import androidx.navigation.NavController
 import com.example.audio_player.ui.theme.dotoFamily
 import com.example.audio_player.ui.theme.orbitronFamily
+import java.lang.Thread.sleep
 
 var shuffleSongInfo = listOf<SongInfo>()
 @OptIn(UnstableApi::class)
@@ -827,18 +830,30 @@ fun SeekBar(mediaController: MediaController?, viewModel: PlayerViewModel) {
         verticalAlignment = Alignment.CenterVertically
     ) {
         var currentSongPosition by remember { mutableFloatStateOf(viewModel.currentSongPosition) }
+        var isSeeking by remember { mutableStateOf(false) }
         LcdText(
-            "${(viewModel.currentSongPosition / 60).toInt()}:${(viewModel.currentSongPosition % 60).toInt()}",
+            (
+                    if (!isSeeking) {
+                        "${(viewModel.currentSongPosition / 60).toInt()}:${(viewModel.currentSongPosition % 60).toInt()}"
+                    } else {
+                        "${(currentSongPosition / 60).toInt()}:${(currentSongPosition % 60).toInt()}"
+                    }
+                    ),
             viewModel = viewModel
         )
         Slider(
-            value = viewModel.currentSongPosition,
+            value = currentSongPosition, // Was viewModel.currentSongPosition
             valueRange = 0f..viewModel.duration,
             modifier = Modifier
                 .size(250.dp, 20.dp),
             onValueChange = {
+                isSeeking = true
                 currentSongPosition = it
+            },
+            onValueChangeFinished = {
                 viewModel.updateSongPosition(mediaController, currentSongPosition.toLong())
+                sleep(40)
+                isSeeking = false
             },
             thumb = {
                 SliderThumb(viewModel)
@@ -851,6 +866,11 @@ fun SeekBar(mediaController: MediaController?, viewModel: PlayerViewModel) {
             "${(viewModel.duration / 60).toInt()}:${(viewModel.duration % 60).toInt()}",
             viewModel = viewModel
         )
+        LaunchedEffect(viewModel.currentSongPosition) {
+            if (!isSeeking) {
+                currentSongPosition = viewModel.currentSongPosition
+            }
+        }
     }
 }
 @Composable
