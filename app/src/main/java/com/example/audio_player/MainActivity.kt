@@ -53,6 +53,7 @@ class MainActivity : ComponentActivity() {
     @OptIn(UnstableApi::class, ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Sets the settings' variables from the json
         viewModel.initViewModel(applicationContext)
         var mediaController: MediaController? = null
         val controllerFuture = MediaController.Builder(
@@ -94,13 +95,12 @@ class MainActivity : ComponentActivity() {
                 2
             )
         }
-        //=============================== Media Declarations ===============================//
-
         val songInfo = mediaStoreSongInfo(applicationContext)
         val albumInfo = getAlbumList(applicationContext)
         
         lifecycleScope.launch {
             val spectrumAnalyzer = mediaSessionService.getSpectrumAnalyzer()
+            spectrumAnalyzer.equaliserIsOn = true
             enableEdgeToEdge()
             setContent {
                 if (viewModel.showBasicLoadingScreen) {
@@ -148,6 +148,18 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
+    }
+
+    override fun onStop() {
+        super.onStop()
+        val spectrumAnalyzer = mediaSessionService.getSpectrumAnalyzer()
+        spectrumAnalyzer.equaliserIsOn = false
+    }
+
+    override fun onResume() {
+        super.onResume()
+        val spectrumAnalyzer = mediaSessionService.getSpectrumAnalyzer()
+        spectrumAnalyzer.equaliserIsOn = true
     }
 }
 
@@ -212,25 +224,3 @@ fun AlbumScreenLcdText(
         lineHeight = 15.sp
     )
 }
-
-//@Preview
-//@Composable
-//fun PreviewLoadingParallelogram() {
-//    Canvas(
-//        modifier = Modifier
-//            .size(30.dp)
-//    ) {
-//        val path = Path()
-//        path.moveTo(10f,50f)
-//        path.relativeLineTo(0f,15f)
-//        path.relativeLineTo(45f,-30f)
-//        path.relativeLineTo(0f,-15f)
-//        path.close()
-//
-//        drawPath(
-//            path = path,
-//            color = LcdOrange,
-//            style = Fill
-//        )
-//    }
-//}

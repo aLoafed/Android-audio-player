@@ -60,7 +60,13 @@ import com.example.audio_player.ui.theme.orbitronFamily
 var shuffleSongInfo = listOf<SongInfo>()
 @OptIn(UnstableApi::class)
 @Composable
-fun PlayerScreen(mediaController: MediaController?, spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer, viewModel: PlayerViewModel, songInfo: List<SongInfo>) {
+fun PlayerScreen(
+    mediaController: MediaController?,
+    spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer,
+    viewModel: PlayerViewModel,
+    songInfo: List<SongInfo>,
+    navController: NavController
+) {
     Column(
         modifier = Modifier
             .fillMaxSize()
@@ -74,7 +80,7 @@ fun PlayerScreen(mediaController: MediaController?, spectrumAnalyzer: Foreground
         PlayingMediaInfo(viewModel, songInfo)
         PlaybackControls(mediaController, viewModel, songInfo)
         GraphicalEqualizer(spectrumAnalyzer, viewModel)
-        RepeatShuffleControls(viewModel, mediaController, songInfo)
+        OtherMediaControls(viewModel, mediaController, songInfo, navController) // Repeat, shuffle, speed & pitch change
         SeekBar(mediaController, viewModel)
     }
 }
@@ -248,7 +254,7 @@ fun ChangeSpeedButton(viewModel: PlayerViewModel, navController: NavController) 
     )
 }
 @Composable
-fun RepeatShuffleControls(viewModel: PlayerViewModel, mediaController: MediaController?, songInfo: List<SongInfo>) {
+fun OtherMediaControls(viewModel: PlayerViewModel, mediaController: MediaController?, songInfo: List<SongInfo>, navController: NavController) {
     val tmpSongInfo = mutableListOf<SongInfo>()
     Row(
         modifier = Modifier
@@ -257,6 +263,27 @@ fun RepeatShuffleControls(viewModel: PlayerViewModel, mediaController: MediaCont
         horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically
     ) {
+        IconButton( // Repeat controls
+            onClick = {
+                navController.navigate("sonic_audio_processor_controls")
+            },
+            modifier = Modifier
+                .size(40.dp),
+            colors = IconButtonColors(
+                containerColor = Color.Transparent,
+                contentColor = viewModel.iconColor,
+                disabledContentColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent
+            ),
+            content = {
+                Icon(
+                    painter = (
+                            painterResource(R.drawable.speed_pitch)
+                            ),
+                    contentDescription = "Speed and pitch change"
+                )
+            }
+        )
         IconButton( // Repeat controls
             onClick = {
                 when (viewModel.repeatMode) {
@@ -861,6 +888,29 @@ fun SliderTrack(viewModel: PlayerViewModel) {
             onDraw = {
                 drawRoundRect(
                     size = Size(600f, 15f),
+                    style = Fill,
+                    color = viewModel.sliderTrackColor,
+                    cornerRadius = CornerRadius(10f,10f),
+                    topLeft = Offset(0f,-6.5f)
+                )
+            }
+        )
+    }
+}
+@Composable
+fun SettingsSliderTrack(viewModel: PlayerViewModel) {
+    Column(
+        modifier = Modifier
+            .height(15.dp)
+            .fillMaxWidth(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.Start,
+    ) {
+        Canvas(
+            modifier = Modifier,
+            onDraw = {
+                drawRoundRect(
+                    size = Size(300f, 15f),
                     style = Fill,
                     color = viewModel.sliderTrackColor,
                     cornerRadius = CornerRadius(10f,10f),

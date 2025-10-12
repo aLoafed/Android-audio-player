@@ -82,7 +82,7 @@ fun NavHost(
             InfoScreen(viewModel)
         }
         composable(route = "sonic_audio_processor_controls") {
-            SonicAudioProcessorControls(viewModel)
+            SonicAudioProcessorControls(viewModel, spectrumAnalyzer)
         }
     }
 }
@@ -243,7 +243,7 @@ fun Pager(
         ) { currentPage ->
             when (currentPage) {
                 0 -> SongQueue(viewModel, mediaController, songInfo)
-                1 -> PlayerScreen(mediaController, spectrumAnalyzer, viewModel, songInfo)
+                1 -> PlayerScreen(mediaController, spectrumAnalyzer, viewModel, songInfo, navController)
                 2 -> SongsScreen(songInfo, mediaController, viewModel, pagerState, navController)
                 3 -> AlbumScreen(albumInfo, viewModel, navController)
             }
