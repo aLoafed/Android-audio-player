@@ -842,7 +842,7 @@ fun SeekBar(mediaController: MediaController?, viewModel: PlayerViewModel) {
             viewModel = viewModel
         )
         Slider(
-            value = currentSongPosition, // Was viewModel.currentSongPosition
+            value = currentSongPosition,
             valueRange = 0f..viewModel.duration,
             modifier = Modifier
                 .size(250.dp, 20.dp),
@@ -908,29 +908,6 @@ fun SliderTrack(viewModel: PlayerViewModel) {
             onDraw = {
                 drawRoundRect(
                     size = Size(600f, 15f),
-                    style = Fill,
-                    color = viewModel.sliderTrackColor,
-                    cornerRadius = CornerRadius(10f,10f),
-                    topLeft = Offset(0f,-6.5f)
-                )
-            }
-        )
-    }
-}
-@Composable
-fun SettingsSliderTrack(viewModel: PlayerViewModel) {
-    Column(
-        modifier = Modifier
-            .height(15.dp)
-            .fillMaxWidth(),
-        verticalArrangement = Arrangement.Center,
-        horizontalAlignment = Alignment.Start,
-    ) {
-        Canvas(
-            modifier = Modifier,
-            onDraw = {
-                drawRoundRect(
-                    size = Size(300f, 15f),
                     style = Fill,
                     color = viewModel.sliderTrackColor,
                     cornerRadius = CornerRadius(10f,10f),

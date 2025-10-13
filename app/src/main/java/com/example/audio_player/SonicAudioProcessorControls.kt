@@ -2,7 +2,9 @@
 
 package com.example.audio_player
 
+import android.media.AudioFormat.ENCODING_PCM_16BIT
 import androidx.annotation.OptIn
+import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -30,9 +32,15 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.geometry.CornerRadius
+import androidx.compose.ui.geometry.Offset
+import androidx.compose.ui.geometry.Size
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.media3.common.C
+import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.navigation.NavController
@@ -51,7 +59,7 @@ fun SonicAudioProcessorControls(
             .background(color = viewModel.backgroundColor)
             .windowInsetsPadding(WindowInsets.statusBars)
             .windowInsetsPadding(WindowInsets.navigationBars)
-            .padding(horizontal = 5.dp),
+            .padding(horizontal = 10.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start
     ) {
@@ -62,69 +70,99 @@ fun SonicAudioProcessorControls(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(30.dp),
+                .height(80.dp),
             horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            LargeLcdText(
-                "Change song's speed: ",
-                viewModel = viewModel
-            )
-            Slider(
-                value = speed,
-                valueRange = 0f..2f,
-                steps = 0, // For 0.5 increments
+            Column(
                 modifier = Modifier
-                    .size(140.dp, 20.dp),
-                onValueChange = {
-                    speed = it
-                },
-                thumb = {
-                    SliderThumb(viewModel)
-                },
-                track = {
-                    SettingsSliderTrack(viewModel)
-                },
-            )
-            Spacer(modifier = Modifier.width(5.dp))
-            LargeLcdText(
-                "%.2f".format(spectrumAnalyzer.speed),
-                viewModel = viewModel
-            )
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.Top
+            ) {
+                LargeLcdText(
+                    "Change song's speed: ",
+                    viewModel = viewModel
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    Slider(
+                        value = speed,
+                        valueRange = 0f..2f,
+                        steps = 39, // For 0.05 increments
+                        modifier = Modifier
+                            .size(250.dp, 20.dp),
+                        onValueChange = {
+                            speed = it
+                        },
+                        thumb = {
+                            SliderThumb(viewModel)
+                        },
+                        track = {
+                            SettingsSliderTrack(viewModel)
+                        },
+                    )
+                    Spacer(modifier = Modifier.width(5.dp))
+                    LargeLcdText(
+                        "%.2f".format(speed),
+                        viewModel = viewModel
+                    )
+                }
+            }
         }
         // Pitch control
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(30.dp),
+                .height(80.dp),
             horizontalArrangement = Arrangement.Start,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            LargeLcdText(
-                "Change song's pitch: ",
-                viewModel = viewModel
-            )
-            Slider(
-                value = pitch,
-                valueRange = 0f..2f,
-                steps = 40, // For 0.5 increments
+            Column(
                 modifier = Modifier
-                    .size(140.dp, 20.dp),
-                onValueChange = {
-                    pitch = it
-                },
-                thumb = {
-                    SliderThumb(viewModel)
-                },
-                track = {
-                    SettingsSliderTrack(viewModel)
-                },
-            )
-            Spacer(modifier = Modifier.width(5.dp))
-            LargeLcdText(
-                "%.2f".format(spectrumAnalyzer.pitch),
-                viewModel = viewModel
-            )
+                    .fillMaxSize(),
+                horizontalAlignment = Alignment.Start,
+                verticalArrangement = Arrangement.Top
+            ) {
+                LargeLcdText(
+                    "Change song's pitch: ",
+                    viewModel = viewModel
+                )
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(50.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    Slider(
+                        value = pitch,
+                        valueRange = 0f..2f,
+                        steps = 39, // For 0.05 increments
+                        modifier = Modifier
+                            .size(250.dp, 20.dp),
+                        onValueChange = {
+                            pitch = it
+                        },
+                        thumb = {
+                            SliderThumb(viewModel)
+                        },
+                        track = {
+                            SettingsSliderTrack(viewModel)
+                        },
+                    )
+                    Spacer(modifier = Modifier.width(5.dp))
+                    LargeLcdText(
+                        "%.2f".format(pitch),
+                        viewModel = viewModel
+                    )
+                }
+            }
         }
         Spacer(modifier = Modifier.height(10.dp))
         // Apply changes
@@ -147,6 +185,14 @@ fun SonicAudioProcessorControls(
                     } else {
                         false
                     }
+                    spectrumAnalyzer.configure(
+                        AudioProcessor.AudioFormat(
+                            44100,
+                            2,
+                            C.ENCODING_PCM_16BIT
+                        )
+                    )
+                    spectrumAnalyzer.flush()
                     mediaController?.play()
                     navController.popBackStack()
                 },
@@ -164,5 +210,28 @@ fun SonicAudioProcessorControls(
                 ),
             )
         }
+    }
+}
+@Composable
+fun SettingsSliderTrack(viewModel: PlayerViewModel) {
+    Column(
+        modifier = Modifier
+            .height(15.dp)
+            .fillMaxWidth(),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.Start,
+    ) {
+        Canvas(
+            modifier = Modifier,
+            onDraw = {
+                drawRoundRect(
+                    size = Size(600f, 15f),
+                    style = Fill,
+                    color = viewModel.sliderTrackColor,
+                    cornerRadius = CornerRadius(10f,10f),
+                    topLeft = Offset(0f,-6.5f)
+                )
+            }
+        )
     }
 }
