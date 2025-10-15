@@ -59,6 +59,7 @@ import androidx.navigation.NavController
 import com.example.audio_player.ui.theme.dotoFamily
 import com.example.audio_player.ui.theme.orbitronFamily
 import java.lang.Thread.sleep
+import kotlin.time.Duration
 
 var shuffleSongInfo = listOf<SongInfo>()
 @OptIn(UnstableApi::class)
@@ -594,7 +595,6 @@ fun VolumeLevelTick(viewModel: PlayerViewModel) {
                     )
                 )
             }
-
         }
     }
 }
@@ -837,7 +837,7 @@ fun SeekBar(mediaController: MediaController?, viewModel: PlayerViewModel) {
         var currentSongPosition by remember { mutableFloatStateOf(viewModel.currentSongPosition) }
         var isSeeking by remember { mutableStateOf(false) }
         LcdText(
-            getSongTime(viewModel, isSeeking, currentSongPosition),
+            getSongPositionString(viewModel, isSeeking, currentSongPosition),
             viewModel = viewModel
         )
         Slider(
@@ -862,7 +862,7 @@ fun SeekBar(mediaController: MediaController?, viewModel: PlayerViewModel) {
             },
         )
         LcdText(
-            "${(viewModel.duration / 60).toInt()}:${(viewModel.duration % 60).toInt()}",
+            getSongDurationString(viewModel),
             viewModel = viewModel
         )
         LaunchedEffect(viewModel.currentSongPosition) {
@@ -872,7 +872,7 @@ fun SeekBar(mediaController: MediaController?, viewModel: PlayerViewModel) {
         }
     }
 }
-fun getSongTime(viewModel: PlayerViewModel, isSeeking: Boolean, currentSongPosition: Float): String {
+fun getSongPositionString(viewModel: PlayerViewModel, isSeeking: Boolean, currentSongPosition: Float): String {
     var buildingString: String
     if (!isSeeking) {
         buildingString = "${(viewModel.currentSongPosition / 60).toInt()}:${(viewModel.currentSongPosition % 60).toInt()}"
@@ -880,9 +880,20 @@ fun getSongTime(viewModel: PlayerViewModel, isSeeking: Boolean, currentSongPosit
         buildingString = "${(currentSongPosition / 60).toInt()}:${(currentSongPosition % 60).toInt()}"
     }
     for (i in 0 until buildingString.length) {
-        if ( buildingString[i].toString() == ":") {
-            while (buildingString.subSequence(i, buildingString.length - 1).length < 2) {
-                buildingString + "0"
+        if (buildingString[i].toString() == ":") {
+            while (buildingString.subSequence(i + 1, buildingString.length).length < 2) {
+                buildingString += "0"
+            }
+        }
+    }
+    return buildingString
+}
+fun getSongDurationString(viewModel: PlayerViewModel): String {
+    var buildingString = "${(viewModel.duration / 60).toInt()}:${(viewModel.duration % 60).toInt()}"
+    for (i in 0 until buildingString.length) {
+        if (buildingString[i].toString() == ":") {
+            while (buildingString.subSequence(i + 1, buildingString.length).length < 2) {
+                buildingString += "0"
             }
         }
     }

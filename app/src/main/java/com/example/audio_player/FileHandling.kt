@@ -87,46 +87,8 @@ fun mediaStoreSongInfo(applicationContext: Context): List<SongInfo> {
             )
         }
     }
-    return songInfo.mergeSortSplit()
-}
-fun MutableList<SongInfo>.mergeSortSplit(): MutableList<SongInfo> {
-    val songInfo = this
-    // Base case
-    if (songInfo.size <= 1) {
-        return songInfo
-    }
-    val midpoint = songInfo.size - 1 / 2
-    var left = songInfo.subList(0, midpoint)
-    var right = songInfo.subList(midpoint, songInfo.size)
-    left = left.mergeSortSplit()
-    right = right.mergeSortSplit()
 
-    return mergeSort(left, right)
-}
-fun mergeSort(left: MutableList<SongInfo>, right: MutableList<SongInfo>): MutableList<SongInfo> {
-    val mergedList = mutableListOf<SongInfo>()
-    mergedList.addAll(left)
-    mergedList.addAll(right)
-    while (sortCheck(mergedList)) {
-        for (i in 0 until mergedList.size) {
-            if (mergedList[i].name > mergedList[i + 1].name) {
-                val tmp = mergedList[i]
-                mergedList[i] = mergedList[i + 1]
-                mergedList[i + 1] = tmp
-            }
-        }
-    }
-    return mergedList
-}
-
-fun sortCheck(list: MutableList<SongInfo>): Boolean {
-    var count = 0
-    for (i in 0 until list.size) {
-        if (list[i].name < list[i + 1].name) {
-            count ++
-        }
-    }
-    return count == list.size
+    return songInfo //mergeSortSplit(songInfo).toList()
 }
 @OptIn(UnstableApi::class)
 fun getAlbumList(applicationContext: Context): List<AlbumInfo> {
@@ -181,3 +143,51 @@ fun getAlbumList(applicationContext: Context): List<AlbumInfo> {
     }
     return albumInfo
 }
+
+//@OptIn(UnstableApi::class)
+//fun mergeSortSplit(songInfo: MutableList<SongInfo>): MutableList<SongInfo> {
+//    // Base case
+//    if (songInfo.size <= 1) {
+//        return songInfo
+//    } else {
+//        val midpoint = songInfo.size / 2
+//        var left = songInfo.subList(0, midpoint)
+//        var right = songInfo.subList(midpoint, songInfo.size)  // Fixed: was songInfo.size - 1
+//        left = mergeSortSplit(left)
+//        right = mergeSortSplit(right)
+//        val sorted = mergeSort(left, right)
+//        return sorted
+//    }
+//}
+//
+//@OptIn(UnstableApi::class)
+//fun mergeSort(left: MutableList<SongInfo>, right: MutableList<SongInfo>): MutableList<SongInfo> {
+//    val mergedList = mutableListOf<SongInfo>()
+//    var leftIndex = 0
+//    var rightIndex = 0
+//
+//    // Merge the two sorted lists
+//    while (leftIndex < left.size && rightIndex < right.size) {
+//        if (left[leftIndex].name <= right[rightIndex].name) {
+//            mergedList.add(left[leftIndex])
+//            leftIndex++
+//        } else {
+//            mergedList.add(right[rightIndex])
+//            rightIndex++
+//        }
+//    }
+//
+//    // Add remaining elements from left
+//    while (leftIndex < left.size) {
+//        mergedList.add(left[leftIndex])
+//        leftIndex++
+//    }
+//
+//    // Add remaining elements from right
+//    while (rightIndex < right.size) {
+//        mergedList.add(right[rightIndex])
+//        rightIndex++
+//    }
+//
+//    return mergedList
+//}

@@ -97,9 +97,6 @@ fun Pager(
     albumInfo: List<AlbumInfo>,
     navController: NavController
 ) {
-    if (mediaController == null) {
-        Log.d("Neoplayer", "Pager media controller is null")
-    }
     val scope = rememberCoroutineScope()
     val pagerState = rememberPagerState(
         initialPage = 1
