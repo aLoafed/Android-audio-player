@@ -105,6 +105,8 @@ class PlayerViewModel(
         private set
     var showBasicLoadingScreen = true
         private set
+    var showEqualiser by mutableStateOf(true)
+        private set
     //========================= Init from Json =========================
     fun initViewModel(context: Context) {
         val settingsManager = SettingsManager(context)
@@ -123,9 +125,13 @@ class PlayerViewModel(
         }
         colorMap.putAll(intToColorMap)
         showBasicLoadingScreen = settings.showBasicLoadingScreen
+        showEqualiser = settings.showEqualiser
     }
     //========================= Setters =========================
-    fun updateLoadingScreenChoice(state: Boolean) {
+    fun updateShowEqualiser(state: Boolean) {
+        showEqualiser = state
+    }
+    fun updateShowBasicLoadingScreen(state: Boolean) {
         showBasicLoadingScreen = state
     }
     fun updateFinishedLoading(state: Boolean) {

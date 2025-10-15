@@ -31,7 +31,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.MenuAnchorType
-import androidx.compose.material3.MenuItemColors
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchColors
 import androidx.compose.material3.TextField
@@ -46,7 +45,6 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.state.ToggleableState
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import com.example.audio_player.ui.theme.LcdGrey
@@ -140,7 +138,10 @@ fun Settings(navController: NavController, viewModel: PlayerViewModel) {
 @Composable
 fun ThemeChange(viewModel: PlayerViewModel, navController: NavController, context: Context) {
     val tmpColorSettings = mutableMapOf<String, Int>()
-    val tmpLoadingScreenSettings = true
+    val tmpMiscSettings = mutableMapOf(
+        "showBasicLoadingScreen" to viewModel.showBasicLoadingScreen,
+        "showEqualiser" to viewModel.showEqualiser
+    )
 
     Column(
         modifier = Modifier
@@ -196,7 +197,8 @@ fun ThemeChange(viewModel: PlayerViewModel, navController: NavController, contex
         ColourListDropDownMenu("equaliser's text","eqText", viewModel, tmpColorSettings, viewModel.eqTextColor)
         ColourListDropDownMenu("seek bar's thumb","sliderThumb", viewModel, tmpColorSettings, viewModel.sliderThumbColor)
         ColourListDropDownMenu("seek bar's track","sliderTrack", viewModel, tmpColorSettings, viewModel.sliderTrackColor)
-        LoadingScreenTypeSwitch(viewModel)
+        LoadingScreenTypeSwitch(viewModel, tmpMiscSettings)
+        EQVisibilitySwitch(viewModel, tmpMiscSettings)
         // Customisation buttons
         Row(
             modifier = Modifier
@@ -216,12 +218,54 @@ fun ThemeChange(viewModel: PlayerViewModel, navController: NavController, contex
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.End
         ) {
-            SaveChangesButton(tmpColorSettings, context, viewModel)
+            SaveChangesButton(tmpColorSettings, tmpMiscSettings,context, viewModel)
         }
     }
 }
 @Composable
-fun LoadingScreenTypeSwitch(viewModel: PlayerViewModel) {
+fun EQVisibilitySwitch(viewModel: PlayerViewModel, tmpMiscSettings: MutableMap<String, Boolean>) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(70.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween
+    ) {
+        var switched by remember { mutableStateOf(viewModel.showEqualiser) }
+        LcdText(
+            "Switch equaliser on / off",
+            viewModel = viewModel
+        )
+        Switch(
+            checked = switched,
+            onCheckedChange = {
+                switched = !switched
+                tmpMiscSettings["showEqualiser"] = switched
+            },
+            colors = SwitchColors(
+                checkedThumbColor = Color.White,
+                checkedTrackColor = LightLcdGrey,
+                checkedBorderColor = Color.White,
+                checkedIconColor = viewModel.iconColor,
+                uncheckedThumbColor = Color.White,
+                uncheckedTrackColor = LightLcdGrey,
+                uncheckedBorderColor = Color.White,
+                uncheckedIconColor = viewModel.iconColor,
+                disabledCheckedThumbColor = Color.White,
+                disabledCheckedTrackColor = Color.White,
+                disabledCheckedBorderColor = Color.White,
+                disabledCheckedIconColor = Color.White,
+                disabledUncheckedThumbColor = Color.White,
+                disabledUncheckedTrackColor = Color.White,
+                disabledUncheckedBorderColor = Color.White,
+                disabledUncheckedIconColor = Color.White
+            )
+        )
+    }
+}
+
+@Composable
+fun LoadingScreenTypeSwitch(viewModel: PlayerViewModel, tmpMiscSettings: MutableMap<String, Boolean>) {
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -238,7 +282,7 @@ fun LoadingScreenTypeSwitch(viewModel: PlayerViewModel) {
             checked = switched,
             onCheckedChange = {
                 switched = !switched
-                viewModel.updateLoadingScreenChoice(switched)
+                tmpMiscSettings["showBasicLoadingScreen"] = switched
             },
             colors = SwitchColors(
                 checkedThumbColor = Color.White,
@@ -277,6 +321,8 @@ fun ResetToDefaultsButton(viewModel: PlayerViewModel, context: Context) {
             viewModel.updateColor("eqText", Color(defaultData.eqTextColor))
             viewModel.updateColor("sliderThumb", Color(defaultData.sliderThumbColor))
             viewModel.updateColor("sliderTrack", Color(defaultData.sliderTrackColor))
+            viewModel.updateShowEqualiser(true)
+            viewModel.updateShowBasicLoadingScreen(true)
             settingsManager.saveSettings(defaultData)
         },
         colors = ButtonColors(
@@ -318,6 +364,7 @@ fun CustomColorButton(
 @Composable
 fun SaveChangesButton(
     tmpColorSettings: MutableMap<String, Int>,
+    tmpMiscSettings: MutableMap<String, Boolean>,
     context: Context,
     viewModel: PlayerViewModel
 ) {
@@ -330,6 +377,16 @@ fun SaveChangesButton(
                     viewModel.updateColor(i, Color(tmpColorSettings[i]!!))
                 }
             }
+            viewModel.updateShowEqualiser(
+                tmpMiscSettings.getOrElse(
+                    "showEqualiser"
+                ) { true }
+            )
+            viewModel.updateShowBasicLoadingScreen(
+                tmpMiscSettings.getOrElse(
+                    "showBasicLoadingScreen"
+                ) { true }
+            )
             saveChanges(viewModel, context)
         },
         colors = ButtonColors(
@@ -356,7 +413,8 @@ fun saveChanges(viewModel: PlayerViewModel, context: Context) {
         viewModel.sliderThumbColor.toArgb(),
         viewModel.sliderTrackColor.toArgb(),
         viewModel.customColorMap,
-        viewModel.showBasicLoadingScreen
+        viewModel.showBasicLoadingScreen,
+        viewModel.showEqualiser
     )
     val settingsManager = SettingsManager(context)
     settingsManager.saveSettings(data)
@@ -396,7 +454,7 @@ fun ColourListDropDownMenu(
                         enabled = true
                     ),
                 value = selectedText,
-                onValueChange = {},
+                onValueChange = {  },
                 readOnly = true,
                 trailingIcon = {
                     ExposedDropdownMenuDefaults.TrailingIcon(

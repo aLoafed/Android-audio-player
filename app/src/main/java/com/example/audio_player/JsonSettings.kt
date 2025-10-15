@@ -21,6 +21,7 @@ data class SettingsData(
     val sliderTrackColor: Int = changeBrightness(Color.White.toArgb(), 0.8f).toArgb(),
     val customColors: Map<String, Int>,
     val showBasicLoadingScreen: Boolean = true,
+    val showEqualiser: Boolean = true,
 )
 
 class SettingsManager(context: Context) {
@@ -33,16 +34,9 @@ class SettingsManager(context: Context) {
     fun loadSettings(): SettingsData {
         val isFileCreated = settingsFilePath.createNewFile()
         if (isFileCreated) {
+            // Fills with default data if json does not exist
             val settingsData = SettingsData(
-                LcdGrey.toArgb(),
-                Color.White.toArgb(),
-                Color.White.toArgb(),
-                Color.White.toArgb(),
-                LcdBlueWhite.toArgb(),
-                Color.White.toArgb(),
-                Color.White.toArgb(),
-                mapOf(),
-                true
+                customColors = mapOf()
             )
             saveSettings(settingsData)
         }

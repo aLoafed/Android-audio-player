@@ -82,7 +82,9 @@ fun PlayerScreen(
         )
         PlayingMediaInfo(viewModel, songInfo)
         PlaybackControls(mediaController, viewModel, songInfo)
-        GraphicalEqualizer(spectrumAnalyzer, viewModel)
+        if (viewModel.showEqualiser) {
+            GraphicalEqualizer(spectrumAnalyzer, viewModel)
+        }
         OtherMediaControls(viewModel, mediaController, songInfo, navController) // Repeat, shuffle, speed & pitch change
         SeekBar(mediaController, viewModel)
     }
@@ -413,7 +415,8 @@ fun GraphicalEqualizer(spectrumAnalyzer: ForegroundNotificationService.SpectrumA
     ) {
         val fieldName = listOf("63","16O","4OO","1k","2.5k","6.3k","16k")
         VolumeLevelAxis(viewModel)
-        Column( // Volume level
+        //======================== Volume level ========================//
+        Column(
             modifier = Modifier
                 .fillMaxHeight()
                 .width(35.dp),
@@ -434,9 +437,10 @@ fun GraphicalEqualizer(spectrumAnalyzer: ForegroundNotificationService.SpectrumA
             modifier = Modifier
                 .width(15.dp)
         )
+        //======================== Equaliser ========================//
         EQLevelAxis(viewModel)
         for (i in 0..6) { // 7 band EQ
-            AudioLevelColumn(fieldName[i],spectrumAnalyzer, viewModel)
+            EQLevelColumn(fieldName[i],spectrumAnalyzer, viewModel)
         }
     }
 }
@@ -597,13 +601,13 @@ fun VolumeLevelTick(viewModel: PlayerViewModel) {
 
 @OptIn(UnstableApi::class)
 @Composable
-fun AudioLevelColumn(fieldName: String, spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer, viewModel: PlayerViewModel) {
+fun EQLevelColumn(fieldName: String, spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer, viewModel: PlayerViewModel) {
     Column(
         modifier = Modifier
             .fillMaxHeight()
             .width(35.dp),
         verticalArrangement = Arrangement.SpaceBetween,
-        horizontalAlignment = Alignment.CenterHorizontally
+        horizontalAlignment = Alignment.CenterHorizontally,
     ) {
         OrbitronText(
             fieldName,
@@ -615,6 +619,7 @@ fun AudioLevelColumn(fieldName: String, spectrumAnalyzer: ForegroundNotification
         ) {
             val tick = viewModel.currentSongPosition
             if (viewModel.isPlaying) {
+                sleep(500) // Tmp test for synchronous eq ///////////////////////////////
                 EQLevelText(fieldName, spectrumAnalyzer, tick, viewModel)
                 EQLevelText(fieldName, spectrumAnalyzer, tick, viewModel)
             }
@@ -832,13 +837,7 @@ fun SeekBar(mediaController: MediaController?, viewModel: PlayerViewModel) {
         var currentSongPosition by remember { mutableFloatStateOf(viewModel.currentSongPosition) }
         var isSeeking by remember { mutableStateOf(false) }
         LcdText(
-            (
-                    if (!isSeeking) {
-                        "${(viewModel.currentSongPosition / 60).toInt()}:${(viewModel.currentSongPosition % 60).toInt()}"
-                    } else {
-                        "${(currentSongPosition / 60).toInt()}:${(currentSongPosition % 60).toInt()}"
-                    }
-                    ),
+            getSongTime(viewModel, isSeeking, currentSongPosition),
             viewModel = viewModel
         )
         Slider(
@@ -873,6 +872,23 @@ fun SeekBar(mediaController: MediaController?, viewModel: PlayerViewModel) {
         }
     }
 }
+fun getSongTime(viewModel: PlayerViewModel, isSeeking: Boolean, currentSongPosition: Float): String {
+    var buildingString: String
+    if (!isSeeking) {
+        buildingString = "${(viewModel.currentSongPosition / 60).toInt()}:${(viewModel.currentSongPosition % 60).toInt()}"
+    } else {
+        buildingString = "${(currentSongPosition / 60).toInt()}:${(currentSongPosition % 60).toInt()}"
+    }
+    for (i in 0 until buildingString.length) {
+        if ( buildingString[i].toString() == ":") {
+            while (buildingString.subSequence(i, buildingString.length - 1).length < 2) {
+                buildingString + "0"
+            }
+        }
+    }
+    return buildingString
+}
+
 @Composable
 fun SliderThumb(viewModel: PlayerViewModel) {
     Column(
