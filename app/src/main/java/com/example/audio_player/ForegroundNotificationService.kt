@@ -1,6 +1,7 @@
 package com.example.audio_player
 
 import android.content.Context
+import android.media.AudioTimestamp
 import android.os.Handler
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.SonicAudioProcessor
@@ -15,6 +16,13 @@ import androidx.media3.exoplayer.audio.MediaCodecAudioRenderer
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.SharedFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.asStateFlow
 import org.jtransforms.fft.DoubleFFT_1D
 import java.nio.BufferUnderflowException
 import java.nio.ByteBuffer
@@ -30,6 +38,14 @@ class ForegroundNotificationService : MediaSessionService() {
     }
 
     object SpectrumAnalyzer : AudioProcessor {
+        private val _eqStateFlow = MutableStateFlow(
+            EQDataClass(
+                doubleArrayOf(),
+                0.0,
+                1000L
+            )
+        )
+        val eqStateFlow: StateFlow<EQDataClass> = _eqStateFlow.asStateFlow()
         var speed = 1f
         var pitch = 1f
         var equaliserIsOn = false
@@ -41,7 +57,7 @@ class ForegroundNotificationService : MediaSessionService() {
         private var isEnded = false
         var eqList = DoubleArray(7)
         var volume = 0.0
-        var usingSonicProcessor = false // Is true for testing it atm
+        var usingSonicProcessor = false
 
         override fun configure(inputAudioFormat: AudioProcessor.AudioFormat): AudioProcessor.AudioFormat {
             if (usingSonicProcessor) {
@@ -62,7 +78,6 @@ class ForegroundNotificationService : MediaSessionService() {
         }
 
         override fun queueInput(inputBuffer: ByteBuffer) {
-            // To counter the buffer from being consumed by sonic processor
             if (usingSonicProcessor) {
                 sonicAudioProcessor.queueInput(inputBuffer)
             } else {
@@ -120,6 +135,15 @@ class ForegroundNotificationService : MediaSessionService() {
                 bufferVolume = sqrt(bufferVolume / ARRAY_SIZE)
                 eqList = frequencyCalculator(absValueList)
                 volume = bufferVolume
+
+                val audioLatency = 1000L
+                _eqStateFlow.tryEmit(
+                    EQDataClass(
+                        eqList,
+                        volume,
+                        audioLatency
+                    )
+                )
             }
             //================================= End of equaliser processing =================================//
             outputBuffer = AudioProcessor.EMPTY_BUFFER
@@ -151,6 +175,7 @@ class ForegroundNotificationService : MediaSessionService() {
             outputBuffer = AudioProcessor.EMPTY_BUFFER
         }
         fun frequencyCalculator(absValueList: DoubleArray): DoubleArray {
+            // Div 2 to accommodate 512 fft size
             val tempList = DoubleArray(7)
             tempList[0] = (absValueList[2 / 2])
             tempList[1] = (absValueList[4 / 2])

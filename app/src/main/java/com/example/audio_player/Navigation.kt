@@ -36,7 +36,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
-import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.navigation.NavController
@@ -80,9 +79,6 @@ fun NavHost(
         }
         composable(route = "info_screen") {
             InfoScreen(viewModel)
-        }
-        composable(route = "sonic_audio_processor_controls") {
-            SonicAudioProcessorControls(viewModel, spectrumAnalyzer, navController, mediaController)
         }
     }
 }
@@ -240,7 +236,7 @@ fun Pager(
         ) { currentPage ->
             when (currentPage) {
                 0 -> SongQueue(viewModel, mediaController, songInfo)
-                1 -> PlayerScreen(mediaController, spectrumAnalyzer, viewModel, songInfo, navController)
+                1 -> PlayerScreen(mediaController, spectrumAnalyzer, viewModel, songInfo)
                 2 -> SongsScreen(songInfo, mediaController, viewModel, pagerState, navController)
                 3 -> AlbumScreen(albumInfo, viewModel, navController)
             }

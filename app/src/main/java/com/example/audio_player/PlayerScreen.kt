@@ -10,6 +10,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -27,16 +28,21 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.Slider
+import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -45,31 +51,44 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.drawscope.Fill
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.LayoutBoundsHolder
+import androidx.compose.ui.layout.layout
+import androidx.compose.ui.layout.layoutBounds
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
+import androidx.media3.common.C
 import androidx.media3.common.MediaItem
+import androidx.media3.common.audio.AudioProcessor
+import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaController
 import androidx.navigation.NavController
 import com.example.audio_player.ui.theme.dotoFamily
 import com.example.audio_player.ui.theme.orbitronFamily
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import java.lang.Thread.sleep
-import kotlin.time.Duration
 
 var shuffleSongInfo = listOf<SongInfo>()
+
+@ExperimentalMaterial3Api
 @OptIn(UnstableApi::class)
 @Composable
 fun PlayerScreen(
     mediaController: MediaController?,
     spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer,
     viewModel: PlayerViewModel,
-    songInfo: List<SongInfo>,
-    navController: NavController
+    songInfo: List<SongInfo>
 ) {
     Column(
         modifier = Modifier
@@ -86,10 +105,16 @@ fun PlayerScreen(
         if (viewModel.showEqualiser) {
             GraphicalEqualizer(spectrumAnalyzer, viewModel)
         }
-        OtherMediaControls(viewModel, mediaController, songInfo, navController) // Repeat, shuffle, speed & pitch change
+        OtherMediaControls(
+            viewModel,
+            mediaController,
+            songInfo,
+            spectrumAnalyzer
+        ) // Repeat, shuffle, speed & pitch change
         SeekBar(mediaController, viewModel)
     }
 }
+
 @Composable
 fun PlayingMediaInfo(viewModel: PlayerViewModel, songInfo: List<SongInfo>) {
     Image( // Album art
@@ -145,8 +170,13 @@ fun PlayingMediaInfo(viewModel: PlayerViewModel, songInfo: List<SongInfo>) {
         viewModel = viewModel
     )
 }
+
 @Composable
-fun PlaybackControls(mediaController: MediaController?, viewModel: PlayerViewModel, songInfo: List<SongInfo>){
+fun PlaybackControls(
+    mediaController: MediaController?,
+    viewModel: PlayerViewModel,
+    songInfo: List<SongInfo>
+) {
     Row( // Playback controls
         modifier = Modifier
             .fillMaxWidth(),
@@ -240,6 +270,7 @@ fun PlaybackControls(mediaController: MediaController?, viewModel: PlayerViewMod
         )
     }
 }
+
 @Composable
 fun ChangeSpeedButton(viewModel: PlayerViewModel, navController: NavController) {
     IconButton(
@@ -259,8 +290,16 @@ fun ChangeSpeedButton(viewModel: PlayerViewModel, navController: NavController) 
         }
     )
 }
+
+@OptIn(UnstableApi::class)
+@ExperimentalMaterial3Api
 @Composable
-fun OtherMediaControls(viewModel: PlayerViewModel, mediaController: MediaController?, songInfo: List<SongInfo>, navController: NavController) {
+fun OtherMediaControls(
+    viewModel: PlayerViewModel,
+    mediaController: MediaController?,
+    songInfo: List<SongInfo>,
+    spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer
+) {
     val tmpSongInfo = mutableListOf<SongInfo>()
     Row(
         modifier = Modifier
@@ -269,27 +308,8 @@ fun OtherMediaControls(viewModel: PlayerViewModel, mediaController: MediaControl
         horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        IconButton( // Repeat controls
-            onClick = {
-                navController.navigate("sonic_audio_processor_controls")
-            },
-            modifier = Modifier
-                .size(40.dp),
-            colors = IconButtonColors(
-                containerColor = Color.Transparent,
-                contentColor = viewModel.iconColor,
-                disabledContentColor = Color.Transparent,
-                disabledContainerColor = Color.Transparent
-            ),
-            content = {
-                Icon(
-                    painter = (
-                            painterResource(R.drawable.speed_pitch)
-                            ),
-                    contentDescription = "Speed and pitch change"
-                )
-            }
-        )
+        // Audio effects
+        AudioEffectMenu(viewModel, spectrumAnalyzer, mediaController)
         IconButton( // Repeat controls
             onClick = {
                 when (viewModel.repeatMode) {
@@ -297,10 +317,12 @@ fun OtherMediaControls(viewModel: PlayerViewModel, mediaController: MediaControl
                         mediaController?.repeatMode = ExoPlayer.REPEAT_MODE_ALL
                         viewModel.updateRepeatMode("repeatQueue")
                     }
+
                     "repeatQueue" -> {
                         mediaController?.repeatMode = ExoPlayer.REPEAT_MODE_ONE
                         viewModel.updateRepeatMode("repeatSong")
                     }
+
                     "repeatSong" -> {
                         mediaController?.repeatMode = ExoPlayer.REPEAT_MODE_OFF
                         viewModel.updateRepeatMode("normal")
@@ -370,7 +392,7 @@ fun OtherMediaControls(viewModel: PlayerViewModel, mediaController: MediaControl
                         }
                     } else { // Playing from albums screen
                         viewModel.updateQueuedSongs(viewModel.albumSongInfo)
-                        for ( i in viewModel.albumSongInfo) {
+                        for (i in viewModel.albumSongInfo) {
                             mediaController?.addMediaItem(MediaItem.fromUri(i.songUri))
                         }
                     }
@@ -404,9 +426,30 @@ fun OtherMediaControls(viewModel: PlayerViewModel, mediaController: MediaControl
         Spacer(modifier = Modifier.width(15.dp))
     }
 }
+
 @OptIn(UnstableApi::class)
 @Composable
-fun GraphicalEqualizer(spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer, viewModel: PlayerViewModel) {
+fun GraphicalEqualizer(
+    spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer,
+    viewModel: PlayerViewModel
+) {
+    val scope = rememberCoroutineScope()
+    var eqList by remember { mutableStateOf(doubleArrayOf()) }
+    var volume by remember { mutableDoubleStateOf(0.0) }
+
+    // Collecting flow data from spectrum analyzer
+    val stateFlowData = spectrumAnalyzer.eqStateFlow.collectAsState()
+    remember(stateFlowData.value) {
+        scope.launch {
+            delay(1850)
+            eqList = stateFlowData.value.eqList
+            volume = stateFlowData.value.volume
+        }
+    }
+    if (eqList.isNotEmpty()) {
+        Log.d("Neoplayer", "${eqList[0]}")
+        Log.d("Neoplayer", "${eqList[4]}")
+    }
     Row(
         modifier = Modifier
             .size(340.dp, 140.dp)
@@ -414,7 +457,7 @@ fun GraphicalEqualizer(spectrumAnalyzer: ForegroundNotificationService.SpectrumA
         verticalAlignment = Alignment.Bottom,
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        val fieldName = listOf("63","16O","4OO","1k","2.5k","6.3k","16k")
+        val fieldName = listOf("63", "16O", "4OO", "1k", "2.5k", "6.3k", "16k")
         VolumeLevelAxis(viewModel)
         //======================== Volume level ========================//
         Column(
@@ -429,8 +472,8 @@ fun GraphicalEqualizer(spectrumAnalyzer: ForegroundNotificationService.SpectrumA
             ) {
                 val tick = viewModel.currentSongPosition
                 if (viewModel.isPlaying) {
-                    VolumeLevelText(spectrumAnalyzer, tick, viewModel)
-                    VolumeLevelText(spectrumAnalyzer, tick, viewModel)
+                    VolumeLevelText(spectrumAnalyzer, tick, viewModel, volume)
+                    VolumeLevelText(spectrumAnalyzer, tick, viewModel, volume)
                 }
             }
         }
@@ -441,7 +484,7 @@ fun GraphicalEqualizer(spectrumAnalyzer: ForegroundNotificationService.SpectrumA
         //======================== Equaliser ========================//
         EQLevelAxis(viewModel)
         for (i in 0..6) { // 7 band EQ
-            EQLevelColumn(fieldName[i],spectrumAnalyzer, viewModel)
+            EQLevelColumn(fieldName[i], viewModel, eqList)
         }
     }
 }
@@ -469,7 +512,7 @@ fun VolumeLevelAxis(viewModel: PlayerViewModel) {
             style = TextStyle(
                 shadow = Shadow(
                     color = viewModel.eqTextColor.copy(alpha = colorAlpha),
-                    offset = Offset(0f,0f),
+                    offset = Offset(0f, 0f),
                     blurRadius = 20f
                 )
             )
@@ -490,7 +533,7 @@ fun VolumeLevelAxis(viewModel: PlayerViewModel) {
             style = TextStyle(
                 shadow = Shadow(
                     color = viewModel.eqTextColor.copy(alpha = 0.6f),
-                    offset = Offset(0f,0f),
+                    offset = Offset(0f, 0f),
                     blurRadius = 20f
                 )
             )
@@ -511,7 +554,7 @@ fun VolumeLevelAxis(viewModel: PlayerViewModel) {
             style = TextStyle(
                 shadow = Shadow(
                     color = viewModel.eqTextColor.copy(alpha = colorAlpha),
-                    offset = Offset(0f,0f),
+                    offset = Offset(0f, 0f),
                     blurRadius = 20f
                 )
             )
@@ -534,6 +577,7 @@ fun VolumeLevelAxis(viewModel: PlayerViewModel) {
         )
     }
 }
+
 @Composable
 fun EQLevelAxis(viewModel: PlayerViewModel) {
     Column( // Arbitrary measure dashes
@@ -565,6 +609,7 @@ fun EQLevelAxis(viewModel: PlayerViewModel) {
         )
     }
 }
+
 @Composable
 fun VolumeLevelTick(viewModel: PlayerViewModel) {
     Row(
@@ -589,7 +634,7 @@ fun VolumeLevelTick(viewModel: PlayerViewModel) {
                     style = TextStyle(
                         shadow = Shadow(
                             color = viewModel.eqTextColor.copy(alpha = 0.8f),
-                            offset = Offset(0f,0f),
+                            offset = Offset(0f, 0f),
                             blurRadius = 8f
                         )
                     )
@@ -601,7 +646,7 @@ fun VolumeLevelTick(viewModel: PlayerViewModel) {
 
 @OptIn(UnstableApi::class)
 @Composable
-fun EQLevelColumn(fieldName: String, spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer, viewModel: PlayerViewModel) {
+fun EQLevelColumn(fieldName: String, viewModel: PlayerViewModel, eqList: DoubleArray) {
     Column(
         modifier = Modifier
             .fillMaxHeight()
@@ -619,28 +664,29 @@ fun EQLevelColumn(fieldName: String, spectrumAnalyzer: ForegroundNotificationSer
         ) {
             val tick = viewModel.currentSongPosition
             if (viewModel.isPlaying) {
-                sleep(500) // Tmp test for synchronous eq ///////////////////////////////
-                EQLevelText(fieldName, spectrumAnalyzer, tick, viewModel)
-                EQLevelText(fieldName, spectrumAnalyzer, tick, viewModel)
+                EQLevelText(fieldName, tick, viewModel, eqList)
+                EQLevelText(fieldName, tick, viewModel, eqList)
             }
         }
     }
 }
+
 //============================== EQ level ==============================//
 @OptIn(UnstableApi::class)
 @Composable
-fun EQLevelText(fieldName: String, spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer, tick: Float, viewModel: PlayerViewModel) {
+fun EQLevelText(fieldName: String, tick: Float, viewModel: PlayerViewModel, eqList: DoubleArray) {
     val eqTransition = rememberInfiniteTransition()
+
     val target = remember(tick) {
-        if (spectrumAnalyzer.eqList.count() != 0) {
+        if (eqList.count() != 0) {
             when (fieldName) {
-                "63" -> level63(spectrumAnalyzer)
-                "16O" -> level160(spectrumAnalyzer)
-                "4OO" -> level400(spectrumAnalyzer)
-                "1k" -> level1k(spectrumAnalyzer)
-                "2.5k" -> level2500k(spectrumAnalyzer)
-                "6.3k" -> level6300k(spectrumAnalyzer)
-                "16k" -> level16k(spectrumAnalyzer)
+                "63" -> level63(eqList[0])
+                "16O" -> level160(eqList[1])
+                "4OO" -> level400(eqList[2])
+                "1k" -> level1k(eqList[3])
+                "2.5k" -> level2500k(eqList[4])
+                "6.3k" -> level6300k(eqList[5])
+                "16k" -> level16k(eqList[6])
                 else -> 0f
             }
         } else {
@@ -671,13 +717,19 @@ fun EQLevelText(fieldName: String, spectrumAnalyzer: ForegroundNotificationServi
         textAlign = TextAlign.Center,
     )
 }
+
 //============================== Volume level ==============================//
 @OptIn(UnstableApi::class)
 @Composable
-fun VolumeLevelText(spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer, tick: Float, viewModel: PlayerViewModel) {
+fun VolumeLevelText(
+    spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer,
+    tick: Float,
+    viewModel: PlayerViewModel,
+    volumeLevel: Double
+) {
     val eqTransition = rememberInfiniteTransition()
     val target = remember(tick) {
-        volumeLevel(spectrumAnalyzer)
+        volumeLevel(volumeLevel)
     }
     val levels by eqTransition.animateFloat(
         initialValue = 0f,
@@ -703,15 +755,17 @@ fun VolumeLevelText(spectrumAnalyzer: ForegroundNotificationService.SpectrumAnal
         textAlign = TextAlign.Center
     )
 }
+
 @OptIn(UnstableApi::class)
-fun volumeLevel(spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer): Float {
-    var tmpSound = spectrumAnalyzer.volume
+fun volumeLevel(volume: Double): Float {
+    var tmpSound = volume
+
     if (tmpSound > 20000.0) {
         tmpSound = 20000.0
     }
     return when {
-        tmpSound <= 2244 -> 2f // 1000
-        tmpSound <= 2512 -> 4f // 2000 etc.
+        tmpSound <= 2244 -> 2f
+        tmpSound <= 2512 -> 4f
         tmpSound <= 2818 -> 6f
         tmpSound <= 3162 -> 8f
         tmpSound <= 3548 -> 10f
@@ -735,68 +789,76 @@ fun volumeLevel(spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer
 }
 
 @OptIn(UnstableApi::class)
-fun level63(spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer): Float {
-    var tempValue = spectrumAnalyzer.eqList[0]
+fun level63(data: Double): Float {
+//    var tempValue = spectrumAnalyzer.eqList[0]
+    var tempValue = data
     if (tempValue > 110.0) {
-       tempValue = 110.0
+        tempValue = 110.0
     }
     tempValue = tempValue / 5.5 * 2
     return tempValue.toFloat()
 }
+
 @OptIn(UnstableApi::class)
-fun level160(spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer): Float {
-    var tempValue = spectrumAnalyzer.eqList[1]
+fun level160(magnitude: Double): Float {
+    var tempValue = magnitude
     if (tempValue > 55.0) {
         tempValue = 55.0
     }
     tempValue = tempValue / 2.75 * 2
     return tempValue.toFloat()
 }
+
 @OptIn(UnstableApi::class)
-fun level400(spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer): Float {
-    var tempValue = spectrumAnalyzer.eqList[2]
+fun level400(magnitude: Double): Float {
+    var tempValue = magnitude
     if (tempValue > 40.0) {
         tempValue = 40.0
     }
     tempValue = tempValue / 2.0 * 2
     return tempValue.toFloat()
 }
+
 @OptIn(UnstableApi::class)
-fun level1k(spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer): Float {
-    var tempValue = spectrumAnalyzer.eqList[3]
+fun level1k(magnitude: Double): Float {
+    var tempValue = magnitude
     if (tempValue > 13.0) {
         tempValue = 13.0
     }
     tempValue = tempValue / 0.65 * 2
     return tempValue.toFloat()
 }
+
 @OptIn(UnstableApi::class)
-fun level2500k(spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer): Float {
-    var tempValue = spectrumAnalyzer.eqList[4]
+fun level2500k(magnitude: Double): Float {
+    var tempValue = magnitude
     if (tempValue > 5.0) {
         tempValue = 5.0
     }
     tempValue = tempValue / 0.25 * 2
     return tempValue.toFloat()
 }
+
 @OptIn(UnstableApi::class)
-fun level6300k(spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer): Float {
-    var tempValue = spectrumAnalyzer.eqList[5]
+fun level6300k(magnitude: Double): Float {
+    var tempValue = magnitude
     if (tempValue > 1.5) {
         tempValue = 1.5
     }
     tempValue = tempValue / 0.075 * 2
     return tempValue.toFloat()
 }
+
 @OptIn(UnstableApi::class)
-fun level16k(spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer): Float {
-    var tempValue = spectrumAnalyzer.eqList[6]
+fun level16k(magnitude: Double): Float {
+    var tempValue = magnitude
     if (tempValue > 1.5) {
         tempValue = 1.5
     }
     tempValue = tempValue / 0.075 * 2
     return tempValue.toFloat()
 }
+
 //============================== Text presets ==============================//
 @Composable
 fun OrbitronText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel) {
@@ -810,12 +872,13 @@ fun OrbitronText(text: String, modifier: Modifier = Modifier, viewModel: PlayerV
         style = TextStyle(
             shadow = Shadow(
                 color = viewModel.eqTextColor.copy(alpha = 0.8f),
-                offset = Offset(0f,0f),
+                offset = Offset(0f, 0f),
                 blurRadius = 20f
             )
         )
     )
 }
+
 fun textLevelBuilder(n: IntRange): String {
     var tempText = ""
     for (i in n) {
@@ -823,6 +886,7 @@ fun textLevelBuilder(n: IntRange): String {
     }
     return tempText
 }
+
 //============================== Seek bar ==============================//
 @kotlin.OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -844,7 +908,7 @@ fun SeekBar(mediaController: MediaController?, viewModel: PlayerViewModel) {
             value = currentSongPosition,
             valueRange = 0f..viewModel.duration,
             modifier = Modifier
-                .size(250.dp, 20.dp),
+                .size(244.dp, 20.dp),
             onValueChange = {
                 isSeeking = true
                 currentSongPosition = it
@@ -872,32 +936,34 @@ fun SeekBar(mediaController: MediaController?, viewModel: PlayerViewModel) {
         }
     }
 }
-fun getSongPositionString(viewModel: PlayerViewModel, isSeeking: Boolean, currentSongPosition: Float): String {
-    var buildingString: String
+
+fun getSongPositionString(
+    viewModel: PlayerViewModel,
+    isSeeking: Boolean,
+    currentSongPosition: Float
+): String {
+    var seconds: String
+    var minutes: String
     if (!isSeeking) {
-        buildingString = "${(viewModel.currentSongPosition / 60).toInt()}:${(viewModel.currentSongPosition % 60).toInt()}"
+        minutes = "${(viewModel.currentSongPosition / 60).toInt()}:"
+        seconds = "${(viewModel.currentSongPosition % 60).toInt()}"
     } else {
-        buildingString = "${(currentSongPosition / 60).toInt()}:${(currentSongPosition % 60).toInt()}"
+        minutes = "${(currentSongPosition / 60).toInt()}:"
+        seconds = "${(currentSongPosition % 60).toInt()}"
     }
-    for (i in 0 until buildingString.length) {
-        if (buildingString[i].toString() == ":") {
-            while (buildingString.subSequence(i + 1, buildingString.length).length < 2) {
-                buildingString += "0"
-            }
-        }
+    while (seconds.length < 2) {
+        seconds = "0$seconds"
     }
-    return buildingString
+    return "$minutes$seconds"
 }
+
 fun getSongDurationString(viewModel: PlayerViewModel): String {
-    var buildingString = "${(viewModel.duration / 60).toInt()}:${(viewModel.duration % 60).toInt()}"
-    for (i in 0 until buildingString.length) {
-        if (buildingString[i].toString() == ":") {
-            while (buildingString.subSequence(i + 1, buildingString.length).length < 2) {
-                buildingString += "0"
-            }
-        }
+    val minutes = "${(viewModel.duration / 60).toInt()}:"
+    var seconds = "${(viewModel.duration % 60).toInt()}"
+    while (seconds.length < 2) {
+        seconds = "0$seconds"
     }
-    return buildingString
+    return "$minutes$seconds"
 }
 
 @Composable
@@ -921,6 +987,7 @@ fun SliderThumb(viewModel: PlayerViewModel) {
         )
     }
 }
+
 @Composable
 fun SliderTrack(viewModel: PlayerViewModel) {
     Column(
@@ -937,8 +1004,241 @@ fun SliderTrack(viewModel: PlayerViewModel) {
                     size = Size(600f, 15f),
                     style = Fill,
                     color = viewModel.sliderTrackColor,
-                    cornerRadius = CornerRadius(10f,10f),
-                    topLeft = Offset(0f,-6.5f)
+                    cornerRadius = CornerRadius(10f, 10f),
+                    topLeft = Offset(0f, -6.5f)
+                )
+            }
+        )
+    }
+}
+
+@ExperimentalMaterial3Api
+@OptIn(UnstableApi::class)
+@Composable
+fun AudioEffectMenu(
+    viewModel: PlayerViewModel,
+    spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer,
+    mediaController: MediaController?,
+) {
+    var expanded by remember { mutableStateOf(false) }
+    var speed by remember { mutableFloatStateOf(spectrumAnalyzer.speed) }
+    var pitch by remember { mutableFloatStateOf(spectrumAnalyzer.pitch) }
+
+    IconButton( // Speed & pitch change
+        onClick = {
+            if (!expanded) {
+                expanded = true
+            }
+        },
+        modifier = Modifier
+            .size(40.dp),
+        colors = IconButtonColors(
+            containerColor = Color.Transparent,
+            contentColor = viewModel.iconColor,
+            disabledContentColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent
+        ),
+        content = {
+            Icon(
+                painter = (
+                        painterResource(R.drawable.speed_pitch)
+                        ),
+                contentDescription = "Audio effects"
+            )
+        }
+    )
+    if (expanded) {
+        Popup(
+            alignment = Alignment.Center,
+            offset = IntOffset(175, -345),
+            onDismissRequest = { expanded = false },
+        ) {
+            Column(
+                modifier = Modifier
+                    .size(150.dp, 215.dp) // Was 140.dp, 200.dp
+                    .background(viewModel.backgroundColor),
+                verticalArrangement = Arrangement.Center,
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Row(
+                    modifier = Modifier
+                        .size(140.dp, 180.dp),
+//                        .border(1.dp, Color.White),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.Start
+                ) {
+                    val sliderHeight = 120.dp
+                    // Speed controls
+                    Column(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .width(70.dp),
+                        verticalArrangement = Arrangement.SpaceEvenly,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        LcdText(
+                            "Speed:",
+                            viewModel = viewModel
+                        )
+                        Slider(
+                            modifier = Modifier
+                                .layout { measurable, constraints ->
+                                    val placeable = measurable.measure(
+                                        Constraints.fixed(
+                                            width = sliderHeight.roundToPx(),
+                                            height = 15.dp.roundToPx()
+                                        )
+                                    )
+                                    layout(15.dp.roundToPx(), sliderHeight.roundToPx()) {
+                                        placeable.place(
+                                            x = -(sliderHeight.roundToPx() - 15.dp.roundToPx()) / 2,
+                                            y = (sliderHeight.roundToPx() - 15.dp.roundToPx()) / 2,
+                                        )
+                                    }
+                                }
+                                .graphicsLayer(
+                                    rotationZ = -90f
+                                )
+                                .size(sliderHeight, 15.dp),
+                            value = speed,
+                            valueRange = 0f..2f,
+                            steps = 39, // For 0.05 increments
+                            onValueChange = {
+                                speed = it
+                            },
+                            thumb = {
+                                SliderThumb(viewModel)
+                            },
+                            track = {
+                                SettingsSliderTrack(viewModel)
+                            },
+                        )
+                        LargeLcdText(
+                            "%.2f".format(speed),
+                            viewModel = viewModel
+                        )
+                    }
+
+                    // Pitch controls
+                    Column(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .width(70.dp),
+                        verticalArrangement = Arrangement.SpaceEvenly,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        LcdText(
+                            "Pitch:",
+                            viewModel = viewModel
+                        )
+                        Slider(
+                            value = pitch,
+                            valueRange = 0f..2f,
+                            steps = 39, // For 0.05 increments
+                            modifier = Modifier
+                                .layout { measurable, constraints ->
+                                    val placeable = measurable.measure(
+                                        Constraints.fixed(
+                                            width = sliderHeight.roundToPx(),
+                                            height = 15.dp.roundToPx()
+                                        )
+                                    )
+                                    layout(15.dp.roundToPx(), sliderHeight.roundToPx()) {
+                                        placeable.place(
+                                            x = -(sliderHeight.roundToPx() - 15.dp.roundToPx()) / 2,
+                                            y = (sliderHeight.roundToPx() - 15.dp.roundToPx()) / 2,
+                                        )
+                                    }
+                                }
+                                .graphicsLayer(
+                                    rotationZ = -90f
+                                )
+                                .size(sliderHeight, 15.dp),
+                            onValueChange = {
+                                pitch = it
+                            },
+                            thumb = {
+                                SliderThumb(viewModel)
+                            },
+                            track = {
+                                SettingsSliderTrack(viewModel)
+                            },
+                        )
+                        LargeLcdText(
+                            "%.2f".format(pitch),
+                            viewModel = viewModel
+                        )
+                    }
+                }
+                // Apply changes
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(40.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.End
+                ) {
+                    IconButton(
+                        modifier = Modifier
+                            .size(50.dp),
+                        onClick = {
+                            mediaController?.pause()
+                            spectrumAnalyzer.speed = speed
+                            spectrumAnalyzer.pitch = pitch
+                            if (spectrumAnalyzer.pitch != 1f || spectrumAnalyzer.speed != 1f) {
+                                spectrumAnalyzer.usingSonicProcessor = true
+                            } else {
+                                false
+                            }
+                            spectrumAnalyzer.configure(
+                                AudioProcessor.AudioFormat(
+                                    44100,
+                                    2,
+                                    C.ENCODING_PCM_16BIT
+                                )
+                            )
+                            spectrumAnalyzer.flush()
+                            mediaController?.play()
+                            expanded = false
+                        },
+                        content = {
+                            Icon(
+                                painterResource(R.drawable.done_tick),
+                                contentDescription = "Apply changes"
+                            )
+                        },
+                        colors = IconButtonColors(
+                            containerColor = Color.Transparent,
+                            contentColor = viewModel.iconColor,
+                            disabledContentColor = Color.Transparent,
+                            disabledContainerColor = Color.Transparent
+                        ),
+                    )
+                }
+            }
+        }
+    }
+}
+
+
+@Composable
+fun SettingsSliderTrack(viewModel: PlayerViewModel) {
+    Column(
+        modifier = Modifier
+            .height(15.dp)
+            .width(280.dp),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.Start,
+    ) {
+        Canvas(
+            modifier = Modifier,
+            onDraw = {
+                drawRoundRect(
+                    size = Size(250f, 15f),
+                    style = Fill,
+                    color = viewModel.sliderTrackColor,
+                    cornerRadius = CornerRadius(10f, 10f),
+                    topLeft = Offset(0f, -6.5f)
                 )
             }
         )

@@ -43,9 +43,9 @@ android {
 dependencies {
 
     //noinspection UseTomlInstead
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0")
-    implementation("com.github.wendykierp:JTransforms:3.1")
-    implementation("com.github.skydoves:colorpicker-compose:1.1.2")
+    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0") // Apache 2.0
+    implementation("com.github.wendykierp:JTransforms:3.1") // Custom JTransform license
+    implementation("com.github.skydoves:colorpicker-compose:1.1.2") // Apache 2.0
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.ui)

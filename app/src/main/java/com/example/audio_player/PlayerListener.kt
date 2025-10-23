@@ -14,6 +14,9 @@ class PlayerListener(
     private val viewModel: PlayerViewModel,
     private val mediaController: MediaController?,
 ) : Player.Listener {
+//    val equalizerDataQueue = EqualizerDataQueue
+//    val volumeDataQueue = VolumeDataQueue
+
     @OptIn(UnstableApi::class)
     override fun onIsPlayingChanged(isPlaying: Boolean) {
         super.onIsPlayingChanged(isPlaying)
@@ -26,6 +29,8 @@ class PlayerListener(
         reason: Int
     ) {
         super.onMediaItemTransition(mediaItem, reason)
+//        volumeDataQueue.reset()
+//        equalizerDataQueue.reset()
         if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) {
             viewModel.incrementSongIterator(1)
         } else if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_SEEK) {
