@@ -18,13 +18,13 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import androidx.core.app.ActivityCompat
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.C
-import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
@@ -49,7 +49,7 @@ class MainActivity : ComponentActivity() {
             }
         }
     )
-    val mediaSessionService = ForegroundNotificationService()
+    val mediaSessionService = PlayerService()
 
     @OptIn(UnstableApi::class, ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -76,7 +76,7 @@ class MainActivity : ComponentActivity() {
                 0
             )
         }
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
             ActivityCompat.requestPermissions(
                 this,
                 arrayOf(Manifest.permission.FOREGROUND_SERVICE_MEDIA_PLAYBACK),
@@ -178,7 +178,7 @@ fun LcdText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewMo
 }
 
 @Composable
-fun LargeLcdText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel) {
+fun LargeLcdText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel, lineHeight: TextUnit = 17.sp) {
     Text(
         modifier = modifier,
         text = text,
@@ -186,7 +186,7 @@ fun LargeLcdText(text: String, modifier: Modifier = Modifier, viewModel: PlayerV
         fontSize = 20.sp,
         fontFamily = lcdFont,
         fontWeight = FontWeight.Normal,
-        lineHeight = 17.sp
+        lineHeight = lineHeight
     )
 }
 

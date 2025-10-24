@@ -30,7 +30,7 @@
             </intent-filter>
         </activity>
         <service
-            android:name=".ForegroundNotificationService"
+            android:name=".PlayerService"
             android:foregroundServiceType="mediaPlayback"
             android:exported="false">
             <intent-filter>

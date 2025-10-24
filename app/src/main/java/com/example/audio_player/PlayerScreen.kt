@@ -1,5 +1,6 @@
 package com.example.audio_player
 
+import android.content.res.Configuration
 import androidx.annotation.OptIn
 import androidx.compose.animation.core.EaseOut
 import androidx.compose.animation.core.RepeatMode
@@ -15,6 +16,8 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
+import androidx.compose.foundation.layout.displayCutout
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -23,12 +26,12 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.Slider
-import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -42,7 +45,6 @@ import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clipToBounds
 import androidx.compose.ui.draw.shadow
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
@@ -52,27 +54,24 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.layout.LayoutBoundsHolder
 import androidx.compose.ui.layout.layout
-import androidx.compose.ui.layout.layoutBounds
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.Constraints
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
-import androidx.compose.ui.window.PopupProperties
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.audio.AudioProcessor
-import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaController
-import androidx.navigation.NavController
 import com.example.audio_player.ui.theme.dotoFamily
 import com.example.audio_player.ui.theme.orbitronFamily
 import kotlinx.coroutines.delay
@@ -86,7 +85,22 @@ var shuffleSongInfo = listOf<SongInfo>()
 @Composable
 fun PlayerScreen(
     mediaController: MediaController?,
-    spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer,
+    spectrumAnalyzer: PlayerService.SpectrumAnalyzer,
+    viewModel: PlayerViewModel,
+    songInfo: List<SongInfo>
+) {
+    if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) {
+        PortraitOrientation(mediaController,spectrumAnalyzer,viewModel,songInfo)
+    } else {
+        HorizontalOrientation(mediaController,spectrumAnalyzer,viewModel,songInfo)
+    }
+}
+@kotlin.OptIn(ExperimentalMaterial3Api::class)
+@UnstableApi
+@Composable
+fun PortraitOrientation(
+    mediaController: MediaController?,
+    spectrumAnalyzer: PlayerService.SpectrumAnalyzer,
     viewModel: PlayerViewModel,
     songInfo: List<SongInfo>
 ) {
@@ -101,9 +115,9 @@ fun PlayerScreen(
                 .height(10.dp)
         )
         PlayingMediaInfo(viewModel, songInfo)
-        PlaybackControls(mediaController, viewModel, songInfo)
+        PlaybackControls(mediaController, viewModel)
         if (viewModel.showEqualiser) {
-            GraphicalEqualizer(spectrumAnalyzer, viewModel)
+            SpectrumAnalyzer(spectrumAnalyzer, viewModel)
         }
         OtherMediaControls(
             viewModel,
@@ -113,6 +127,232 @@ fun PlayerScreen(
         ) // Repeat, shuffle, speed & pitch change
         SeekBar(mediaController, viewModel)
     }
+}
+@kotlin.OptIn(ExperimentalMaterial3Api::class)
+@UnstableApi
+@Composable
+fun HorizontalOrientation(
+    mediaController: MediaController?,
+    spectrumAnalyzer: PlayerService.SpectrumAnalyzer,
+    viewModel: PlayerViewModel,
+    songInfo: List<SongInfo>
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(viewModel.backgroundColor)
+            .windowInsetsPadding(WindowInsets.displayCutout),
+        horizontalArrangement = Arrangement.Start,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        AlbumArtHorizontalOrientation(viewModel, songInfo)
+        Column(
+            modifier = Modifier
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.Top,
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            HorizontalPlayingMediaInfo(viewModel, songInfo)
+            PlaybackControls(mediaController, viewModel, 50.dp)
+            SeekBarAndOtherControls(viewModel, mediaController, songInfo, spectrumAnalyzer)
+            if (viewModel.showEqualiser) {
+                SpectrumAnalyzer(spectrumAnalyzer, viewModel)
+            }
+        }
+    }
+}
+
+@ExperimentalMaterial3Api
+@UnstableApi
+@Composable
+fun SeekBarAndOtherControls(
+    viewModel: PlayerViewModel,
+    mediaController: MediaController?,
+    songInfo: List<SongInfo>,
+    spectrumAnalyzer: PlayerService.SpectrumAnalyzer
+) {
+    val tmpSongInfo = mutableListOf<SongInfo>()
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 20.dp),
+        horizontalArrangement = Arrangement.Center,
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        SeekBar(mediaController,viewModel, 0.65f)
+        //===================== Other controls =====================//
+        // Audio effects
+        AudioEffectMenu(viewModel, spectrumAnalyzer, mediaController)
+        IconButton( // Repeat controls
+            onClick = {
+                when (viewModel.repeatMode) {
+                    "normal" -> {
+                        mediaController?.repeatMode = ExoPlayer.REPEAT_MODE_ALL
+                        viewModel.updateRepeatMode("repeatQueue")
+                    }
+
+                    "repeatQueue" -> {
+                        mediaController?.repeatMode = ExoPlayer.REPEAT_MODE_ONE
+                        viewModel.updateRepeatMode("repeatSong")
+                    }
+
+                    "repeatSong" -> {
+                        mediaController?.repeatMode = ExoPlayer.REPEAT_MODE_OFF
+                        viewModel.updateRepeatMode("normal")
+                    }
+                }
+            },
+            modifier = Modifier
+                .size(40.dp),
+            colors = IconButtonColors(
+                containerColor = Color.Transparent,
+                contentColor = viewModel.iconColor,
+                disabledContentColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent
+            ),
+            content = {
+                Icon(
+                    painter = (
+                            when (viewModel.repeatMode) {
+                                "normal" -> painterResource(R.drawable.repeat) // R.drawable.repeat
+                                "repeatQueue" -> painterResource(R.drawable.repeat_on) // R.drawable.repeat_on
+                                "repeatSong" -> painterResource(R.drawable.repeat_one_on) // R.drawable.repeat_one_on
+                                else -> painterResource(R.drawable.repeat)
+                            }
+                            ),
+                    contentDescription = "Repeat controls"
+                )
+            }
+        )
+        IconButton( // Shuffle controls
+            onClick = {
+                if (!viewModel.shuffleMode) { // Switching to shuffle
+                    if (!viewModel.playingFromSongsScreen) { // Playing from albums
+                        val tmpShuffledAlbumSongInfo = viewModel.albumSongInfo.shuffled()
+                        tmpSongInfo.clear()
+                        mediaController?.clearMediaItems()
+                        for (i in tmpShuffledAlbumSongInfo) {
+                            tmpSongInfo.add(i)
+                        }
+                        shuffleSongInfo = tmpSongInfo
+                        for (i in shuffleSongInfo) {
+                            mediaController?.addMediaItem(MediaItem.fromUri(i.songUri))
+                        }
+                    } else { // Playing from songs screen
+                        val tmpShuffledSongInfo = songInfo.shuffled()
+                        tmpSongInfo.clear()
+                        mediaController?.clearMediaItems()
+                        for (i in tmpShuffledSongInfo) {
+                            tmpSongInfo.add(i)
+                        }
+                        shuffleSongInfo = tmpSongInfo
+                        for (i in shuffleSongInfo) {
+                            mediaController?.addMediaItem(MediaItem.fromUri(i.songUri))
+                        }
+                    }
+                    viewModel.updateQueuedSongs(shuffleSongInfo)
+                    viewModel.updateLastPlayedUnshuffledSong()
+                    viewModel.updateSongIterator(0)
+                    mediaController?.prepare()
+                    mediaController?.play()
+                } else { // Switching to normal playback
+                    viewModel.updateSongIterator(viewModel.lastPlayedUnshuffledSong)
+                    mediaController?.clearMediaItems()
+                    if (viewModel.playingFromSongsScreen) { // Playing from songs screen
+                        viewModel.updateQueuedSongs(songInfo)
+                        for (i in songInfo) {
+                            mediaController?.addMediaItem(MediaItem.fromUri(i.songUri))
+                        }
+                    } else { // Playing from albums screen
+                        viewModel.updateQueuedSongs(viewModel.albumSongInfo)
+                        for (i in viewModel.albumSongInfo) {
+                            mediaController?.addMediaItem(MediaItem.fromUri(i.songUri))
+                        }
+                    }
+                    mediaController?.prepare()
+                    mediaController?.seekTo(viewModel.songIterator, 0L)
+                    viewModel.incrementSongIterator(1)
+                }
+                viewModel.updateShuffleMode(!viewModel.shuffleMode)
+            },
+            modifier = Modifier
+                .size(40.dp),
+            colors = IconButtonColors(
+                containerColor = Color.Transparent,
+                contentColor = viewModel.iconColor,
+                disabledContentColor = Color.Transparent,
+                disabledContainerColor = Color.Transparent
+            ),
+            content = {
+                Icon(
+                    painter = (
+                            if (!viewModel.shuffleMode) {
+                                painterResource(R.drawable.arrow_right)
+                            } else {
+                                painterResource(R.drawable.shuffle)
+                            }
+                            ),
+                    contentDescription = "Shuffle controls"
+                )
+            }
+        )
+        Spacer(modifier = Modifier.width(15.dp))
+    }
+}
+
+@Composable
+fun AlbumArtHorizontalOrientation(viewModel: PlayerViewModel, songInfo: List<SongInfo>) {
+    Image( // Album art
+        bitmap = (
+                if (viewModel.shuffleMode) {
+                    shuffleSongInfo[viewModel.songIterator].albumArt
+                } else if (viewModel.playingFromSongsScreen) {
+                    songInfo[viewModel.songIterator].albumArt
+                } else {
+                    viewModel.albumSongInfo[viewModel.songIterator].albumArt
+                }
+                ),
+        modifier = Modifier
+            .size(250.dp),
+        contentDescription = null
+    )
+}
+@Composable
+fun HorizontalPlayingMediaInfo(viewModel: PlayerViewModel, songInfo: List<SongInfo>) {
+    ExtraLargeLcdText(
+        if (viewModel.shuffleMode) {
+            shuffleSongInfo[viewModel.songIterator].name
+        } else if (viewModel.playingFromSongsScreen) {
+            songInfo[viewModel.songIterator].name
+        } else {
+            viewModel.albumSongInfo[viewModel.songIterator].name
+        },
+        viewModel = viewModel
+    )
+    Spacer(
+        modifier = Modifier
+            .height(5.dp)
+    )
+    LargeLcdText(
+        if (viewModel.shuffleMode) {
+            shuffleSongInfo[viewModel.songIterator].artist
+        } else if (viewModel.playingFromSongsScreen) {
+            songInfo[viewModel.songIterator].artist
+        } else {
+            viewModel.albumSongInfo[viewModel.songIterator].artist
+        },
+        viewModel = viewModel
+    )
+    LargeLcdText(
+        if (viewModel.shuffleMode) {
+            shuffleSongInfo[viewModel.songIterator].album
+        } else if (viewModel.playingFromSongsScreen) {
+            songInfo[viewModel.songIterator].album
+        } else {
+            viewModel.albumSongInfo[viewModel.songIterator].album
+        },
+        viewModel = viewModel
+    )
 }
 
 @Composable
@@ -175,11 +415,12 @@ fun PlayingMediaInfo(viewModel: PlayerViewModel, songInfo: List<SongInfo>) {
 fun PlaybackControls(
     mediaController: MediaController?,
     viewModel: PlayerViewModel,
-    songInfo: List<SongInfo>
+    height: Dp = 60.dp
 ) {
     Row( // Playback controls
         modifier = Modifier
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .height(height),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
         IconButton(
@@ -271,26 +512,6 @@ fun PlaybackControls(
     }
 }
 
-@Composable
-fun ChangeSpeedButton(viewModel: PlayerViewModel, navController: NavController) {
-    IconButton(
-        onClick = {
-            navController.navigate("sonic_audio_controller_controls")
-        },
-        modifier = Modifier
-            .size(40.dp),
-        colors = IconButtonColors(
-            containerColor = Color.Transparent,
-            contentColor = viewModel.iconColor,
-            disabledContentColor = Color.Transparent,
-            disabledContainerColor = Color.Transparent
-        ),
-        content = {
-
-        }
-    )
-}
-
 @OptIn(UnstableApi::class)
 @ExperimentalMaterial3Api
 @Composable
@@ -298,7 +519,7 @@ fun OtherMediaControls(
     viewModel: PlayerViewModel,
     mediaController: MediaController?,
     songInfo: List<SongInfo>,
-    spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer
+    spectrumAnalyzer: PlayerService.SpectrumAnalyzer
 ) {
     val tmpSongInfo = mutableListOf<SongInfo>()
     Row(
@@ -429,8 +650,8 @@ fun OtherMediaControls(
 
 @OptIn(UnstableApi::class)
 @Composable
-fun GraphicalEqualizer(
-    spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer,
+fun SpectrumAnalyzer(
+    spectrumAnalyzer: PlayerService.SpectrumAnalyzer,
     viewModel: PlayerViewModel
 ) {
     val scope = rememberCoroutineScope()
@@ -445,10 +666,6 @@ fun GraphicalEqualizer(
             eqList = stateFlowData.value.eqList
             volume = stateFlowData.value.volume
         }
-    }
-    if (eqList.isNotEmpty()) {
-        Log.d("Neoplayer", "${eqList[0]}")
-        Log.d("Neoplayer", "${eqList[4]}")
     }
     Row(
         modifier = Modifier
@@ -722,7 +939,7 @@ fun EQLevelText(fieldName: String, tick: Float, viewModel: PlayerViewModel, eqLi
 @OptIn(UnstableApi::class)
 @Composable
 fun VolumeLevelText(
-    spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer,
+    spectrumAnalyzer: PlayerService.SpectrumAnalyzer,
     tick: Float,
     viewModel: PlayerViewModel,
     volumeLevel: Double
@@ -890,10 +1107,10 @@ fun textLevelBuilder(n: IntRange): String {
 //============================== Seek bar ==============================//
 @kotlin.OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun SeekBar(mediaController: MediaController?, viewModel: PlayerViewModel) {
+fun SeekBar(mediaController: MediaController?, viewModel: PlayerViewModel, widthFactor: Float = 1f) {
     Row(
         modifier = Modifier
-            .fillMaxWidth()
+            .fillMaxWidth(widthFactor)
             .height(20.dp),
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
@@ -1017,12 +1234,17 @@ fun SliderTrack(viewModel: PlayerViewModel) {
 @Composable
 fun AudioEffectMenu(
     viewModel: PlayerViewModel,
-    spectrumAnalyzer: ForegroundNotificationService.SpectrumAnalyzer,
+    spectrumAnalyzer: PlayerService.SpectrumAnalyzer,
     mediaController: MediaController?,
 ) {
     var expanded by remember { mutableStateOf(false) }
     var speed by remember { mutableFloatStateOf(spectrumAnalyzer.speed) }
     var pitch by remember { mutableFloatStateOf(spectrumAnalyzer.pitch) }
+    val popupOffset = if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) {
+        IntOffset(175, -345)
+    } else {
+        IntOffset(60, 330)
+    }
 
     IconButton( // Speed & pitch change
         onClick = {
@@ -1050,16 +1272,18 @@ fun AudioEffectMenu(
     if (expanded) {
         Popup(
             alignment = Alignment.Center,
-            offset = IntOffset(175, -345),
+            offset = popupOffset,
             onDismissRequest = { expanded = false },
         ) {
             Column(
                 modifier = Modifier
                     .size(150.dp, 215.dp) // Was 140.dp, 200.dp
-                    .background(viewModel.backgroundColor),
+                    .background(viewModel.backgroundColor)
+                    .border(0.dp, viewModel.iconColor),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                Spacer(Modifier.height(5.dp))
                 Row(
                     modifier = Modifier
                         .size(140.dp, 180.dp),
@@ -1115,7 +1339,8 @@ fun AudioEffectMenu(
                         )
                         LargeLcdText(
                             "%.2f".format(speed),
-                            viewModel = viewModel
+                            viewModel = viewModel,
+                            lineHeight = 1.sp
                         )
                     }
 

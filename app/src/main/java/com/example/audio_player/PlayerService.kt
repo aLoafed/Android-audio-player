@@ -1,7 +1,6 @@
 package com.example.audio_player
 
 import android.content.Context
-import android.media.AudioTimestamp
 import android.os.Handler
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.SonicAudioProcessor
@@ -16,20 +15,18 @@ import androidx.media3.exoplayer.audio.MediaCodecAudioRenderer
 import androidx.media3.exoplayer.mediacodec.MediaCodecSelector
 import androidx.media3.session.MediaSession
 import androidx.media3.session.MediaSessionService
-import kotlinx.coroutines.channels.BufferOverflow
-import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.SharedFlow
 import kotlinx.coroutines.flow.StateFlow
-import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.jtransforms.fft.DoubleFFT_1D
+import java.nio.BufferOverflowException
 import java.nio.BufferUnderflowException
 import java.nio.ByteBuffer
+import kotlin.math.sin
 import kotlin.math.sqrt
 
 @UnstableApi
-class ForegroundNotificationService : MediaSessionService() {
+class PlayerService : MediaSessionService() {
     private lateinit var player: ExoPlayer
     private var mediaSession: MediaSession? = null
 
@@ -58,6 +55,7 @@ class ForegroundNotificationService : MediaSessionService() {
         var eqList = DoubleArray(7)
         var volume = 0.0
         var usingSonicProcessor = false
+        var x = 0f
 
         override fun configure(inputAudioFormat: AudioProcessor.AudioFormat): AudioProcessor.AudioFormat {
             if (usingSonicProcessor) {
