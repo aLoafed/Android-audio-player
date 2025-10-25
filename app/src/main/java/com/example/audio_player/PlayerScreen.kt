@@ -137,6 +137,7 @@ fun HorizontalOrientation(
     viewModel: PlayerViewModel,
     songInfo: List<SongInfo>
 ) {
+    Spacer(Modifier.width(10.dp))
     Row(
         modifier = Modifier
             .fillMaxSize()
@@ -153,7 +154,7 @@ fun HorizontalOrientation(
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             HorizontalPlayingMediaInfo(viewModel, songInfo)
-            PlaybackControls(mediaController, viewModel, 50.dp)
+            PlaybackControls(mediaController, viewModel, 46.dp)
             SeekBarAndOtherControls(viewModel, mediaController, songInfo, spectrumAnalyzer)
             if (viewModel.showEqualiser) {
                 SpectrumAnalyzer(spectrumAnalyzer, viewModel)

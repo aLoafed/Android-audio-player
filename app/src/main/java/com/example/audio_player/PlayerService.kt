@@ -55,7 +55,6 @@ class PlayerService : MediaSessionService() {
         var eqList = DoubleArray(7)
         var volume = 0.0
         var usingSonicProcessor = false
-        var x = 0f
 
         override fun configure(inputAudioFormat: AudioProcessor.AudioFormat): AudioProcessor.AudioFormat {
             if (usingSonicProcessor) {
@@ -76,13 +75,32 @@ class PlayerService : MediaSessionService() {
         }
 
         override fun queueInput(inputBuffer: ByteBuffer) {
+//            val size = inputBuffer.remaining()
+//            val tmpOutBuffer = ByteBuffer
+//                .allocate(size)
+//                .order(inputBuffer.order())
+//
+//            val input = inputBuffer.duplicate()
+
+//            while (input.remaining() >= 2) {
+//                val sample = (input.getShort() * 1f)
+//                    .toInt()
+//                    .coerceIn(-32768, 32767)
+//                    .toShort()
+//                tmpOutBuffer.putShort(sample)
+//            }
+//            tmpOutBuffer.put(input)
+//                .position(0)
+//                .limit(size)
+//            outputBuffer = tmpOutBuffer
+
+            if (!inputBuffer.hasRemaining()) {
+                return
+            }
             if (usingSonicProcessor) {
                 sonicAudioProcessor.queueInput(inputBuffer)
             } else {
                 outputBuffer = inputBuffer // Default audio buffer processing
-            }
-            if (!inputBuffer.hasRemaining()) {
-                return
             }
         }
 

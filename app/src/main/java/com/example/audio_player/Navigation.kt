@@ -157,14 +157,14 @@ fun HorizontalTabRow(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(45.dp),
+                .height(48.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.Start
         ) {
             TabRow(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(45.dp),
+                    .height(48.dp),
                 containerColor = viewModel.backgroundColor,
                 selectedTabIndex = selectedTab.value,
                 indicator = { tabPositions ->
@@ -280,7 +280,7 @@ fun HorizontalTabRow(
                 0 -> SongQueue(viewModel, mediaController, songInfo)
                 1 -> PlayerScreen(mediaController, spectrumAnalyzer, viewModel, songInfo)
                 2 -> SongsScreen(songInfo, mediaController, viewModel, pagerState, navController)
-                3 -> AlbumScreen(albumInfo, viewModel, navController)
+                3 -> AlbumScreen(albumInfo, viewModel, navController, 6)
             }
         }
     }
