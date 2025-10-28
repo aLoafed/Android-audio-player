@@ -2,6 +2,7 @@ package com.example.audio_player
 
 import androidx.compose.animation.core.EaseOutBounce
 import androidx.compose.animation.core.EaseOutElastic
+import androidx.compose.animation.core.EaseOutSine
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.TweenSpec
 import androidx.compose.animation.core.animateFloatAsState
@@ -23,6 +24,7 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -41,14 +43,87 @@ import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.drawscope.Stroke
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.graphics.ColorUtils
 import com.example.audio_player.ui.theme.LcdBlueWhite
 import com.example.audio_player.ui.theme.LcdGrey
+import com.example.audio_player.ui.theme.dotoFamily
 import kotlinx.coroutines.delay
+
+@Composable
+fun BasicLoadingScreen(viewModel: PlayerViewModel) {
+    Column(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(LcdGrey),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        var loadingProgressRange by remember { mutableIntStateOf(0) }
+        LaunchedEffect(Unit) {
+            loadingProgressRange = 60
+        }
+        val loadingProgress by animateIntAsState(
+            targetValue = loadingProgressRange,
+            TweenSpec(
+                durationMillis = 800,
+                easing = EaseOutSine
+            )
+        )
+        Row(
+            modifier = Modifier
+                .height(250.dp)
+                .width(50.dp)
+                .graphicsLayer(
+                    rotationZ = 90f
+                ),
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.Start // Start
+        ) {
+            DotoText(
+                text = loadingTextLevelBuilder(0..loadingProgress),
+                modifier = Modifier,
+                viewModel = viewModel
+            )
+        }
+        LaunchedEffect(Unit) {
+            delay(600)
+            viewModel.updateFinishedLoading(true)
+        }
+    }
+}
+fun loadingTextLevelBuilder(n: IntRange): String {
+    var tempText = ""
+    for (i in n) {
+        tempText += "________\n"
+    }
+    return tempText
+}
+@Composable
+fun DotoText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel) {
+    Text(
+        modifier = modifier,
+        text = text,
+        fontFamily = dotoFamily,
+        fontWeight = FontWeight.W600,
+        fontSize = 8.sp,
+        color = viewModel.eqTextColor,
+        style = TextStyle(
+            shadow = Shadow(
+                color = viewModel.eqTextColor.copy(alpha = 0.8f),
+                offset = Offset(0f,0f),
+                blurRadius = 20f
+            )
+        ),
+        lineHeight = 4.sp
+    )
+}
 
 @Composable
 fun DetailedLoadingScreen(viewModel: PlayerViewModel) {

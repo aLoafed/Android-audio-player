@@ -76,10 +76,18 @@ fun NavHost(
             Settings(navController, viewModel)
         }
         composable(route = "theme_change") {
-            ThemeChange(viewModel, navController, context)
+            if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                PortraitThemeChange(viewModel, navController, context)
+            } else {
+                HorizontalThemeChange(viewModel, navController, context)
+            }
         }
         composable(route = "color_picker") {
-            ColorPicker(viewModel, navController, context)
+            if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) {
+                PortraitColorPicker(viewModel, navController)
+            } else {
+                HorizontalColorPicker(viewModel, navController)
+            }
         }
         composable(route = "song_options") {
             SongOptions(viewModel.selectedSong, viewModel, mediaController)

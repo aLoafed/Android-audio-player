@@ -1258,9 +1258,10 @@ fun AudioEffectMenu(
         colors = IconButtonColors(
             containerColor = Color.Transparent,
             contentColor = viewModel.iconColor,
-            disabledContentColor = Color.Transparent,
-            disabledContainerColor = Color.Transparent
+            disabledContainerColor = Color.Transparent,
+            disabledContentColor = viewModel.iconColor,
         ),
+        enabled = !expanded,
         content = {
             Icon(
                 painter = (
@@ -1274,11 +1275,15 @@ fun AudioEffectMenu(
         Popup(
             alignment = Alignment.Center,
             offset = popupOffset,
-            onDismissRequest = { expanded = false },
+            onDismissRequest = {
+                expanded = false
+                speed = spectrumAnalyzer.speed
+                pitch = spectrumAnalyzer.pitch
+            },
         ) {
             Column(
                 modifier = Modifier
-                    .size(150.dp, 215.dp) // Was 140.dp, 200.dp
+                    .size(150.dp, 215.dp)
                     .background(viewModel.backgroundColor)
                     .border(0.dp, viewModel.iconColor),
                 verticalArrangement = Arrangement.Center,
@@ -1288,7 +1293,6 @@ fun AudioEffectMenu(
                 Row(
                     modifier = Modifier
                         .size(140.dp, 180.dp),
-//                        .border(1.dp, Color.White),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Start
                 ) {

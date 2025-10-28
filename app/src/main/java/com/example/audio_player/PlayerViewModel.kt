@@ -75,7 +75,7 @@ class PlayerViewModel(
     var sliderTrackColor = Color.White
         private set
     val colorMap = mutableMapOf(
-        "Default" to LcdGrey,
+        "Dark blue" to LcdGrey,
         "Red" to Color.Red,
         "Green" to Color.Green,
         "Blue" to Color.Blue,
@@ -84,11 +84,12 @@ class PlayerViewModel(
         "Orange" to Color(0xffFFA500),
         "Black" to Color.Black,
         "White" to Color.White,
+        "Light grey" to Color(0xffcccccc),
         "Pink" to Color(0xffFFC0CB),
         "Purple" to Color(0xffA020F0),
     )
     val otherColorMap = mutableMapOf(
-        "Default" to Color.White,
+        "White" to Color.White,
         "Red" to Color.Red,
         "Green" to Color.Green,
         "Blue" to Color.Blue,
@@ -160,7 +161,6 @@ class PlayerViewModel(
     }
 
     fun updateColor(choice: String, color: Color?) {
-        Log.d("Neoplayer", "Choice: $choice, Color: $color")
         if (color != null) {
             when (choice) {
                 "background" -> {

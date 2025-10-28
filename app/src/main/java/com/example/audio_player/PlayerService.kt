@@ -1,7 +1,11 @@
 package com.example.audio_player
 
 import android.content.Context
+import android.media.audiofx.AudioEffect
+import android.media.audiofx.EnvironmentalReverb
+import android.media.audiofx.PresetReverb
 import android.os.Handler
+import androidx.media3.common.C
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.SonicAudioProcessor
 import androidx.media3.common.util.UnstableApi
@@ -55,6 +59,11 @@ class PlayerService : MediaSessionService() {
         var eqList = DoubleArray(7)
         var volume = 0.0
         var usingSonicProcessor = false
+        var reverb: PresetReverb? = null
+
+        fun getAudioId(id: Int) {
+           reverb = PresetReverb(0, id)
+        }
 
         override fun configure(inputAudioFormat: AudioProcessor.AudioFormat): AudioProcessor.AudioFormat {
             if (usingSonicProcessor) {
