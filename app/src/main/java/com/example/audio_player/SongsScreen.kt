@@ -90,7 +90,7 @@ fun SongsScreen(
                     modifier = Modifier
                         .size(65.dp),
                     contentDescription = null,
-                    contentScale = ContentScale.Fit
+                    contentScale = ContentScale.Crop
                 )
                 Spacer(
                     modifier = Modifier

@@ -84,7 +84,7 @@ fun SongQueue(viewModel: PlayerViewModel, mediaController: MediaController?, son
                     modifier = Modifier
                         .size(60.dp),
                     contentDescription = null,
-                    contentScale = ContentScale.Fit
+                    contentScale = ContentScale.Crop
                 )
                 Spacer(
                     modifier = Modifier

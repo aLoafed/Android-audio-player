@@ -134,7 +134,7 @@ fun AlbumSongsScreen(album: String, songInfo: List<SongInfo>, mediaController: M
                         modifier = Modifier
                             .size(60.dp),
                         contentDescription = null,
-                        contentScale = ContentScale.Fit
+                        contentScale = ContentScale.Crop
                     )
                     Spacer(
                         modifier = Modifier

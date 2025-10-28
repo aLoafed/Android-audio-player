@@ -54,6 +54,7 @@ import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.drawscope.Fill
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.res.painterResource
@@ -315,7 +316,8 @@ fun AlbumArtHorizontalOrientation(viewModel: PlayerViewModel, songInfo: List<Son
                 ),
         modifier = Modifier
             .size(250.dp),
-        contentDescription = null
+        contentDescription = null,
+        contentScale = ContentScale.Fit
     )
 }
 @Composable
@@ -370,7 +372,8 @@ fun PlayingMediaInfo(viewModel: PlayerViewModel, songInfo: List<SongInfo>) {
                 ),
         modifier = Modifier
             .size(300.dp),
-        contentDescription = null
+        contentDescription = null,
+        contentScale = ContentScale.Fit
     )
     Spacer(
         modifier = Modifier

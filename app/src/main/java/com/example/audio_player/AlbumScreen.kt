@@ -17,6 +17,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.util.UnstableApi
 import androidx.navigation.NavController
@@ -71,7 +72,8 @@ fun AlbumScreen(
                                 modifier = Modifier
                                     .aspectRatio(1f),
                                 bitmap = albumInfo[rowIndex * elementsPerRow + index].albumArt,
-                                contentDescription = null
+                                contentDescription = null,
+                                contentScale = ContentScale.Crop
                             )
                             AlbumScreenLcdText(
                                 albumInfo[rowIndex * elementsPerRow + index].albumName,
@@ -100,7 +102,8 @@ fun AlbumScreen(
                                     modifier = Modifier
                                         .aspectRatio(1f),
                                     bitmap = albumInfo[rowIndex * elementsPerRow + index].albumArt,
-                                    contentDescription = null
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop
                                 )
                                 AlbumScreenLcdText(
                                     albumInfo[rowIndex * elementsPerRow + index].albumName,
@@ -128,7 +131,8 @@ fun AlbumScreen(
                                     modifier = Modifier
                                         .aspectRatio(1f),
                                     bitmap = albumInfo[rowIndex * 3 + index - 1].albumArt,
-                                    contentDescription = null
+                                    contentDescription = null,
+                                    contentScale = ContentScale.Crop
                                 )
                                 AlbumScreenLcdText(
                                     albumInfo[rowIndex * 3 + index - 1].albumName,
@@ -142,26 +146,3 @@ fun AlbumScreen(
         }
     }
 }
-
-//@Composable
-//fun HorizontalAlbumScreen(
-//    albumInfo: List<AlbumInfo>,
-//    viewModel: PlayerViewModel,
-//    navController: NavController
-//) {
-//    val rowNumbers = (
-//            if (albumInfo.count() % 5 != 0) {
-//                albumInfo.count() / 5 + 1
-//            } else {
-//                albumInfo.count() / 5
-//            }
-//            )
-//    LazyColumn(
-//        modifier = Modifier
-//            .fillMaxSize(),
-//        verticalArrangement = Arrangement.Top,
-//        horizontalAlignment = Alignment.Start
-//    ) {
-//
-//    }
-//}
