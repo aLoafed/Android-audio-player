@@ -7,6 +7,7 @@ import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
@@ -101,14 +102,24 @@ class PlayerViewModel(
         "Purple" to Color(0xffA020F0)
     )
     val customColorMap = mutableMapOf<String, Int>()
-    //========================= Miscellaneous =========================
+    //========================= Miscellaneous =========================//
     var loadingFinished by mutableStateOf(false)
         private set
     var showBasicLoadingScreen = true
         private set
     var showEqualiser by mutableStateOf(true)
         private set
-    //========================= Init from Json =========================
+    val visiblePermissionDialogQueue = mutableStateListOf<String>()
+    //========================= Misc methods =========================//
+    fun dismissDialog() {
+        visiblePermissionDialogQueue.removeAt(visiblePermissionDialogQueue.lastIndex)
+    }
+    fun onPermissionResult(permission: String, isGranted: Boolean) {
+        if (!isGranted) {
+            visiblePermissionDialogQueue.add(0, permission)
+        }
+    }
+    //========================= Init from Json =========================//
     fun initViewModel(context: Context) {
         val settingsManager = SettingsManager(context)
         val settings = settingsManager.loadSettings()

@@ -7,6 +7,7 @@ import android.content.res.Configuration
 import androidx.annotation.OptIn
 import androidx.collection.IntList
 import androidx.collection.intListOf
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -51,6 +52,7 @@ import androidx.navigation.compose.rememberNavController
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.launch
 
+@ExperimentalFoundationApi
 @OptIn(UnstableApi::class)
 @Composable
 fun NavHost(
@@ -98,6 +100,7 @@ fun NavHost(
     }
 }
 
+@ExperimentalFoundationApi
 @ExperimentalMaterial3Api
 @OptIn(UnstableApi::class)
 @Composable
@@ -139,6 +142,7 @@ fun Pager(
     }
 }
 
+@ExperimentalFoundationApi
 @OptIn(UnstableApi::class)
 @Composable
 fun HorizontalTabRow(
@@ -294,6 +298,7 @@ fun HorizontalTabRow(
     }
 }
 
+@ExperimentalFoundationApi
 @OptIn(UnstableApi::class)
 @Composable
 fun PortraitTabRow(
