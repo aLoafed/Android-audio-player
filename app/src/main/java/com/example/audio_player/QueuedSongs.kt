@@ -7,7 +7,6 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -27,30 +26,16 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableFloatStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollDispatcher
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.MediaItem
-import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaController
 
 @ExperimentalFoundationApi
 @Composable
-fun SongQueue(viewModel: PlayerViewModel, mediaController: MediaController?, songInfo: List<SongInfo>) {
-    var tabScrollOffset by remember { mutableFloatStateOf(0f) }
-    val nestedScrollConnection = remember {
-        object : NestedScrollConnection {
-        }
-    }
-    NestedScrollDispatcher()
+fun SongQueue(viewModel: PlayerViewModel, mediaController: MediaController?) {
     val fetchStrategy = LazyListPrefetchStrategy(50)
     val lazyColumnState = rememberLazyListState(
         initialFirstVisibleItemIndex = 0,
@@ -63,8 +48,7 @@ fun SongQueue(viewModel: PlayerViewModel, mediaController: MediaController?, son
             .fillMaxSize()
             .background(viewModel.backgroundColor)
             .windowInsetsPadding(WindowInsets.statusBars)
-            .windowInsetsPadding(WindowInsets.navigationBars)
-            .nestedScroll(nestedScrollConnection),
+            .windowInsetsPadding(WindowInsets.navigationBars),
         verticalAlignment = Alignment.Top,
         horizontalArrangement = Arrangement.Start
     ) {
@@ -148,6 +132,6 @@ fun SongQueue(viewModel: PlayerViewModel, mediaController: MediaController?, son
                 }
             }
         }
-        ScrollBar(lazyColumnState, viewModel, lazyListSize.toFloat())
+        ScrollBar(lazyColumnState, viewModel, lazyListSize.toFloat(), 10.toFloat())
     }
 }

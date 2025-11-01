@@ -5,7 +5,6 @@ import androidx.compose.foundation.Canvas
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.gestures.scrollBy
@@ -32,7 +31,9 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
@@ -43,17 +44,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.geometry.Size
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.input.nestedscroll.NestedScrollConnection
-import androidx.compose.ui.input.nestedscroll.NestedScrollDispatcher
-import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.MediaItem
-import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.navigation.NavController
@@ -69,27 +65,19 @@ fun SongsScreen(
     pagerState: PagerState,
     navController: NavController
 ) {
-    var tabScrollOffset by remember { mutableFloatStateOf(0f) }
-    val nestedScrollConnection = remember {
-        object : NestedScrollConnection {
-        }
-    }
-    NestedScrollDispatcher()
     val fetchStrategy = LazyListPrefetchStrategy(50)
     val lazyColumnState = rememberLazyListState(
         initialFirstVisibleItemIndex = 0,
         initialFirstVisibleItemScrollOffset = 0,
         prefetchStrategy = fetchStrategy
     )
-    val lazyListSize = songInfo.count()
-//    LazyLayoutCacheWindow()
+    val lazyColumnSize = songInfo.count()
     Row(
         modifier = Modifier
             .fillMaxSize()
             .background(viewModel.backgroundColor)
             .windowInsetsPadding(WindowInsets.statusBars)
-            .windowInsetsPadding(WindowInsets.navigationBars)
-            .nestedScroll(nestedScrollConnection),
+            .windowInsetsPadding(WindowInsets.navigationBars),
         verticalAlignment = Alignment.Top,
         horizontalArrangement = Arrangement.Start
     ) {
@@ -101,7 +89,7 @@ fun SongsScreen(
             horizontalAlignment = Alignment.Start,
             state = lazyColumnState,
         ) {
-            items(lazyListSize) { i ->
+            items(lazyColumnSize) { i ->
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -162,75 +150,83 @@ fun SongsScreen(
                             viewModel = viewModel
                         )
                     }
-                    Row(
+                    IconButton(
                         modifier = Modifier
-                            .fillMaxSize()
-                            .border(1.dp, Color.White),
-                        horizontalArrangement = Arrangement.End,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        IconButton(
-                            modifier = Modifier
-                                .size(50.dp),
-                            content = {
-                                Icon(
-                                    painter = painterResource(R.drawable.more_menu),
-                                    contentDescription = "More options",
-                                    tint = viewModel.iconColor
-                                )
-                            },
-                            onClick = {
-                                viewModel.updateSelectedOptionsSong(songInfo[i])
-                                navController.navigate("song_options")
-                            }
+                            .size(50.dp),
+                        content = {
+                            Icon(
+                                painter = painterResource(R.drawable.more_menu),
+                                contentDescription = "More options",
+                            )
+                        },
+                        onClick = {
+                            viewModel.updateSelectedOptionsSong(songInfo[i])
+                            navController.navigate("song_options")
+                        },
+                        colors = IconButtonDefaults.iconButtonColors(
+                            contentColor = viewModel.iconColor,
+                            disabledContentColor = viewModel.iconColor
                         )
-                    }
+                    )
                 }
             }
         }
-        ScrollBar(lazyColumnState, viewModel, lazyListSize.toFloat())
+        ScrollBar(lazyColumnState, viewModel, lazyColumnSize.toFloat())
     }
 }
 
 @Composable
-fun ScrollBar(columnState: LazyListState, viewModel: PlayerViewModel, lazyListSize: Float) {
+fun ScrollBar(columnState: LazyListState, viewModel: PlayerViewModel, lazyColumnSize: Float, itemsPerViewport: Float = 9f) {
+    var scrollBarHeight by remember { mutableFloatStateOf(0f) }
     Column(
         modifier = Modifier
             .fillMaxHeight()
             .fillMaxWidth()
             .windowInsetsPadding(WindowInsets.navigationBars)
-            .windowInsetsPadding(WindowInsets.displayCutout),
+            .windowInsetsPadding(WindowInsets.displayCutout)
+            .onGloballyPositioned { coordinates ->
+                scrollBarHeight = coordinates.size.height.toFloat()
+            },
     ) {
-        var scrollBarHeight by remember { mutableFloatStateOf(0f) }
-        var tabOffset by remember { mutableFloatStateOf(0f) }
         val scope = rememberCoroutineScope()
+        val tabOffset = remember {
+            derivedStateOf {
+                if (lazyColumnSize <= itemsPerViewport) {
+                    0f
+                } else {
+                    // (Percentage of lazy list covered + percentage of offset) * scrollBarHeight
+                    val overallPercentageScroll = columnState.firstVisibleItemIndex.toFloat() / columnState.layoutInfo.totalItemsCount.toFloat()
+                    val offsetPercentageScroll = columnState.firstVisibleItemScrollOffset.dp.value / (columnState.layoutInfo.viewportSize.height.toFloat() * (columnState.layoutInfo.totalItemsCount.toFloat() / itemsPerViewport))
+                    overallPercentageScroll * scrollBarHeight + offsetPercentageScroll * scrollBarHeight
+                }
+            }
+        }
         Canvas(
             modifier = Modifier
                 .fillMaxSize()
-                .onGloballyPositioned { coordinates ->
-                    scrollBarHeight = coordinates.size.height.toFloat()
-                }
                 .pointerInput(Unit) {
                     detectVerticalDragGestures { pointerChange, value ->
                         val initialLocale = tabOffset
-                        tabOffset = pointerChange.position.y
+                        // tabOffset = pointerChange.position.y; was here, may need to revert
+                        val yDelta = pointerChange.position.y
                         scope.launch {
                             columnState.scrollBy(
-                                (tabOffset - initialLocale) / scrollBarHeight * columnState.layoutInfo.viewportSize.height * (columnState.layoutInfo.totalItemsCount.toFloat() / 9f)
+                                // Percentage change in position * total lazy column size in px
+                                (yDelta - initialLocale.value) / scrollBarHeight * (columnState.layoutInfo.viewportSize.height.toFloat() * (columnState.layoutInfo.totalItemsCount.toFloat() / itemsPerViewport))
                             )
                         }
                     }
                 }
         ) {
-            val tabHeight = if (lazyListSize <= 9) {
+            val tabHeight = if (lazyColumnSize <= itemsPerViewport) {
                 scrollBarHeight
             } else {
-                (columnState.layoutInfo.visibleItemsInfo.size - 1).toFloat() / lazyListSize * scrollBarHeight
+                (itemsPerViewport).toFloat() / lazyColumnSize * scrollBarHeight
             }
             drawRoundRect(
-                topLeft = Offset(0f,tabOffset.coerceIn(0f, scrollBarHeight - tabHeight)),
+                topLeft = Offset(0f,tabOffset.value.coerceIn(0f, scrollBarHeight - tabHeight)),
                 color = viewModel.backgroundColor.increaseBrightness(0.05f), // Should probably change the color
-                size = Size(30f, tabHeight),
+                size = Size(30f, tabHeight - 10f),
                 cornerRadius = CornerRadius(30f, 30f),
             )
         }

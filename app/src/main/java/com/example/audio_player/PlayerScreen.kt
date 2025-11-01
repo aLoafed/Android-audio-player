@@ -322,7 +322,7 @@ fun AlbumArtHorizontalOrientation(viewModel: PlayerViewModel, songInfo: List<Son
 }
 @Composable
 fun HorizontalPlayingMediaInfo(viewModel: PlayerViewModel, songInfo: List<SongInfo>) {
-    ExtraLargeLcdText(
+    PlayerLargeLcdText(
         if (viewModel.shuffleMode) {
             shuffleSongInfo[viewModel.songIterator].name
         } else if (viewModel.playingFromSongsScreen) {
@@ -336,7 +336,7 @@ fun HorizontalPlayingMediaInfo(viewModel: PlayerViewModel, songInfo: List<SongIn
         modifier = Modifier
             .height(5.dp)
     )
-    LargeLcdText(
+    PlayerLcdText(
         if (viewModel.shuffleMode) {
             shuffleSongInfo[viewModel.songIterator].artist
         } else if (viewModel.playingFromSongsScreen) {
@@ -346,7 +346,7 @@ fun HorizontalPlayingMediaInfo(viewModel: PlayerViewModel, songInfo: List<SongIn
         },
         viewModel = viewModel
     )
-    LargeLcdText(
+    PlayerLcdText(
         if (viewModel.shuffleMode) {
             shuffleSongInfo[viewModel.songIterator].album
         } else if (viewModel.playingFromSongsScreen) {
@@ -379,7 +379,7 @@ fun PlayingMediaInfo(viewModel: PlayerViewModel, songInfo: List<SongInfo>) {
         modifier = Modifier
             .height(10.dp)
     )
-    ExtraLargeLcdText(
+    PlayerLargeLcdText( // Was using Extra large
         if (viewModel.shuffleMode) {
             shuffleSongInfo[viewModel.songIterator].name
         } else if (viewModel.playingFromSongsScreen) {
@@ -393,7 +393,7 @@ fun PlayingMediaInfo(viewModel: PlayerViewModel, songInfo: List<SongInfo>) {
         modifier = Modifier
             .height(5.dp)
     )
-    LargeLcdText(
+    PlayerLcdText( // Was using Large
         if (viewModel.shuffleMode) {
             shuffleSongInfo[viewModel.songIterator].artist
         } else if (viewModel.playingFromSongsScreen) {
@@ -403,7 +403,7 @@ fun PlayingMediaInfo(viewModel: PlayerViewModel, songInfo: List<SongInfo>) {
         },
         viewModel = viewModel
     )
-    LargeLcdText(
+    PlayerLcdText(
         if (viewModel.shuffleMode) {
             shuffleSongInfo[viewModel.songIterator].album
         } else if (viewModel.playingFromSongsScreen) {
@@ -693,8 +693,8 @@ fun SpectrumAnalyzer(
             ) {
                 val tick = viewModel.currentSongPosition
                 if (viewModel.isPlaying) {
-                    VolumeLevelText(spectrumAnalyzer, tick, viewModel, volume)
-                    VolumeLevelText(spectrumAnalyzer, tick, viewModel, volume)
+                    VolumeLevelText(tick, viewModel, volume)
+                    VolumeLevelText(tick, viewModel, volume)
                 }
             }
         }
@@ -943,7 +943,6 @@ fun EQLevelText(fieldName: String, tick: Float, viewModel: PlayerViewModel, eqLi
 @OptIn(UnstableApi::class)
 @Composable
 fun VolumeLevelText(
-    spectrumAnalyzer: PlayerService.SpectrumAnalyzer,
     tick: Float,
     viewModel: PlayerViewModel,
     volumeLevel: Double

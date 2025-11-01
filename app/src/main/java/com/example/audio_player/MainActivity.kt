@@ -202,7 +202,11 @@ class MainActivity : ComponentActivity() {
 fun LcdText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel) {
     Text(
         modifier = modifier,
-        text = text,
+        text = if (text.length > 34) {
+            "${text.removeRange(34 until text.length)}..."
+        } else {
+            text
+        },
         color = viewModel.textColor,
         fontSize = 15.sp,
         fontFamily = lcdFont,
@@ -221,6 +225,40 @@ fun LargeLcdText(text: String, modifier: Modifier = Modifier, viewModel: PlayerV
         fontFamily = lcdFont,
         fontWeight = FontWeight.Normal,
         lineHeight = lineHeight
+    )
+}
+
+@Composable
+fun PlayerLargeLcdText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel) {
+    Text(
+        modifier = modifier,
+        text = if (text.length > 30) {
+            "${text.removeRange(34 until text.length)}..."
+        } else {
+            text
+        },
+        color = viewModel.textColor,
+        fontSize = 25.sp,
+        fontFamily = lcdFont,
+        fontWeight = FontWeight.Normal,
+        textAlign = TextAlign.Center,
+    )
+}
+
+@Composable
+fun PlayerLcdText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel) {
+    Text(
+        modifier = modifier,
+        text = if (text.length > 34) {
+            "${text.removeRange(34 until text.length)}..."
+        } else {
+            text
+        },
+        color = viewModel.textColor,
+        fontSize = 20.sp,
+        fontFamily = lcdFont,
+        fontWeight = FontWeight.Normal,
+        textAlign = TextAlign.Center,
     )
 }
 

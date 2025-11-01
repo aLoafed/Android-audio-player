@@ -67,6 +67,8 @@ fun NavHost(
     NavHost(
         navController = navController,
         startDestination = "pager",
+        modifier = Modifier
+            .background(viewModel.backgroundColor)
     ) {
         composable(route = "pager") {
             Pager(mediaController, spectrumAnalyzer, viewModel, songInfo, albumInfo, navController)
@@ -289,7 +291,7 @@ fun HorizontalTabRow(
             state = pagerState
         ) { currentPage ->
             when (currentPage) {
-                0 -> SongQueue(viewModel, mediaController, songInfo)
+                0 -> SongQueue(viewModel, mediaController)
                 1 -> PlayerScreen(mediaController, spectrumAnalyzer, viewModel, songInfo)
                 2 -> SongsScreen(songInfo, mediaController, viewModel, pagerState, navController)
                 3 -> AlbumScreen(albumInfo, viewModel, navController, 6)
@@ -444,7 +446,7 @@ fun PortraitTabRow(
             state = pagerState
         ) { currentPage ->
             when (currentPage) {
-                0 -> SongQueue(viewModel, mediaController, songInfo)
+                0 -> SongQueue(viewModel, mediaController)
                 1 -> PlayerScreen(mediaController, spectrumAnalyzer, viewModel, songInfo)
                 2 -> SongsScreen(songInfo, mediaController, viewModel, pagerState, navController)
                 3 -> AlbumScreen(albumInfo, viewModel, navController)

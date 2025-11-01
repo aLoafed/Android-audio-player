@@ -70,14 +70,16 @@ fun Settings(navController: NavController, viewModel: PlayerViewModel) {
             .fillMaxSize()
             .background(viewModel.backgroundColor)
             .windowInsetsPadding(WindowInsets.navigationBars)
-            .windowInsetsPadding(WindowInsets.displayCutout),
+            .windowInsetsPadding(WindowInsets.displayCutout)
+            .padding(horizontal = 5.dp),
         verticalArrangement = Arrangement.Top,
         horizontalAlignment = Alignment.Start,
     ) {
+        // Top bar
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .height(70.dp)
+                .height(43.dp)
                 .windowInsetsPadding(WindowInsets.statusBars)
                 .background(viewModel.backgroundColor),
             horizontalArrangement = Arrangement.Start,
@@ -106,13 +108,11 @@ fun Settings(navController: NavController, viewModel: PlayerViewModel) {
             )
             LargeLcdText("Settings", viewModel = viewModel)
         }
+        Spacer(Modifier.height(15.dp))
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .background(viewModel.backgroundColor)
-                .windowInsetsPadding(WindowInsets.navigationBars)
                 .padding(start = 10.dp),
-            contentPadding = PaddingValues(bottom = 55.dp),
             verticalArrangement = Arrangement.Top,
             horizontalAlignment = Alignment.Start
         ) {
@@ -120,7 +120,7 @@ fun Settings(navController: NavController, viewModel: PlayerViewModel) {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .height(75.dp)
+                        .height(25.dp)
                         .clickable(
                             onClick = {
                                 navController.navigate("theme_change")
@@ -134,6 +134,7 @@ fun Settings(navController: NavController, viewModel: PlayerViewModel) {
                         contentDescription = "Customisation",
                         tint = viewModel.iconColor
                     )
+                    Spacer(Modifier.width(5.dp))
                     LcdText(
                         "Customisation",
                         viewModel = viewModel
