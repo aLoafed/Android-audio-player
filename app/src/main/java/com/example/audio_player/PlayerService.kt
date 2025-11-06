@@ -1,11 +1,8 @@
 package com.example.audio_player
 
 import android.content.Context
-import android.media.audiofx.AudioEffect
-import android.media.audiofx.EnvironmentalReverb
 import android.media.audiofx.PresetReverb
 import android.os.Handler
-import androidx.media3.common.C
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.SonicAudioProcessor
 import androidx.media3.common.util.UnstableApi
@@ -23,10 +20,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.jtransforms.fft.DoubleFFT_1D
-import java.nio.BufferOverflowException
 import java.nio.BufferUnderflowException
 import java.nio.ByteBuffer
-import kotlin.math.sin
 import kotlin.math.sqrt
 
 @UnstableApi
@@ -213,7 +208,7 @@ class PlayerService : MediaSessionService() {
         }
     }
 
-    fun getSpectrumAnalyzer(): SpectrumAnalyzer {
+    fun getAudioProcessor(): SpectrumAnalyzer {
         return SpectrumAnalyzer
     }
 
