@@ -3,11 +3,9 @@ package com.example.audio_player
 import android.content.Context
 import android.graphics.BitmapFactory
 import android.net.Uri
-import android.util.Log
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
@@ -109,16 +107,6 @@ class PlayerViewModel(
         private set
     var showEqualiser by mutableStateOf(true)
         private set
-    val visiblePermissionDialogQueue = mutableStateListOf<String>()
-    //========================= Misc methods =========================//
-    fun dismissDialog() {
-        visiblePermissionDialogQueue.removeAt(visiblePermissionDialogQueue.lastIndex)
-    }
-    fun onPermissionResult(permission: String, isGranted: Boolean) {
-        if (!isGranted) {
-            visiblePermissionDialogQueue.add(0, permission)
-        }
-    }
     //========================= Init from Json =========================//
     fun initViewModel(context: Context) {
         val settingsManager = SettingsManager(context)

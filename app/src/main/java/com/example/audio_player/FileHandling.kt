@@ -9,6 +9,7 @@ import androidx.annotation.OptIn
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.media3.common.util.UnstableApi
+import kotlinx.coroutines.flow.merge
 import java.io.FileNotFoundException
 
 data class SongInfo(
@@ -87,8 +88,8 @@ fun getSongInfo(context: Context): List<SongInfo> {
             )
         }
     }
-
-    return songInfo //mergeSortSplit(songInfo).toList()
+    val mergeSort = MergeSort()
+    return songInfo
 }
 @OptIn(UnstableApi::class)
 fun getAlbumSongInfo(context: Context): List<AlbumInfo> {
@@ -141,53 +142,7 @@ fun getAlbumSongInfo(context: Context): List<AlbumInfo> {
             }
         }
     }
+    val mergeSort = MergeSort()
+
     return albumInfo
 }
-
-//@OptIn(UnstableApi::class)
-//fun mergeSortSplit(songInfo: MutableList<SongInfo>): MutableList<SongInfo> {
-//    // Base case
-//    if (songInfo.size <= 1) {
-//        return songInfo
-//    } else {
-//        val midpoint = songInfo.size / 2
-//        var left = songInfo.subList(0, midpoint)
-//        var right = songInfo.subList(midpoint, songInfo.size)  // Fixed: was songInfo.size - 1
-//        left = mergeSortSplit(left)
-//        right = mergeSortSplit(right)
-//        val sorted = mergeSort(left, right)
-//        return sorted
-//    }
-//}
-//
-//@OptIn(UnstableApi::class)
-//fun mergeSort(left: MutableList<SongInfo>, right: MutableList<SongInfo>): MutableList<SongInfo> {
-//    val mergedList = mutableListOf<SongInfo>()
-//    var leftIndex = 0
-//    var rightIndex = 0
-//
-//    // Merge the two sorted lists
-//    while (leftIndex < left.size && rightIndex < right.size) {
-//        if (left[leftIndex].name <= right[rightIndex].name) {
-//            mergedList.add(left[leftIndex])
-//            leftIndex++
-//        } else {
-//            mergedList.add(right[rightIndex])
-//            rightIndex++
-//        }
-//    }
-//
-//    // Add remaining elements from left
-//    while (leftIndex < left.size) {
-//        mergedList.add(left[leftIndex])
-//        leftIndex++
-//    }
-//
-//    // Add remaining elements from right
-//    while (rightIndex < right.size) {
-//        mergedList.add(right[rightIndex])
-//        rightIndex++
-//    }
-//
-//    return mergedList
-//}

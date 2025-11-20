@@ -34,7 +34,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.C
-import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
@@ -211,8 +210,13 @@ class MainActivity : ComponentActivity() {
 
     override fun onResume() {
         super.onResume()
-        val spectrumAnalyzer = mediaSessionService.getAudioProcessor()
-        spectrumAnalyzer.equaliserIsOn = true
+        val audioProcessor = mediaSessionService.getAudioProcessor()
+        audioProcessor.equaliserIsOn = true
+    }
+
+    override fun onDestroy() {
+        mediaSessionService.pauseAllPlayersAndStopSelf()
+        super.onDestroy()
     }
 }
 

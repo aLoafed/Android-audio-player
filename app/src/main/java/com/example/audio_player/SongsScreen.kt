@@ -221,7 +221,7 @@ fun ScrollBar(columnState: LazyListState, viewModel: PlayerViewModel, lazyColumn
             val tabHeight = if (lazyColumnSize <= itemsPerViewport) {
                 scrollBarHeight
             } else {
-                (itemsPerViewport).toFloat() / lazyColumnSize * scrollBarHeight
+                itemsPerViewport / lazyColumnSize * scrollBarHeight
             }
             drawRoundRect(
                 topLeft = Offset(0f,tabOffset.value.coerceIn(0f, scrollBarHeight - tabHeight)),

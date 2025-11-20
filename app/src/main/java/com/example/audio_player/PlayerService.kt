@@ -180,15 +180,14 @@ class PlayerService : MediaSessionService() {
             outputBuffer = AudioProcessor.EMPTY_BUFFER
         }
         fun frequencyCalculator(absValueList: DoubleArray): DoubleArray {
-            // Div 2 to accommodate 512 fft size
             val tempList = DoubleArray(7)
-            tempList[0] = (absValueList[2 / 2])
-            tempList[1] = (absValueList[4 / 2])
-            tempList[2] = (absValueList[10 / 2])
-            tempList[3] = (absValueList[26 / 2])
-            tempList[4] = (absValueList[64 / 2])
-            tempList[5] = (absValueList[160 / 2])
-            tempList[6] = (absValueList[410 / 2])
+            tempList[0] = (absValueList[1])
+            tempList[1] = (absValueList[2])
+            tempList[2] = (absValueList[5])
+            tempList[3] = (absValueList[13])
+            tempList[4] = (absValueList[32])
+            tempList[5] = (absValueList[80])
+            tempList[6] = (absValueList[205])
             return tempList
         }
     }
@@ -241,7 +240,7 @@ class PlayerService : MediaSessionService() {
 //        val mediaSessionCallback = object : MediaSession.Callback{}
         mediaSession = MediaSession.Builder(this, player)
             .build()
-        SpectrumAnalyzer.setReverbId(player.audioSessionId) // Prepares the reverb
+        SpectrumAnalyzer.setReverbId(player.audioSessionId)
     }
 
     override fun onDestroy() {
