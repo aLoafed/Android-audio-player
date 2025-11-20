@@ -1,10 +1,15 @@
 package com.example.audio_player
 
 import android.content.res.Configuration
+import android.media.audiofx.PresetReverb
 import androidx.annotation.OptIn
+import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.EaseOut
+import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.animateSizeAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
 import androidx.compose.animation.core.tween
@@ -36,9 +41,11 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
+import androidx.compose.runtime.derivedStateOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableDoubleStateOf
 import androidx.compose.runtime.mutableFloatStateOf
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -86,14 +93,14 @@ var shuffleSongInfo = listOf<SongInfo>()
 @Composable
 fun PlayerScreen(
     mediaController: MediaController?,
-    spectrumAnalyzer: PlayerService.SpectrumAnalyzer,
+    audioProcessor: PlayerService.SpectrumAnalyzer,
     viewModel: PlayerViewModel,
     songInfo: List<SongInfo>
 ) {
     if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) {
-        PortraitOrientation(mediaController,spectrumAnalyzer,viewModel,songInfo)
+        PortraitOrientation(mediaController,audioProcessor,viewModel,songInfo)
     } else {
-        HorizontalOrientation(mediaController,spectrumAnalyzer,viewModel,songInfo)
+        HorizontalOrientation(mediaController,audioProcessor,viewModel,songInfo)
     }
 }
 @kotlin.OptIn(ExperimentalMaterial3Api::class)
@@ -101,7 +108,7 @@ fun PlayerScreen(
 @Composable
 fun PortraitOrientation(
     mediaController: MediaController?,
-    spectrumAnalyzer: PlayerService.SpectrumAnalyzer,
+    audioProcessor: PlayerService.SpectrumAnalyzer,
     viewModel: PlayerViewModel,
     songInfo: List<SongInfo>
 ) {
@@ -118,14 +125,14 @@ fun PortraitOrientation(
         PlayingMediaInfo(viewModel, songInfo)
         PlaybackControls(mediaController, viewModel)
         if (viewModel.showEqualiser) {
-            SpectrumAnalyzer(spectrumAnalyzer, viewModel)
+            SpectrumAnalyzer(audioProcessor, viewModel)
         }
         OtherMediaControls(
             viewModel,
             mediaController,
             songInfo,
-            spectrumAnalyzer
-        ) // Repeat, shuffle, speed & pitch change
+            audioProcessor
+        )
         SeekBar(mediaController, viewModel)
     }
 }
@@ -134,7 +141,7 @@ fun PortraitOrientation(
 @Composable
 fun HorizontalOrientation(
     mediaController: MediaController?,
-    spectrumAnalyzer: PlayerService.SpectrumAnalyzer,
+    audioProcessor: PlayerService.SpectrumAnalyzer,
     viewModel: PlayerViewModel,
     songInfo: List<SongInfo>
 ) {
@@ -156,9 +163,9 @@ fun HorizontalOrientation(
         ) {
             HorizontalPlayingMediaInfo(viewModel, songInfo)
             PlaybackControls(mediaController, viewModel, 46.dp)
-            SeekBarAndOtherControls(viewModel, mediaController, songInfo, spectrumAnalyzer)
+            SeekBarAndOtherControls(viewModel, mediaController, songInfo, audioProcessor)
             if (viewModel.showEqualiser) {
-                SpectrumAnalyzer(spectrumAnalyzer, viewModel)
+                SpectrumAnalyzer(audioProcessor, viewModel)
             }
         }
     }
@@ -171,7 +178,7 @@ fun SeekBarAndOtherControls(
     viewModel: PlayerViewModel,
     mediaController: MediaController?,
     songInfo: List<SongInfo>,
-    spectrumAnalyzer: PlayerService.SpectrumAnalyzer
+    audioProcessor: PlayerService.SpectrumAnalyzer
 ) {
     val tmpSongInfo = mutableListOf<SongInfo>()
     Row(
@@ -184,7 +191,7 @@ fun SeekBarAndOtherControls(
         SeekBar(mediaController,viewModel, 0.65f)
         //===================== Other controls =====================//
         // Audio effects
-        AudioEffectMenu(viewModel, spectrumAnalyzer, mediaController)
+        AudioEffectMenu(viewModel, audioProcessor, mediaController)
         IconButton( // Repeat controls
             onClick = {
                 when (viewModel.repeatMode) {
@@ -523,7 +530,7 @@ fun OtherMediaControls(
     viewModel: PlayerViewModel,
     mediaController: MediaController?,
     songInfo: List<SongInfo>,
-    spectrumAnalyzer: PlayerService.SpectrumAnalyzer
+    audioProcessor: PlayerService.SpectrumAnalyzer
 ) {
     val tmpSongInfo = mutableListOf<SongInfo>()
     Row(
@@ -534,7 +541,7 @@ fun OtherMediaControls(
         verticalAlignment = Alignment.CenterVertically
     ) {
         // Audio effects
-        AudioEffectMenu(viewModel, spectrumAnalyzer, mediaController)
+        AudioEffectMenu(viewModel, audioProcessor, mediaController)
         IconButton( // Repeat controls
             onClick = {
                 when (viewModel.repeatMode) {
@@ -1237,18 +1244,21 @@ fun SliderTrack(viewModel: PlayerViewModel) {
 @Composable
 fun AudioEffectMenu(
     viewModel: PlayerViewModel,
-    spectrumAnalyzer: PlayerService.SpectrumAnalyzer,
+    audioProcessor: PlayerService.SpectrumAnalyzer,
     mediaController: MediaController?,
 ) {
     var expanded by remember { mutableStateOf(false) }
-    var speed by remember { mutableFloatStateOf(spectrumAnalyzer.speed) }
-    var pitch by remember { mutableFloatStateOf(spectrumAnalyzer.pitch) }
+    var speed by remember { mutableFloatStateOf(audioProcessor.speed) }
+    var pitch by remember { mutableFloatStateOf(audioProcessor.pitch) }
+    var reverbPresetType by remember { mutableIntStateOf(0) }
+    var reverbPresetValue by remember { mutableIntStateOf(0) }
+    var showReverbValueSlider by remember { mutableStateOf(false) }
+    var menuWidth by remember { mutableStateOf(180.dp) }
     val popupOffset = if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) {
         IntOffset(175, -345)
     } else {
         IntOffset(60, 330)
     }
-
     IconButton( // Speed & pitch change
         onClick = {
             if (!expanded) {
@@ -1273,37 +1283,48 @@ fun AudioEffectMenu(
             )
         }
     )
+    // Popup audio effects menu
     if (expanded) {
         Popup(
             alignment = Alignment.Center,
             offset = popupOffset,
             onDismissRequest = {
                 expanded = false
-                speed = spectrumAnalyzer.speed
-                pitch = spectrumAnalyzer.pitch
+                speed = audioProcessor.speed
+                pitch = audioProcessor.pitch
             },
         ) {
             Column(
                 modifier = Modifier
-                    .size(150.dp, 215.dp)
+                    .animateContentSize()
+                    .size(menuWidth, 215.dp)
                     .background(viewModel.backgroundColor)
                     .border(0.dp, viewModel.iconColor),
                 verticalArrangement = Arrangement.Center,
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+                val sliderColumnWidth by remember { derivedStateOf {
+                    if (showReverbValueSlider) {
+                        (menuWidth.value / 4f).dp
+                    } else {
+                        (menuWidth.value / 3f).dp
+                    }
+                } }
                 Spacer(Modifier.height(5.dp))
                 Row(
                     modifier = Modifier
-                        .size(140.dp, 180.dp),
+                        .animateContentSize()
+                        .size(menuWidth, 180.dp),
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Start
                 ) {
-                    val sliderHeight = 120.dp
-                    // Speed controls
+                    val sliderHeight = 120.dp // Is read as width due to rotation
+                    // Speed slider
                     Column(
                         modifier = Modifier
                             .fillMaxHeight()
-                            .width(70.dp),
+                            .animateContentSize()
+                            .width(sliderColumnWidth),
                         verticalArrangement = Arrangement.SpaceEvenly,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
@@ -1351,11 +1372,12 @@ fun AudioEffectMenu(
                         )
                     }
 
-                    // Pitch controls
+                    // Pitch slider
                     Column(
                         modifier = Modifier
                             .fillMaxHeight()
-                            .width(70.dp),
+                            .animateContentSize()
+                            .width(sliderColumnWidth),
                         verticalArrangement = Arrangement.SpaceEvenly,
                         horizontalAlignment = Alignment.CenterHorizontally
                     ) {
@@ -1401,6 +1423,164 @@ fun AudioEffectMenu(
                             viewModel = viewModel
                         )
                     }
+
+                    // Reverb type slider
+                    Column(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .animateContentSize()
+                            .width(sliderColumnWidth),
+                        verticalArrangement = Arrangement.SpaceEvenly,
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        LcdText(
+                            "Reverb:",
+                            viewModel = viewModel
+                        )
+                        Slider(
+                            value = reverbPresetType.toFloat(),
+                            valueRange = 0f..3f,
+                            steps = 4,
+                            modifier = Modifier
+                                .layout { measurable, constraints ->
+                                    val placeable = measurable.measure(
+                                        Constraints.fixed(
+                                            width = sliderHeight.roundToPx(),
+                                            height = 15.dp.roundToPx()
+                                        )
+                                    )
+                                    layout(15.dp.roundToPx(), sliderHeight.roundToPx()) {
+                                        placeable.place(
+                                            x = -(sliderHeight.roundToPx() - 15.dp.roundToPx()) / 2,
+                                            y = (sliderHeight.roundToPx() - 15.dp.roundToPx()) / 2,
+                                        )
+                                    }
+                                }
+                                .graphicsLayer(
+                                    rotationZ = -90f
+                                )
+                                .size(sliderHeight, 15.dp),
+                            onValueChange = {
+                                reverbPresetType = it.toInt()
+                            },
+                            onValueChangeFinished = {
+                                if (reverbPresetType != 3) {
+                                    menuWidth = 200.dp
+                                    showReverbValueSlider = true
+                                }
+                            },
+                            thumb = {
+                                SliderThumb(viewModel)
+                            },
+                            track = {
+                                SettingsSliderTrack(viewModel)
+                            },
+                        )
+                        LargeLcdText(
+                            (
+                                when (reverbPresetType) {
+                                    0 -> "None"
+                                    1 -> "Room"
+                                    2 -> "Hall"
+                                    3 -> "Plate"
+                                    else -> "None"
+                                }
+                            ),
+                            viewModel = viewModel
+                        )
+                    }
+
+                    // Reverb value slider
+                    if (showReverbValueSlider) {
+                        Column(
+                            modifier = Modifier
+                                .fillMaxHeight(0.7f)
+                                .animateContentSize()
+                                .width(sliderColumnWidth - 10.dp),
+                            verticalArrangement = Arrangement.SpaceEvenly,
+                            horizontalAlignment = Alignment.CenterHorizontally
+                        ) {
+                            var steps by remember {
+                                mutableIntStateOf(
+                                    when (reverbPresetType) {
+                                        PresetReverb.PRESET_SMALLROOM.toInt() -> 3
+                                        PresetReverb.PRESET_MEDIUMHALL.toInt() -> 2
+                                        else -> 3
+                                    }
+                                )
+                            }
+                            val valueRange by remember {
+                                mutableStateOf(
+                                    when (reverbPresetType) {
+                                        PresetReverb.PRESET_SMALLROOM.toInt() -> 0f..2f
+                                        PresetReverb.PRESET_MEDIUMHALL.toInt() -> 0f..1f
+                                        else -> 0f..2f
+                                    }
+                                )
+                            }
+                            LcdText(
+                                "Magnitude:",
+                                viewModel = viewModel
+                            )
+                            Slider(
+                                value = reverbPresetType.toFloat(),
+                                valueRange = valueRange,
+                                steps = steps,
+                                modifier = Modifier
+                                    .layout { measurable, constraints ->
+                                        val placeable = measurable.measure(
+                                            Constraints.fixed(
+                                                width = sliderHeight.roundToPx(),
+                                                height = 15.dp.roundToPx()
+                                            )
+                                        )
+                                        layout(15.dp.roundToPx(), sliderHeight.roundToPx()) {
+                                            placeable.place(
+                                                x = -(sliderHeight.roundToPx() - 15.dp.roundToPx()) / 2,
+                                                y = (sliderHeight.roundToPx() - 15.dp.roundToPx()) / 2,
+                                            )
+                                        }
+                                    }
+                                    .graphicsLayer(
+                                        rotationZ = -90f
+                                    )
+                                    .size(sliderColumnWidth - 10.dp, 15.dp),
+                                onValueChange = {
+                                    reverbPresetValue = it.toInt()
+                                },
+                                thumb = {
+                                    SliderThumb(viewModel)
+                                },
+                                track = {
+                                    SettingsSliderTrack(viewModel)
+                                },
+                            )
+                            // Text representing the value
+                            LcdText(
+                                (
+                                        when (steps) {
+                                            3 -> {
+                                                when (reverbPresetValue) {
+                                                    0 -> "Small"
+                                                    1 -> "Medium"
+                                                    2 -> "Large"
+                                                    else -> "Small"
+                                                }
+                                            }
+                                            2 -> {
+                                                when (reverbPresetValue) {
+                                                    0 -> "Medium"
+                                                    1 -> "Large"
+                                                    else -> "Medium"
+                                                }
+                                            }
+                                            else -> "Error"
+                                        }
+                                        ),
+                                viewModel = viewModel
+                            )
+                        }
+                    }
                 }
                 // Apply changes
                 Row(
@@ -1408,28 +1588,29 @@ fun AudioEffectMenu(
                         .fillMaxWidth()
                         .height(40.dp),
                     verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.End
+                    horizontalArrangement = Arrangement.SpaceBetween // Arrangement.End for only apply changes
                 ) {
                     IconButton(
                         modifier = Modifier
                             .size(50.dp),
                         onClick = {
                             mediaController?.pause()
-                            spectrumAnalyzer.speed = speed
-                            spectrumAnalyzer.pitch = pitch
-                            if (spectrumAnalyzer.pitch != 1f || spectrumAnalyzer.speed != 1f) {
-                                spectrumAnalyzer.usingSonicProcessor = true
+                            audioProcessor.speed = speed
+                            audioProcessor.pitch = pitch
+                            audioProcessor.setReverbPreset((reverbPresetType + reverbPresetValue).toShort())
+                            if (audioProcessor.pitch != 1f || audioProcessor.speed != 1f) {
+                                audioProcessor.usingSonicProcessor = true
                             } else {
                                 false
                             }
-                            spectrumAnalyzer.configure(
+                            audioProcessor.configure(
                                 AudioProcessor.AudioFormat(
                                     44100,
                                     2,
                                     C.ENCODING_PCM_16BIT
                                 )
                             )
-                            spectrumAnalyzer.flush()
+                            audioProcessor.flush()
                             mediaController?.play()
                             expanded = false
                         },
@@ -1451,7 +1632,6 @@ fun AudioEffectMenu(
         }
     }
 }
-
 
 @Composable
 fun SettingsSliderTrack(viewModel: PlayerViewModel) {

@@ -1,11 +1,8 @@
 package com.example.audio_player
 
 import android.content.Context
-import android.media.audiofx.AudioEffect
-import android.media.audiofx.EnvironmentalReverb
 import android.media.audiofx.PresetReverb
 import android.os.Handler
-import androidx.media3.common.C
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.SonicAudioProcessor
 import androidx.media3.common.util.UnstableApi
@@ -23,10 +20,8 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import org.jtransforms.fft.DoubleFFT_1D
-import java.nio.BufferOverflowException
 import java.nio.BufferUnderflowException
 import java.nio.ByteBuffer
-import kotlin.math.sin
 import kotlin.math.sqrt
 
 @UnstableApi
@@ -61,8 +56,12 @@ class PlayerService : MediaSessionService() {
         var usingSonicProcessor = false
         var reverb: PresetReverb? = null
 
-        fun getAudioId(id: Int) {
-           reverb = PresetReverb(0, id)
+        fun setReverbId(id: Int) {
+            reverb = PresetReverb(1, id)
+        }
+
+        fun setReverbPreset(reverbPreset: Short) {
+            reverb?.preset = reverbPreset
         }
 
         override fun configure(inputAudioFormat: AudioProcessor.AudioFormat): AudioProcessor.AudioFormat {
@@ -84,25 +83,6 @@ class PlayerService : MediaSessionService() {
         }
 
         override fun queueInput(inputBuffer: ByteBuffer) {
-//            val size = inputBuffer.remaining()
-//            val tmpOutBuffer = ByteBuffer
-//                .allocate(size)
-//                .order(inputBuffer.order())
-//
-//            val input = inputBuffer.duplicate()
-
-//            while (input.remaining() >= 2) {
-//                val sample = (input.getShort() * 1f)
-//                    .toInt()
-//                    .coerceIn(-32768, 32767)
-//                    .toShort()
-//                tmpOutBuffer.putShort(sample)
-//            }
-//            tmpOutBuffer.put(input)
-//                .position(0)
-//                .limit(size)
-//            outputBuffer = tmpOutBuffer
-
             if (!inputBuffer.hasRemaining()) {
                 return
             }
@@ -261,6 +241,7 @@ class PlayerService : MediaSessionService() {
 //        val mediaSessionCallback = object : MediaSession.Callback{}
         mediaSession = MediaSession.Builder(this, player)
             .build()
+        SpectrumAnalyzer.setReverbId(player.audioSessionId) // Prepares the reverb
     }
 
     override fun onDestroy() {
