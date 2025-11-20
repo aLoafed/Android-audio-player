@@ -27,7 +27,7 @@ data class AlbumInfo(
 )
 
 @OptIn(UnstableApi::class)
-fun mediaStoreSongInfo(applicationContext: Context): List<SongInfo> {
+fun getSongInfo(context: Context): List<SongInfo> {
     val songInfo = mutableListOf<SongInfo>()
     val externalUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
     val projection = arrayOf(
@@ -39,7 +39,7 @@ fun mediaStoreSongInfo(applicationContext: Context): List<SongInfo> {
         MediaStore.Audio.Media._ID
     )
     val sortOrder = "${MediaStore.Audio.Media.TITLE} ASC"
-    val contentResolver = applicationContext.contentResolver
+    val contentResolver = context.contentResolver
     val cursor = contentResolver.query(
         externalUri,
         projection,
@@ -66,7 +66,7 @@ fun mediaStoreSongInfo(applicationContext: Context): List<SongInfo> {
             val songUri = ContentUris.withAppendedId(
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, getId
             )
-            var albumCover = BitmapFactory.decodeResource(applicationContext.resources, R.drawable.file_not_found_image)
+            var albumCover = BitmapFactory.decodeResource(context.resources, R.drawable.file_not_found_image)
             try {
                 albumCover = contentResolver.loadThumbnail(
                     songUri,
@@ -91,7 +91,7 @@ fun mediaStoreSongInfo(applicationContext: Context): List<SongInfo> {
     return songInfo //mergeSortSplit(songInfo).toList()
 }
 @OptIn(UnstableApi::class)
-fun getAlbumList(applicationContext: Context): List<AlbumInfo> {
+fun getAlbumSongInfo(context: Context): List<AlbumInfo> {
     val albumInfo = mutableListOf<AlbumInfo>()
     val externalUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
     val projection = arrayOf(
@@ -99,7 +99,7 @@ fun getAlbumList(applicationContext: Context): List<AlbumInfo> {
         MediaStore.Audio.Albums._ID
     )
     val sortOrder = "${MediaStore.Audio.Media.TITLE} ASC"
-    val contentResolver = applicationContext.contentResolver
+    val contentResolver = context.contentResolver
     val cursor = contentResolver.query(
         externalUri,
         projection,
@@ -117,7 +117,7 @@ fun getAlbumList(applicationContext: Context): List<AlbumInfo> {
             val songUri = ContentUris.withAppendedId(
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, getId
             )
-            var albumCover = BitmapFactory.decodeResource(applicationContext.resources, R.drawable.file_not_found_image)
+            var albumCover = BitmapFactory.decodeResource(context.resources, R.drawable.file_not_found_image)
             try {
                 albumCover = contentResolver.loadThumbnail(
                     songUri,

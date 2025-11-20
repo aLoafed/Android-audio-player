@@ -58,7 +58,7 @@ import kotlinx.coroutines.launch
 fun NavHost(
     mediaController: MediaController?,
     songInfo: List<SongInfo>,
-    spectrumAnalyzer: PlayerService.SpectrumAnalyzer,
+    audioProcessor: PlayerService.SpectrumAnalyzer,
     viewModel: PlayerViewModel,
     albumInfo: List<AlbumInfo>,
     context: Context
@@ -71,7 +71,7 @@ fun NavHost(
             .background(viewModel.backgroundColor)
     ) {
         composable(route = "pager") {
-            Pager(mediaController, spectrumAnalyzer, viewModel, songInfo, albumInfo, navController)
+            Pager(mediaController, audioProcessor, viewModel, songInfo, albumInfo, navController)
         }
         composable(route = "album_songs_screen") {
             AlbumSongsScreen(viewModel.selectedAlbum, songInfo, mediaController, viewModel, navController)

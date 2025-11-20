@@ -193,7 +193,7 @@ class PlayerService : MediaSessionService() {
         }
     }
 
-    fun getSpectrumAnalyzer(): SpectrumAnalyzer {
+    fun getAudioProcessor(): SpectrumAnalyzer {
         return SpectrumAnalyzer
     }
 
