@@ -67,7 +67,7 @@ fun getSongInfo(context: Context): List<SongInfo> {
             val songUri = ContentUris.withAppendedId(
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, getId
             )
-            var albumCover = BitmapFactory.decodeResource(context.resources, R.drawable.file_not_found_image)
+            var albumCover = BitmapFactory.decodeResource(context.resources, R.drawable.album_art_not_found)
             try {
                 albumCover = contentResolver.loadThumbnail(
                     songUri,
@@ -88,7 +88,7 @@ fun getSongInfo(context: Context): List<SongInfo> {
             )
         }
     }
-    val mergeSort = MergeSort()
+//    val mergeSort = MergeSort()
     return songInfo
 }
 @OptIn(UnstableApi::class)
@@ -118,7 +118,7 @@ fun getAlbumSongInfo(context: Context): List<AlbumInfo> {
             val songUri = ContentUris.withAppendedId(
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, getId
             )
-            var albumCover = BitmapFactory.decodeResource(context.resources, R.drawable.file_not_found_image)
+            var albumCover = BitmapFactory.decodeResource(context.resources, R.drawable.album_art_not_found)
             try {
                 albumCover = contentResolver.loadThumbnail(
                     songUri,
@@ -142,7 +142,6 @@ fun getAlbumSongInfo(context: Context): List<AlbumInfo> {
             }
         }
     }
-    val mergeSort = MergeSort()
-
+//    val mergeSort = MergeSort()
     return albumInfo
 }

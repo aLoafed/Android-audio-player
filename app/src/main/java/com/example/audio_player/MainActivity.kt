@@ -34,6 +34,7 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.C
+import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
@@ -143,10 +144,10 @@ class MainActivity : ComponentActivity() {
             { mediaController = controllerFuture.get() },
             MoreExecutors.directExecutor()
         )
-        
         lifecycleScope.launch {
             val audioProcessor = mediaSessionService.getAudioProcessor()
             audioProcessor.equaliserIsOn = true
+            // Request permissions is stalling load
             mediaInfoPair = requestInitPermissions(applicationContext, requestPermissionLauncher)
 
             enableEdgeToEdge()
@@ -215,15 +216,17 @@ class MainActivity : ComponentActivity() {
     }
 
     override fun onDestroy() {
-        mediaSessionService.pauseAllPlayersAndStopSelf()
+        // For fixing mediaSessionService binding issues, tried: mediaSessionService.pauseAllPlayersAndStopSelf()
         super.onDestroy()
     }
 }
 
+@SuppressLint("UnsafeOptInUsageError")
 fun requestInitPermissions(
     context: Context,
     requestPermissionLauncher: ActivityResultLauncher<Array<String>>
 ): Pair<List<SongInfo>, List<AlbumInfo>>?  {
+    Log.d("MusicPlayer", "Perms hit")
     val permissionList = mutableListOf<String>()
     var mediaInfoPair: Pair<List<SongInfo>, List<AlbumInfo>>? = null
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -246,6 +249,7 @@ fun requestInitPermissions(
             }
         }
     }
+    Log.d("MusicPlayer", "First perm check cleared")
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         when(
             ContextCompat.checkSelfPermission(
@@ -257,10 +261,12 @@ fun requestInitPermissions(
                 permissionList.add(Manifest.permission.READ_MEDIA_AUDIO)
             }
             PackageManager.PERMISSION_GRANTED -> {
+                Log.d("MusicPlayer", "Before getSongs")
                 mediaInfoPair = Pair(
                     getSongInfo(context),
                     getAlbumSongInfo(context)
                 )
+                Log.d("MusicPlayer", "After getSongs")
             }
         }
     } else {
@@ -275,14 +281,18 @@ fun requestInitPermissions(
             }
 
             PackageManager.PERMISSION_GRANTED -> {
+                Log.d("MusicPlayer", "Before getSongs")
                 mediaInfoPair = Pair(
                     getSongInfo(context),
                     getAlbumSongInfo(context)
                 )
+                Log.d("MusicPlayer", "After getSongs")
             }
         }
     }
+    Log.d("MusicPlayer", "Before perms requested")
     requestPermissionLauncher.launch(permissionList.toTypedArray())
+    Log.d("MusicPlayer", "Perm request fin")
     return mediaInfoPair
 }
 

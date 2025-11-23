@@ -2,6 +2,7 @@ package com.example.audio_player
 
 import android.content.Context
 import android.graphics.BitmapFactory
+import android.media.audiofx.PresetReverb
 import android.net.Uri
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
@@ -12,6 +13,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.ImageBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.graphics.toArgb
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.ViewModel
 import androidx.media3.session.MediaController
 import com.example.audio_player.ui.theme.LcdBlueWhite
@@ -25,7 +27,7 @@ class PlayerViewModel(
         private set
     var currentSongPosition by mutableFloatStateOf((0f)) // Current position in song
         private set
-    var currentAlbumArt by mutableStateOf(BitmapFactory.decodeResource(applicationContext.resources, R.drawable.file_not_found_image).asImageBitmap())
+    var currentAlbumArt by mutableStateOf(BitmapFactory.decodeResource(applicationContext.resources, R.drawable.album_art_not_found).asImageBitmap())
         private set
     var songIterator by mutableIntStateOf(0)
         private set
@@ -58,6 +60,25 @@ class PlayerViewModel(
         private set
     var repeatMode by mutableStateOf("normal")
         private set
+    //============================ Audio effect ===========================
+    var reverbPresetType by mutableIntStateOf(0)
+    var reverbPresetValue by mutableIntStateOf(0)
+    var menuWidth by mutableStateOf(180.dp)
+    var steps by mutableIntStateOf(
+        when (reverbPresetType) {
+            PresetReverb.PRESET_SMALLROOM.toInt() -> 3
+            PresetReverb.PRESET_MEDIUMHALL.toInt() -> 2
+            else -> 3
+        }
+    )
+    var valueRange by mutableStateOf(
+        when (reverbPresetType) {
+            PresetReverb.PRESET_SMALLROOM.toInt() -> 0f..2f
+            PresetReverb.PRESET_MEDIUMHALL.toInt() -> 0f..1f
+            else -> 0f..2f
+        }
+    )
+    var showReverbValueSlider by mutableStateOf(false)
     //============================ Colours ===========================
     var backgroundColor = LcdGrey
         private set
