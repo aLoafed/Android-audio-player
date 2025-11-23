@@ -3,8 +3,10 @@ package com.example.audio_player
 import android.content.Context
 import android.media.audiofx.PresetReverb
 import android.os.Handler
+import androidx.media3.common.AuxEffectInfo
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.SonicAudioProcessor
+import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
@@ -54,25 +56,27 @@ class PlayerService : MediaSessionService() {
         var eqList = DoubleArray(7)
         var volume = 0.0
         var usingSonicProcessor = false
-        var reverb: PresetReverb? = null
+        lateinit var reverb: PresetReverb
 
-        fun setReverbId(id: Int) {
-            reverb = PresetReverb(1, id)
+        fun setReverbId(player: ExoPlayer) {
+            reverb = PresetReverb(0, player.audioSessionId)
+            player.setAuxEffectInfo(AuxEffectInfo(reverb.id, 1f))
         }
 
         fun setReverbPreset(reverbPreset: Short) {
-            reverb?.preset = reverbPreset
+            reverb.preset = reverbPreset
+            reverb.enabled = true
         }
 
         override fun configure(inputAudioFormat: AudioProcessor.AudioFormat): AudioProcessor.AudioFormat {
             if (usingSonicProcessor) {
                 sonicAudioProcessor.configure(inputAudioFormat)
                 // Factor must not be 1f or else null pointer exception
-                if (speed != 1f) {
-                    sonicAudioProcessor.setPitch(speed)
+                if (speed != 1f && speed != 0f) {
+                    sonicAudioProcessor.setSpeed(speed)
                 }
-                if (pitch != 1f) {
-                    sonicAudioProcessor.setSpeed(pitch)
+                if (pitch != 1f && pitch != 0f) {
+                    sonicAudioProcessor.setPitch(pitch)
                 }
             }
             return inputAudioFormat
@@ -240,7 +244,7 @@ class PlayerService : MediaSessionService() {
 //        val mediaSessionCallback = object : MediaSession.Callback{}
         mediaSession = MediaSession.Builder(this, player)
             .build()
-        SpectrumAnalyzer.setReverbId(player.audioSessionId)
+        SpectrumAnalyzer.setReverbId(player)
     }
 
     override fun onDestroy() {
