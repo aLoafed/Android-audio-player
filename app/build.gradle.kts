@@ -35,6 +35,11 @@ android {
     kotlinOptions {
         jvmTarget = "11"
     }
+    //    kotlin {
+    //        compilerOptions {
+    //            jvmTarget = JvmTarget.JVM_11
+    //        }
+    //    }
     buildFeatures {
         compose = true
     }
@@ -42,10 +47,9 @@ android {
 
 dependencies {
 
-    //noinspection UseTomlInstead
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.9.0") // Apache 2.0
-    implementation("com.github.wendykierp:JTransforms:3.1") // Custom JTransform license
-    implementation("com.github.skydoves:colorpicker-compose:1.1.2") // Apache 2.0
+    implementation(libs.kotlinx.serialization.json) // Apache 2.0
+    implementation(libs.jtransforms) // Custom JTransform license
+    implementation(libs.colorpicker.compose) // Apache 2.0
     implementation(libs.androidx.lifecycle.viewmodel.compose)
     implementation(libs.androidx.media3.exoplayer)
     implementation(libs.androidx.media3.ui)
