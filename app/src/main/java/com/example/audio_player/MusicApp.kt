@@ -9,6 +9,7 @@ import androidx.media3.common.util.UnstableApi
 class MusicApp: Application() {
     override fun onCreate() {
         super.onCreate()
+        // Look into whether the MediaSessionService needs this
         val channel = NotificationChannel(
             "audio_channel",
             "Audio notifications",

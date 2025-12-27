@@ -6,7 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -47,7 +46,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.modifier.modifierLocalConsumer
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -421,8 +419,8 @@ fun ResetToDefaultsButton(viewModel: PlayerViewModel, context: Context) {
             viewModel.updateColor("eqText", Color(defaultData.eqTextColor))
             viewModel.updateColor("sliderThumb", Color(defaultData.sliderThumbColor))
             viewModel.updateColor("sliderTrack", Color(defaultData.sliderTrackColor))
-            viewModel.updateShowEqualiser(true)
-            viewModel.updateShowBasicLoadingScreen(true)
+            viewModel.showEqualiser = true
+            viewModel.showBasicLoadingScreen = true
             settingsManager.saveSettings(defaultData)
         },
         colors = ButtonColors(
@@ -477,12 +475,12 @@ fun SaveChangesButton(
                     viewModel.updateColor(i, Color(tmpColorSettings[i]!!))
                 }
             }
-            viewModel.updateShowEqualiser(
+            viewModel.showEqualiser = (
                 tmpMiscSettings.getOrElse(
                     "showEqualiser"
                 ) { true }
             )
-            viewModel.updateShowBasicLoadingScreen(
+            viewModel.showBasicLoadingScreen = (
                 tmpMiscSettings.getOrElse(
                     "showBasicLoadingScreen"
                 ) { true }

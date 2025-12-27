@@ -34,7 +34,6 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.C
-import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
@@ -53,7 +52,6 @@ class MainActivity : ComponentActivity() {
             object : ViewModelProvider.Factory {
                 override fun <T : ViewModel> create(modelClass: Class<T>): T {
                     return PlayerViewModel(
-                        applicationContext
                     ) as T
                 }
             }
@@ -66,8 +64,8 @@ class MainActivity : ComponentActivity() {
     @OptIn(UnstableApi::class, ExperimentalMaterial3Api::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        var songInfo: List<SongInfo>? = null
-        var albumInfo: List<AlbumInfo>? = null
+        var songInfo: List<SongInfo>?
+        var albumInfo: List<AlbumInfo>?
         var mediaInfoPair: Pair<List<SongInfo>, List<AlbumInfo>>? = null
         //==================== Check & request permissions ====================//
         val requestPermissionLauncher = registerForActivityResult(
@@ -78,25 +76,18 @@ class MainActivity : ComponentActivity() {
                 when {
                     Manifest.permission.READ_MEDIA_AUDIO in requests.keys -> {
                         if (requests[Manifest.permission.READ_MEDIA_AUDIO] == true) {
-                            mediaInfoPair = Pair(
-                                getSongInfo(applicationContext),
-                                getAlbumSongInfo(applicationContext)
-                            )
+                            mediaInfoPair = getSongInfo(applicationContext)
                         } else {
                             requestPermissions(
                                 arrayOf(Manifest.permission.READ_MEDIA_AUDIO),
                                 1
                             )
-                            // May need to add more logic to get songInfo if permission is granted
                         }
                     }
 
                     Manifest.permission.READ_EXTERNAL_STORAGE in requests.keys -> {
                         if (requests[Manifest.permission.READ_EXTERNAL_STORAGE] == true) {
-                            mediaInfoPair = Pair(
-                                getSongInfo(applicationContext),
-                                getAlbumSongInfo(applicationContext)
-                            )
+                            mediaInfoPair = getSongInfo(applicationContext)
                         } else {
                             requestPermissions(
                                 arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE),
@@ -147,7 +138,6 @@ class MainActivity : ComponentActivity() {
         lifecycleScope.launch {
             val audioProcessor = mediaSessionService.getAudioProcessor()
             audioProcessor.equaliserIsOn = true
-            // Request permissions is stalling load
             mediaInfoPair = requestInitPermissions(applicationContext, requestPermissionLauncher)
 
             enableEdgeToEdge()
@@ -226,7 +216,6 @@ fun requestInitPermissions(
     context: Context,
     requestPermissionLauncher: ActivityResultLauncher<Array<String>>
 ): Pair<List<SongInfo>, List<AlbumInfo>>?  {
-    Log.d("MusicPlayer", "Perms hit")
     val permissionList = mutableListOf<String>()
     var mediaInfoPair: Pair<List<SongInfo>, List<AlbumInfo>>? = null
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -249,7 +238,6 @@ fun requestInitPermissions(
             }
         }
     }
-    Log.d("MusicPlayer", "First perm check cleared")
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
         when(
             ContextCompat.checkSelfPermission(
@@ -261,12 +249,7 @@ fun requestInitPermissions(
                 permissionList.add(Manifest.permission.READ_MEDIA_AUDIO)
             }
             PackageManager.PERMISSION_GRANTED -> {
-                Log.d("MusicPlayer", "Before getSongs")
-                mediaInfoPair = Pair(
-                    getSongInfo(context),
-                    getAlbumSongInfo(context)
-                )
-                Log.d("MusicPlayer", "After getSongs")
+                mediaInfoPair = getSongInfo(context)
             }
         }
     } else {
@@ -281,18 +264,11 @@ fun requestInitPermissions(
             }
 
             PackageManager.PERMISSION_GRANTED -> {
-                Log.d("MusicPlayer", "Before getSongs")
-                mediaInfoPair = Pair(
-                    getSongInfo(context),
-                    getAlbumSongInfo(context)
-                )
-                Log.d("MusicPlayer", "After getSongs")
+                mediaInfoPair = getSongInfo(context)
             }
         }
     }
-    Log.d("MusicPlayer", "Before perms requested")
     requestPermissionLauncher.launch(permissionList.toTypedArray())
-    Log.d("MusicPlayer", "Perm request fin")
     return mediaInfoPair
 }
 
@@ -402,30 +378,3 @@ fun Color.increaseBrightness(brightness: Float): Color {
     hsl[2] += brightness
     return Color(ColorUtils.HSLToColor(hsl))
 }
-
-//@Preview
-//@Composable
-//fun TmpIconPreview() {
-//    Canvas(
-//        modifier = Modifier
-//            .size(450.dp)
-//            .background(Color(0xFF000000))
-//    ) {
-//        val path = Path()
-//        path.moveTo(200f, 500f)
-//        val sigmaWidth = 10f
-//        for (i in 0..10000) {
-//            val x = i.toFloat() * 10 + 200f
-////            val amplitude = E.pow(-1 * (x.pow(2)/sigmaWidth.pow(2)).toDouble()) // y = e^(-x²/σ²) · sin(ωx)
-//            val amplitude = E.pow(-x.toDouble()) // y = e^(-|x|) · sin(ωx)
-//            path.lineTo(
-//                x,
-//                (10000 * amplitude * sin(3 * x)).toFloat() + 500f
-//                )
-//        }
-//        drawPath(
-//            path = path,
-//            color = Color.White
-//        )
-//    }
-//}

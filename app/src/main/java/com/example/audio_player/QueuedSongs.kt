@@ -67,7 +67,7 @@ fun SongQueue(viewModel: PlayerViewModel, mediaController: MediaController?) {
                         .height(75.dp)
                         .border(
                             width = (
-                                    if (i == viewModel.songIterator) {
+                                    if (i == viewModel.songIndex) {
                                         0.dp
                                     } else {
                                         (-1).dp
@@ -86,10 +86,10 @@ fun SongQueue(viewModel: PlayerViewModel, mediaController: MediaController?) {
                                 mediaController?.prepare()
                                 mediaController?.seekTo(i, 0L)
                                 mediaController?.play()
-                                viewModel.updateAlbumArt(viewModel.queuedSongs[i].albumArt)
+//                                viewModel.updateAlbumArt(viewModel.queuedSongs[i].albumArt) !!!! DEBUG !!!! Likely not needed
                                 viewModel.updateSongDuration((viewModel.queuedSongs[i].time).toLong())
-                                viewModel.updateSongIterator(i)
-                                viewModel.updatePlayingFromSongsScreen(true)
+                                viewModel.songIndex = i
+                                viewModel.playingFromSongsScreen = true
                             }
                         ),
                     verticalAlignment = Alignment.CenterVertically,

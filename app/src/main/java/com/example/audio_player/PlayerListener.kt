@@ -17,7 +17,7 @@ class PlayerListener(
     @OptIn(UnstableApi::class)
     override fun onIsPlayingChanged(isPlaying: Boolean) {
         super.onIsPlayingChanged(isPlaying)
-        viewModel.updateIsPlaying(!viewModel.isPlaying)
+        viewModel.isPlaying = !viewModel.isPlaying
     }
 
     @OptIn(UnstableApi::class)
@@ -30,7 +30,7 @@ class PlayerListener(
             viewModel.incrementSongIterator(1)
         } else if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_SEEK) {
             mediaController?.let {
-                if (it.currentMediaItemIndex > viewModel.songIterator) {
+                if (it.currentMediaItemIndex > viewModel.songIndex) {
                     viewModel.incrementSongIterator(1)
                 } else {
                     viewModel.incrementSongIterator(-1)

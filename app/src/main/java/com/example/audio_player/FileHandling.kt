@@ -2,15 +2,21 @@ package com.example.audio_player
 
 import android.content.ContentUris
 import android.content.Context
+import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.net.Uri
 import android.provider.MediaStore
 import androidx.annotation.OptIn
 import androidx.compose.ui.graphics.ImageBitmap
+import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.media3.common.util.UnstableApi
-import kotlinx.coroutines.flow.merge
+import java.io.BufferedInputStream
+import java.io.DataOutputStream
 import java.io.FileNotFoundException
+import java.io.InputStream
+import java.io.InputStreamReader
+import java.io.OutputStream
 
 data class SongInfo(
     val name: String,
@@ -28,7 +34,7 @@ data class AlbumInfo(
 )
 
 @OptIn(UnstableApi::class)
-fun getSongInfo(context: Context): List<SongInfo> {
+fun getSongInfo(context: Context): Pair<List<SongInfo>, List<AlbumInfo>> {
     val songInfo = mutableListOf<SongInfo>()
     val externalUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
     val projection = arrayOf(
@@ -39,14 +45,13 @@ fun getSongInfo(context: Context): List<SongInfo> {
         MediaStore.Audio.Media.DURATION,
         MediaStore.Audio.Media._ID
     )
-    val sortOrder = "${MediaStore.Audio.Media.TITLE} ASC"
     val contentResolver = context.contentResolver
     val cursor = contentResolver.query(
         externalUri,
         projection,
         MediaStore.Audio.Media.IS_MUSIC,
         null,
-        sortOrder
+        null
     )
     cursor?.use {
         val idColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
@@ -67,14 +72,20 @@ fun getSongInfo(context: Context): List<SongInfo> {
             val songUri = ContentUris.withAppendedId(
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, getId
             )
-            var albumCover = BitmapFactory.decodeResource(context.resources, R.drawable.album_art_not_found)
+            var albumCover: Bitmap
             try {
                 albumCover = contentResolver.loadThumbnail(
                     songUri,
                     android.util.Size(500,500),
                     null
                 )
-            } catch (e: FileNotFoundException) {}
+            } catch (_: FileNotFoundException) {
+                albumCover = ImageBitmap(500,500).asAndroidBitmap()
+//                val resBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.album_art_not_found)
+//                val compressedBitmapStream = OutputStream.nullOutputStream()
+//                resBitmap.compress(Bitmap.CompressFormat.WEBP_LOSSY, 40, compressedBitmapStream)
+//                albumCover = BitmapFactory.decodeStream()
+            }
             songInfo.add(
                 SongInfo(
                     getName,
@@ -88,60 +99,21 @@ fun getSongInfo(context: Context): List<SongInfo> {
             )
         }
     }
-//    val mergeSort = MergeSort()
-    return songInfo
-}
-@OptIn(UnstableApi::class)
-fun getAlbumSongInfo(context: Context): List<AlbumInfo> {
     val albumInfo = mutableListOf<AlbumInfo>()
-    val externalUri = MediaStore.Audio.Media.EXTERNAL_CONTENT_URI
-    val projection = arrayOf(
-        MediaStore.Audio.Media.ALBUM,
-        MediaStore.Audio.Albums._ID
-    )
-    val sortOrder = "${MediaStore.Audio.Media.TITLE} ASC"
-    val contentResolver = context.contentResolver
-    val cursor = contentResolver.query(
-        externalUri,
-        projection,
-        MediaStore.Audio.Media.IS_MUSIC,
-        null,
-        sortOrder
-    )
-    cursor?.use {
-        val albumColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.ALBUM)
-        val idColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
-        while (it.moveToNext()) {
-            var newAlbumEntry = true // Used for checking whether the songs album is new to prevent dupes
-            val getAlbum = it.getString(albumColumn)
-            val getId = it.getLong(idColumn)
-            val songUri = ContentUris.withAppendedId(
-                MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, getId
+    val addedAlbumNames = mutableListOf<String>()
+    for (i in 0 until songInfo.size) {
+        if (songInfo[i].album in addedAlbumNames) {
+            continue
+        } else {
+            addedAlbumNames.add(songInfo[i].album)
+            albumInfo.add(
+                AlbumInfo(
+                    songInfo[i].album,
+                    songInfo[i].albumArt
+                )
             )
-            var albumCover = BitmapFactory.decodeResource(context.resources, R.drawable.album_art_not_found)
-            try {
-                albumCover = contentResolver.loadThumbnail(
-                    songUri,
-                    android.util.Size(500,500),
-                    null
-                )
-            } catch (e: FileNotFoundException) {}
-            for (i in 0 until albumInfo.count()){
-                if (albumInfo[i].albumName == getAlbum) {
-                    newAlbumEntry = false
-                    break
-                }
-            }
-            if (newAlbumEntry) {
-                albumInfo.add(
-                    AlbumInfo(
-                        getAlbum,
-                        albumCover.asImageBitmap()
-                    )
-                )
-            }
         }
     }
-//    val mergeSort = MergeSort()
-    return albumInfo
+    val mergeSort = MergeSort()
+    return Pair(mergeSort.sort(songInfo), mergeSort.sort(albumInfo))
 }

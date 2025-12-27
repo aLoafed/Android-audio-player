@@ -94,7 +94,7 @@ fun BasicLoadingScreen(viewModel: PlayerViewModel) {
         }
         LaunchedEffect(Unit) {
             delay(600)
-            viewModel.updateFinishedLoading(true)
+            viewModel.loadingFinished = true
         }
     }
 }
@@ -209,7 +209,7 @@ fun LoadingBars(viewModel: PlayerViewModel) {
                     }
                     LaunchedEffect(Unit) {
                         delay(750)
-                        viewModel.updateFinishedLoading(true)
+                        viewModel.loadingFinished = true
                     }
                 }
                 else -> {

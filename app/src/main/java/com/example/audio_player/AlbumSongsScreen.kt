@@ -6,7 +6,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -35,7 +34,6 @@ import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.MediaItem
-import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaController
 import androidx.navigation.NavController
 
@@ -120,9 +118,10 @@ fun AlbumSongsScreen(album: String, songInfo: List<SongInfo>, mediaController: M
                             .clickable(
                                 onClick = {
                                     if (mediaController != null) {
-                                        viewModel.updateShuffleMode(false)
+                                        viewModel.queueingSongs = false
+                                        viewModel.shuffleMode = false
                                         mediaController.clearMediaItems()
-                                        viewModel.updateAlbumSongInfo(albumSongsList)
+//                                        viewModel.albumSongInfo = albumSongsList // Removed for centralization
                                         for (j in 0 until albumSongsList.count()) {
                                             mediaController.addMediaItem(
                                                 MediaItem.fromUri(
@@ -133,11 +132,11 @@ fun AlbumSongsScreen(album: String, songInfo: List<SongInfo>, mediaController: M
                                         mediaController.prepare()
                                         mediaController.seekTo(i, 0L)
                                         mediaController.play()
-                                        viewModel.updateQueuedSongs(albumSongsList)
-                                        viewModel.updateSongIterator(i)
-                                        viewModel.updateAlbumArt(albumSongsList[i].albumArt)
+                                        viewModel.queuedSongs = albumSongsList
+                                        viewModel.songIndex = i
+//                                        viewModel.updateAlbumArt(albumSongsList[i].albumArt) !!!! DEBUG !!!! Probably not needed
                                         viewModel.updateSongDuration((albumSongsList[i].time).toLong())
-                                        viewModel.updatePlayingFromSongsScreen(false) // Shows details from albums list
+                                        viewModel.playingFromSongsScreen = false // Shows details from albums list
                                         navController.navigate("pager")
                                     }
                                 }

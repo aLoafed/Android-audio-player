@@ -93,9 +93,7 @@ fun NavHost(
                 HorizontalColorPicker(viewModel, navController)
             }
         }
-        composable(route = "song_options") {
-            SongOptions(viewModel.selectedSong, viewModel, mediaController)
-        }
+
         composable(route = "info_screen") {
             InfoScreen(viewModel)
         }

@@ -85,7 +85,7 @@ fun AlbumScreen(
                                     .width(albumWidth)
                                     .clickable(
                                         onClick = {
-                                            viewModel.updateSelectedAlbum(albumInfo[rowIndex * elementsPerRow + index].albumName)
+                                            viewModel.selectedAlbum = albumInfo[rowIndex * elementsPerRow + index].albumName
                                             navController.navigate("album_songs_screen")
                                         }
                                     ),
@@ -115,7 +115,7 @@ fun AlbumScreen(
                                         .width(albumWidth)
                                         .clickable(
                                             onClick = {
-                                                viewModel.updateSelectedAlbum(albumInfo[rowIndex * elementsPerRow + index].albumName)
+                                                viewModel.selectedAlbum = albumInfo[rowIndex * elementsPerRow + index].albumName
                                                 navController.navigate("album_songs_screen")
                                             }
                                         ),
@@ -144,7 +144,7 @@ fun AlbumScreen(
                                         .width(albumWidth)
                                         .clickable(
                                             onClick = {
-                                                viewModel.updateSelectedAlbum(albumInfo[rowIndex * elementsPerRow + index].albumName)
+                                                viewModel.selectedAlbum = albumInfo[rowIndex * elementsPerRow + index].albumName
                                                 navController.navigate("album_songs_screen")
                                             }
                                         ),

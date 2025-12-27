@@ -9,6 +9,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.detectVerticalDragGestures
 import androidx.compose.foundation.gestures.scrollBy
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -25,8 +26,8 @@ import androidx.compose.foundation.layout.statusBars
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.LazyListPrefetchStrategy
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.layout.LazyLayoutCacheWindow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material3.Icon
@@ -65,113 +66,141 @@ fun SongsScreen(
     pagerState: PagerState,
     navController: NavController
 ) {
-    val fetchStrategy = LazyListPrefetchStrategy(50)
+    // --------- May want to consider however speed has improved ---------
+    // Lazy list prefetch strategy has no effect as there's no nested scrolling
+    // Lazy list cache doesn't seem to do much
+
+    val lazyListCache = LazyLayoutCacheWindow(1600.dp, 1600.dp) // 1600.dp?
     val lazyColumnState = rememberLazyListState(
         initialFirstVisibleItemIndex = 0,
         initialFirstVisibleItemScrollOffset = 0,
-        prefetchStrategy = fetchStrategy
+//        cacheWindow = lazyListCache
     )
     val lazyColumnSize = songInfo.count()
-    Row(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(viewModel.backgroundColor)
-            .windowInsetsPadding(WindowInsets.statusBars)
-            .windowInsetsPadding(WindowInsets.navigationBars),
-        verticalAlignment = Alignment.Top,
-        horizontalArrangement = Arrangement.Start
-    ) {
-        LazyColumn(
+    val playSongCallback = remember {
+        { i: Int ->
+            viewModel.queueingSongs = false
+            viewModel.shuffleMode = false
+            mediaController?.clearMediaItems()
+            for (j in 0 until songInfo.count()) {
+                mediaController?.addMediaItem(MediaItem.fromUri(songInfo[j].songUri))
+            }
+            mediaController?.prepare()
+            mediaController?.seekTo(i, 0L)
+            mediaController?.play()
+            viewModel.queuedSongs = songInfo.toMutableList()
+            viewModel.updateSongDuration((songInfo[i].time).toLong())
+            viewModel.songIndex = i
+            viewModel.playingFromSongsScreen = true
+            pagerState.requestScrollToPage(1)
+        }
+    }
+    Box {
+        Row(
             modifier = Modifier
-                .fillMaxHeight()
-                .fillMaxWidth(0.955f),
-            verticalArrangement = Arrangement.Top,
-            horizontalAlignment = Alignment.Start,
-            state = lazyColumnState,
+                .fillMaxSize()
+                .background(viewModel.backgroundColor)
+                .windowInsetsPadding(WindowInsets.statusBars)
+                .windowInsetsPadding(WindowInsets.navigationBars),
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.Start
         ) {
-            items(lazyColumnSize) { i ->
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(80.dp)
-                        .padding(5.dp)
-                        .clickable(
-                            onClick = {
-                                viewModel.updateShuffleMode(false)
-                                mediaController?.clearMediaItems()
-                                for (j in 0 until songInfo.count()) {
-                                    mediaController?.addMediaItem(MediaItem.fromUri(songInfo[j].songUri))
-                                }
-                                mediaController?.prepare()
-                                mediaController?.seekTo(i, 0L)
-                                mediaController?.play()
-                                viewModel.updateQueuedSongs(songInfo)
-                                viewModel.updateAlbumArt(songInfo[i].albumArt)
-                                viewModel.updateSongDuration((songInfo[i].time).toLong())
-                                viewModel.updateSongIterator(i)
-                                viewModel.updatePlayingFromSongsScreen(true)
-                                pagerState.requestScrollToPage(1)
-                            }
-                        ),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.Start
-                ) {
-                    Image( // Album art
-                        bitmap = songInfo[i].albumArt,
-                        modifier = Modifier
-                            .size(65.dp),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop
-                    )
-                    Spacer(
-                        modifier = Modifier
-                            .width(10.dp)
-                    )
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize(),
-                        verticalArrangement = Arrangement.Top,
-                        horizontalAlignment = Alignment.Start
-                    ) {
-                        LargeLcdText( //Song name
-                            text = songInfo[i].name,
-                            viewModel = viewModel
-                        )
-                        Spacer(
-                            modifier = Modifier
-                                .height(5.dp)
-                        )
-                        LcdText( // Artist name
-                            text = songInfo[i].artist,
-                            viewModel = viewModel
-                        )
-                        LcdText( // Album name
-                            text = songInfo[i].album,
-                            viewModel = viewModel
-                        )
-                    }
-                    IconButton(
-                        modifier = Modifier
-                            .size(50.dp),
-                        content = {
-                            Icon(
-                                painter = painterResource(R.drawable.more_menu),
-                                contentDescription = "More options",
-                            )
-                        },
-                        onClick = {
-                            viewModel.updateSelectedOptionsSong(songInfo[i])
-                            navController.navigate("song_options")
-                        },
-                        colors = IconButtonDefaults.iconButtonColors(
-                            contentColor = viewModel.iconColor,
-                            disabledContentColor = viewModel.iconColor
-                        )
-                    )
+            LazyColumn(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .fillMaxWidth(0.955f),
+                verticalArrangement = Arrangement.Top,
+                horizontalAlignment = Alignment.Start,
+                state = lazyColumnState,
+            ) {
+                items(lazyColumnSize) { i ->
+                    SongRow(songInfo, viewModel, i, playSongCallback)
                 }
             }
+            ScrollBar(lazyColumnState, viewModel, lazyColumnSize.toFloat())
         }
-        ScrollBar(lazyColumnState, viewModel, lazyColumnSize.toFloat())
+        if (viewModel.showMoreOptions) {
+            MoreOptions(viewModel, mediaController)
+        }
+    }
+}
+
+@Composable
+fun SongRow(
+    songInfo: List<SongInfo>,
+    viewModel: PlayerViewModel,
+    i: Int,
+    playSongCallback: (Int) -> Unit
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(80.dp)
+            .padding(5.dp)
+            .clickable(
+                onClick = {
+                    playSongCallback(i)
+                }
+            ),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.Start
+    ) {
+        Image( // Album art -- the remember {  } may not be necessary
+            bitmap = remember(songInfo[i].albumArt) { songInfo[i].albumArt },
+            modifier = Modifier
+                .size(65.dp),
+            contentDescription = null,
+            contentScale = ContentScale.Crop
+        )
+        Spacer(
+            modifier = Modifier
+                .width(10.dp)
+        )
+        Column(
+            modifier = Modifier
+                .fillMaxHeight()
+                .fillMaxWidth(0.9f),
+            verticalArrangement = Arrangement.Center,
+            horizontalAlignment = Alignment.Start
+        ) {
+            LargeLcdText( //Song name
+                text = songInfo[i].name,
+                viewModel = viewModel
+            )
+            Spacer(
+                modifier = Modifier
+                    .height(5.dp)
+            )
+            LcdText( // Artist name
+                text = songInfo[i].artist,
+                viewModel = viewModel
+            )
+            LcdText( // Album name
+                text = songInfo[i].album,
+                viewModel = viewModel
+            )
+        }
+        MoreOptionsButton(viewModel, songInfo[i])
+    }
+}
+
+@Composable
+fun MoreOptionsButton(viewModel: PlayerViewModel, song: SongInfo) {
+    IconButton(
+        modifier = Modifier
+            .size(50.dp),
+        onClick = {
+            viewModel.showMoreOptions = !viewModel.showMoreOptions
+            viewModel.moreOptionsSelectedSong = song
+        },
+        colors = IconButtonDefaults.iconButtonColors(
+            contentColor = viewModel.iconColor,
+        )
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.more_menu),
+            contentDescription = "More options",
+        )
     }
 }
 
@@ -225,7 +254,7 @@ fun ScrollBar(columnState: LazyListState, viewModel: PlayerViewModel, lazyColumn
             }
             drawRoundRect(
                 topLeft = Offset(0f,tabOffset.value.coerceIn(0f, scrollBarHeight - tabHeight)),
-                color = viewModel.backgroundColor.increaseBrightness(0.05f), // Should probably change the color
+                color = viewModel.backgroundColor.increaseBrightness(0.1f), // Should probably change the color // 0.05f
                 size = Size(30f, tabHeight - 10f),
                 cornerRadius = CornerRadius(30f, 30f),
             )
