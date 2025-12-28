@@ -53,6 +53,8 @@ fun getSongInfo(context: Context): Pair<List<SongInfo>, List<AlbumInfo>> {
         null,
         null
     )
+    val albumCoverNotFoundBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.album_art_not_found).asImageBitmap()
+
     cursor?.use {
         val idColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media._ID)
         val fileNameColumn = it.getColumnIndexOrThrow(MediaStore.Audio.Media.DISPLAY_NAME)
@@ -72,19 +74,15 @@ fun getSongInfo(context: Context): Pair<List<SongInfo>, List<AlbumInfo>> {
             val songUri = ContentUris.withAppendedId(
                 MediaStore.Audio.Media.EXTERNAL_CONTENT_URI, getId
             )
-            var albumCover: Bitmap
-            try {
-                albumCover = contentResolver.loadThumbnail(
+            val albumCover = try {
+                contentResolver.loadThumbnail(
                     songUri,
                     android.util.Size(500,500),
                     null
-                )
+                ).asImageBitmap()
             } catch (_: FileNotFoundException) {
-                albumCover = ImageBitmap(500,500).asAndroidBitmap()
-//                val resBitmap = BitmapFactory.decodeResource(context.resources, R.drawable.album_art_not_found)
-//                val compressedBitmapStream = OutputStream.nullOutputStream()
-//                resBitmap.compress(Bitmap.CompressFormat.WEBP_LOSSY, 40, compressedBitmapStream)
-//                albumCover = BitmapFactory.decodeStream()
+                // albumCover = ImageBitmap(500,500).asAndroidBitmap()
+                albumCoverNotFoundBitmap
             }
             songInfo.add(
                 SongInfo(
@@ -94,7 +92,7 @@ fun getSongInfo(context: Context): Pair<List<SongInfo>, List<AlbumInfo>> {
                     duration,
                     getArtist,
                     getAlbum,
-                    albumCover.asImageBitmap()
+                    albumCover
                 )
             )
         }
