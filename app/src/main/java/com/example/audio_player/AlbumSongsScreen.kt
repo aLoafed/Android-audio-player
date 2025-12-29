@@ -27,6 +27,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -132,7 +133,7 @@ fun AlbumSongsScreen(album: String, songInfo: List<SongInfo>, mediaController: M
                                         mediaController.prepare()
                                         mediaController.seekTo(i, 0L)
                                         mediaController.play()
-                                        viewModel.queuedSongs = albumSongsList
+                                        viewModel.queuedSongs = albumSongsList.toMutableStateList()
                                         viewModel.songIndex = i
 //                                        viewModel.updateAlbumArt(albumSongsList[i].albumArt) !!!! DEBUG !!!! Probably not needed
                                         viewModel.updateSongDuration((albumSongsList[i].time).toLong())

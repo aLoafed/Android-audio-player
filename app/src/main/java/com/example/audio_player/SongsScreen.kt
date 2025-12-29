@@ -40,6 +40,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -49,11 +50,11 @@ import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.MediaItem
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
-import androidx.navigation.NavController
 import kotlinx.coroutines.launch
 
 @ExperimentalFoundationApi
@@ -63,8 +64,7 @@ fun SongsScreen(
     songInfo: List<SongInfo>,
     mediaController: MediaController?,
     viewModel: PlayerViewModel,
-    pagerState: PagerState,
-    navController: NavController
+    pagerState: PagerState
 ) {
     // --------- May want to consider however speed has improved ---------
     // Lazy list prefetch strategy has no effect as there's no nested scrolling
@@ -88,7 +88,7 @@ fun SongsScreen(
             mediaController?.prepare()
             mediaController?.seekTo(i, 0L)
             mediaController?.play()
-            viewModel.queuedSongs = songInfo.toMutableList()
+            viewModel.queuedSongs = songInfo.toMutableStateList()
             viewModel.updateSongDuration((songInfo[i].time).toLong())
             viewModel.songIndex = i
             viewModel.playingFromSongsScreen = true
@@ -114,20 +114,20 @@ fun SongsScreen(
                 state = lazyColumnState,
             ) {
                 items(lazyColumnSize) { i ->
-                    SongRow(songInfo, viewModel, i, playSongCallback)
+                    SongRow(songInfo[i], viewModel, i, playSongCallback)
                 }
             }
             ScrollBar(lazyColumnState, viewModel, lazyColumnSize.toFloat())
         }
         if (viewModel.showMoreOptions) {
-            MoreOptions(viewModel, mediaController)
+            MoreSongOptions(viewModel, mediaController)
         }
     }
 }
 
 @Composable
 fun SongRow(
-    songInfo: List<SongInfo>,
+    songInfo: SongInfo,
     viewModel: PlayerViewModel,
     i: Int,
     playSongCallback: (Int) -> Unit
@@ -145,47 +145,57 @@ fun SongRow(
         verticalAlignment = Alignment.CenterVertically,
         horizontalArrangement = Arrangement.Start
     ) {
-        Image( // Album art -- the remember {  } may not be necessary
-            bitmap = remember(songInfo[i].albumArt) { songInfo[i].albumArt },
-            modifier = Modifier
-                .size(65.dp),
-            contentDescription = null,
-            contentScale = ContentScale.Crop
-        )
+        AlbumCover(songInfo)
         Spacer(
             modifier = Modifier
                 .width(10.dp)
         )
-        Column(
-            modifier = Modifier
-                .fillMaxHeight()
-                .fillMaxWidth(0.9f),
-            verticalArrangement = Arrangement.Center,
-            horizontalAlignment = Alignment.Start
-        ) {
-            LargeLcdText( //Song name
-                text = songInfo[i].name,
-                viewModel = viewModel
-            )
-            Spacer(
-                modifier = Modifier
-                    .height(5.dp)
-            )
-            LcdText( // Artist name
-                text = songInfo[i].artist,
-                viewModel = viewModel
-            )
-            LcdText( // Album name
-                text = songInfo[i].album,
-                viewModel = viewModel
-            )
-        }
-        MoreOptionsButton(viewModel, songInfo[i])
+        SongTextColumn(songInfo, viewModel)
+        MoreOptionsButton(songInfo, viewModel)
     }
 }
 
 @Composable
-fun MoreOptionsButton(viewModel: PlayerViewModel, song: SongInfo) {
+fun AlbumCover(songInfo: SongInfo, size: Dp = 65.dp) {
+    Image( // Album art
+        bitmap = remember(songInfo.albumArt) { songInfo.albumArt },
+        modifier = Modifier
+            .size(size),
+        contentDescription = null,
+        contentScale = ContentScale.Crop
+    )
+}
+
+@Composable
+fun SongTextColumn(songInfo: SongInfo, viewModel: PlayerViewModel) {
+    Column(
+        modifier = Modifier
+            .fillMaxHeight()
+            .fillMaxWidth(0.9f),
+        verticalArrangement = Arrangement.Center,
+        horizontalAlignment = Alignment.Start
+    ) {
+        LargeLcdText( //Song name
+            text = songInfo.name,
+            viewModel = viewModel
+        )
+        Spacer(
+            modifier = Modifier
+                .height(5.dp)
+        )
+        LcdText( // Artist name
+            text = songInfo.artist,
+            viewModel = viewModel
+        )
+        LcdText( // Album name
+            text = songInfo.album,
+            viewModel = viewModel
+        )
+    }
+}
+
+@Composable
+fun MoreOptionsButton(song: SongInfo, viewModel: PlayerViewModel) {
     IconButton(
         modifier = Modifier
             .size(50.dp),
@@ -195,7 +205,8 @@ fun MoreOptionsButton(viewModel: PlayerViewModel, song: SongInfo) {
         },
         colors = IconButtonDefaults.iconButtonColors(
             contentColor = viewModel.iconColor,
-        )
+        ),
+        enabled = !viewModel.showMoreOptions
     ) {
         Icon(
             painter = painterResource(R.drawable.more_menu),

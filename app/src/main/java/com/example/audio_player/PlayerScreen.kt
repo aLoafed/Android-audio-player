@@ -35,6 +35,7 @@ import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.toMutableStateList
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.geometry.CornerRadius
@@ -54,6 +55,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.window.Popup
+import androidx.compose.ui.window.PopupProperties
 import androidx.media3.common.C
 import androidx.media3.common.MediaItem
 import androidx.media3.common.audio.AudioProcessor
@@ -61,8 +63,6 @@ import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.ExoPlayer
 import androidx.media3.session.MediaController
 import java.lang.Thread.sleep
-
-var shuffleSongInfo = listOf<SongInfo>()
 
 @ExperimentalMaterial3Api
 @OptIn(UnstableApi::class)
@@ -158,7 +158,6 @@ fun SeekBarAndOtherControls(
     songInfo: List<SongInfo>,
     audioProcessor: PlayerService.SpectrumAnalyzer
 ) {
-    val tmpSongInfo = mutableListOf<SongInfo>()
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -170,119 +169,8 @@ fun SeekBarAndOtherControls(
         //===================== Other controls =====================//
         // Audio effects
         AudioEffectMenu(viewModel, audioProcessor, mediaController)
-        IconButton( // Repeat controls
-            onClick = {
-                when (viewModel.repeatMode) {
-                    "normal" -> {
-                        mediaController?.repeatMode = ExoPlayer.REPEAT_MODE_ALL
-                        viewModel.repeatMode = "repeatQueue"
-                    }
-
-                    "repeatQueue" -> {
-                        mediaController?.repeatMode = ExoPlayer.REPEAT_MODE_ONE
-                        viewModel.repeatMode = "repeatSong"
-                    }
-
-                    "repeatSong" -> {
-                        mediaController?.repeatMode = ExoPlayer.REPEAT_MODE_OFF
-                        viewModel.repeatMode = "normal"
-                    }
-                }
-            },
-            modifier = Modifier
-                .size(40.dp),
-            colors = IconButtonColors(
-                containerColor = Color.Transparent,
-                contentColor = viewModel.iconColor,
-                disabledContentColor = Color.Transparent,
-                disabledContainerColor = Color.Transparent
-            ),
-            content = {
-                Icon(
-                    painter = (
-                            when (viewModel.repeatMode) {
-                                "normal" -> painterResource(R.drawable.repeat) // R.drawable.repeat
-                                "repeatQueue" -> painterResource(R.drawable.repeat_on) // R.drawable.repeat_on
-                                "repeatSong" -> painterResource(R.drawable.repeat_one_on) // R.drawable.repeat_one_on
-                                else -> painterResource(R.drawable.repeat)
-                            }
-                            ),
-                    contentDescription = "Repeat controls"
-                )
-            }
-        )
-        IconButton( // Shuffle controls
-            onClick = {
-                if (!viewModel.shuffleMode) { // Switching to shuffle
-                    if (!viewModel.playingFromSongsScreen) { // Playing from albums
-                        val tmpShuffledAlbumSongInfo = viewModel.albumSongInfo.shuffled()
-                        tmpSongInfo.clear()
-                        mediaController?.clearMediaItems()
-                        for (i in tmpShuffledAlbumSongInfo) {
-                            tmpSongInfo.add(i)
-                        }
-                        shuffleSongInfo = tmpSongInfo
-                        for (i in shuffleSongInfo) {
-                            mediaController?.addMediaItem(MediaItem.fromUri(i.songUri))
-                        }
-                    } else { // Playing from songs screen
-                        val tmpShuffledSongInfo = songInfo.shuffled()
-                        tmpSongInfo.clear()
-                        mediaController?.clearMediaItems()
-                        for (i in tmpShuffledSongInfo) {
-                            tmpSongInfo.add(i)
-                        }
-                        shuffleSongInfo = tmpSongInfo
-                        for (i in shuffleSongInfo) {
-                            mediaController?.addMediaItem(MediaItem.fromUri(i.songUri))
-                        }
-                    }
-                    viewModel.queuedSongs = shuffleSongInfo.toMutableList()
-                    viewModel.updateLastPlayedUnshuffledSong()
-                    viewModel.songIndex = 0
-                    mediaController?.prepare()
-                    mediaController?.play()
-                } else { // Switching to normal playback
-                    viewModel.songIndex = viewModel.lastPlayedUnshuffledSong
-                    mediaController?.clearMediaItems()
-                    if (viewModel.playingFromSongsScreen) { // Playing from songs screen
-                        viewModel.queuedSongs = songInfo.toMutableList()
-                        for (i in songInfo) {
-                            mediaController?.addMediaItem(MediaItem.fromUri(i.songUri))
-                        }
-                    } else { // Playing from albums screen
-                        viewModel.queuedSongs = viewModel.albumSongInfo
-                        for (i in viewModel.albumSongInfo) {
-                            mediaController?.addMediaItem(MediaItem.fromUri(i.songUri))
-                        }
-                    }
-                    mediaController?.prepare()
-                    mediaController?.seekTo(viewModel.songIndex, 0L)
-                    viewModel.incrementSongIterator(1)
-                }
-                viewModel.shuffleMode = !viewModel.shuffleMode
-            },
-            modifier = Modifier
-                .size(40.dp),
-            colors = IconButtonColors(
-                containerColor = Color.Transparent,
-                contentColor = viewModel.iconColor,
-                disabledContentColor = Color.Transparent,
-                disabledContainerColor = Color.Transparent
-            ),
-            content = {
-                Icon(
-                    painter = (
-                            if (!viewModel.shuffleMode) {
-                                painterResource(R.drawable.arrow_right)
-                            } else {
-                                painterResource(R.drawable.shuffle)
-                            }
-                            ),
-                    contentDescription = "Shuffle controls"
-                )
-            }
-        )
+        RepeatControls(mediaController, viewModel)
+        ShuffleControls(mediaController, viewModel, songInfo)
         Spacer(modifier = Modifier.width(15.dp))
     }
 }
@@ -334,7 +222,7 @@ fun HorizontalPlayingMediaInfo(viewModel: PlayerViewModel) {
     PlayerLcdText(
         try {
             viewModel.queuedSongs[viewModel.songIndex].album
-        } catch (e: IndexOutOfBoundsException) {
+        } catch (_: IndexOutOfBoundsException) {
             ""
         },
         viewModel = viewModel
@@ -411,93 +299,107 @@ fun PlaybackControls(
             .height(height),
         horizontalArrangement = Arrangement.SpaceEvenly
     ) {
-        IconButton(
-            // Previous button
-            modifier = Modifier
-                .size(60.dp),
-            onClick = {
-                if (mediaController != null) {
-                    try {
-                        if (mediaController.currentPosition < 10000L) {
-                            if (mediaController.hasPreviousMediaItem()) {
-                                mediaController.seekToPreviousMediaItem()
-                            }
-                        } else {
-                            mediaController.seekTo(0L)
-                        }
-                    } catch (_: IndexOutOfBoundsException) {
-                    }
-                }
-            },
-            colors = IconButtonColors(
-                containerColor = Color.Transparent,
-                contentColor = viewModel.iconColor,
-                disabledContentColor = Color.Transparent,
-                disabledContainerColor = Color.Transparent
-            ),
-            content = {
-                Icon(
-                    painter = painterResource(R.drawable.skip_previous),
-                    contentDescription = "Previous"
-                )
-            },
-        )
-        IconButton( // Play & pause button
-            onClick = {
-                if (mediaController != null) {
-                    if (mediaController.isPlaying) {
-                        mediaController.pause()
-                    } else {
-                        mediaController.play()
-                    }
-                }
-            },
-            modifier = Modifier
-                .size(60.dp),
-            colors = IconButtonColors(
-                containerColor = Color.Transparent,
-                contentColor = viewModel.iconColor,
-                disabledContentColor = Color.Transparent,
-                disabledContainerColor = Color.Transparent
-            ),
-            content = {
-                Icon(
-                    painter = (
-                            if (!viewModel.isPlaying) {
-                                painterResource(R.drawable.large_play_arrow)
-                            } else {
-                                painterResource(R.drawable.pause)
-                            }
-                            ),
-                    contentDescription = "Play & pause"
-                )
-            }
-        )
-        IconButton(
-            // Skip button
-            modifier = Modifier
-                .size(60.dp),
-            onClick = {
-                if (mediaController != null) {
-                    if (mediaController.hasNextMediaItem()) {
-                        mediaController.seekToNextMediaItem()
-                    }
-                }
-            },
-            colors = IconButtonColors(
-                containerColor = Color.Transparent,
-                contentColor = viewModel.iconColor,
-                disabledContentColor = Color.Transparent,
-                disabledContainerColor = Color.Transparent
-            ),
-            content = {
-                Icon(
-                    painter = painterResource(R.drawable.skip_next),
-                    contentDescription = "Next"
-                )
-            },
-        )
+        PreviousButton(mediaController, viewModel)
+        PlayPauseButton(mediaController, viewModel)
+        SkipButton(mediaController, viewModel)
     }
+}
+
+@Composable
+fun PreviousButton(mediaController: MediaController?, viewModel: PlayerViewModel) {
+    IconButton(
+        modifier = Modifier
+            .size(60.dp),
+        onClick = {
+            if (mediaController != null) {
+                try {
+                    if (mediaController.currentPosition < 10000L) {
+                        if (mediaController.hasPreviousMediaItem()) {
+                            mediaController.seekToPreviousMediaItem()
+                        }
+                    } else {
+                        mediaController.seekTo(0L)
+                    }
+                } catch (_: IndexOutOfBoundsException) {
+                }
+            }
+        },
+        colors = IconButtonColors(
+            containerColor = Color.Transparent,
+            contentColor = viewModel.iconColor,
+            disabledContentColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent
+        ),
+        content = {
+            Icon(
+                painter = painterResource(R.drawable.skip_previous),
+                contentDescription = "Previous"
+            )
+        },
+    )
+}
+
+@Composable
+fun SkipButton(mediaController: MediaController?, viewModel: PlayerViewModel) {
+    IconButton(
+        // Skip button
+        modifier = Modifier
+            .size(60.dp),
+        onClick = {
+            if (mediaController != null) {
+                if (mediaController.hasNextMediaItem()) {
+                    mediaController.seekToNextMediaItem()
+                }
+            }
+        },
+        colors = IconButtonColors(
+            containerColor = Color.Transparent,
+            contentColor = viewModel.iconColor,
+            disabledContentColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent
+        ),
+        content = {
+            Icon(
+                painter = painterResource(R.drawable.skip_next),
+                contentDescription = "Next"
+            )
+        },
+    )
+}
+
+@Composable
+fun PlayPauseButton(mediaController: MediaController?, viewModel: PlayerViewModel) {
+    IconButton( // Play & pause button
+        onClick = {
+            if (mediaController != null) {
+                if (mediaController.isPlaying) {
+                    mediaController.pause()
+                } else {
+                    mediaController.play()
+                }
+            }
+        },
+        modifier = Modifier
+            .size(60.dp),
+        colors = IconButtonColors(
+            containerColor = Color.Transparent,
+            contentColor = viewModel.iconColor,
+            disabledContentColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent
+        ),
+        content = {
+            Icon(
+                painter = (
+                        if (!viewModel.isPlaying) {
+                            painterResource(R.drawable.large_play_arrow)
+                        } else {
+                            painterResource(R.drawable.pause)
+                        }
+                        ),
+                contentDescription = "Play & pause"
+            )
+        }
+    )
 }
 
 @OptIn(UnstableApi::class)
@@ -509,7 +411,6 @@ fun OtherMediaControls(
     songInfo: List<SongInfo>,
     audioProcessor: PlayerService.SpectrumAnalyzer
 ) {
-    val tmpSongInfo = mutableListOf<SongInfo>()
     Row(
         modifier = Modifier
             .fillMaxWidth()
@@ -519,121 +420,132 @@ fun OtherMediaControls(
     ) {
         // Audio effects
         AudioEffectMenu(viewModel, audioProcessor, mediaController)
-        IconButton( // Repeat controls
-            onClick = {
-                when (viewModel.repeatMode) {
-                    "normal" -> {
-                        mediaController?.repeatMode = ExoPlayer.REPEAT_MODE_ALL
-                        viewModel.repeatMode = "repeatQueue"
-                    }
-
-                    "repeatQueue" -> {
-                        mediaController?.repeatMode = ExoPlayer.REPEAT_MODE_ONE
-                        viewModel.repeatMode = "repeatSong"
-                    }
-
-                    "repeatSong" -> {
-                        mediaController?.repeatMode = ExoPlayer.REPEAT_MODE_OFF
-                        viewModel.repeatMode = "normal"
-                    }
-                }
-            },
-            modifier = Modifier
-                .size(40.dp),
-            colors = IconButtonColors(
-                containerColor = Color.Transparent,
-                contentColor = viewModel.iconColor,
-                disabledContentColor = Color.Transparent,
-                disabledContainerColor = Color.Transparent
-            ),
-            content = {
-                Icon(
-                    painter = (
-                            when (viewModel.repeatMode) {
-                                "normal" -> painterResource(R.drawable.repeat) // R.drawable.repeat
-                                "repeatQueue" -> painterResource(R.drawable.repeat_on) // R.drawable.repeat_on
-                                "repeatSong" -> painterResource(R.drawable.repeat_one_on) // R.drawable.repeat_one_on
-                                else -> painterResource(R.drawable.repeat)
-                            }
-                            ),
-                    contentDescription = "Repeat controls"
-                )
-            }
-        )
-        IconButton( // Shuffle controls
-            onClick = {
-                if (!viewModel.shuffleMode) { // Switching to shuffle
-                    if (!viewModel.playingFromSongsScreen) { // Playing from albums
-                        val tmpShuffledAlbumSongInfo = viewModel.albumSongInfo.shuffled()
-                        tmpSongInfo.clear()
-                        mediaController?.clearMediaItems()
-                        for (i in tmpShuffledAlbumSongInfo) {
-                            tmpSongInfo.add(i)
-                        }
-                        shuffleSongInfo = tmpSongInfo
-                        for (i in shuffleSongInfo) {
-                            mediaController?.addMediaItem(MediaItem.fromUri(i.songUri))
-                        }
-                    } else { // Playing from songs screen
-                        val tmpShuffledSongInfo = songInfo.shuffled()
-                        tmpSongInfo.clear()
-                        mediaController?.clearMediaItems()
-                        for (i in tmpShuffledSongInfo) {
-                            tmpSongInfo.add(i)
-                        }
-                        shuffleSongInfo = tmpSongInfo
-                        for (i in shuffleSongInfo) {
-                            mediaController?.addMediaItem(MediaItem.fromUri(i.songUri))
-                        }
-                    }
-                    viewModel.queuedSongs = shuffleSongInfo.toMutableList()
-                    viewModel.updateLastPlayedUnshuffledSong()
-                    viewModel.songIndex = 0
-                    mediaController?.prepare()
-                    mediaController?.play()
-                } else { // Switching to normal playback
-                    viewModel.songIndex = viewModel.lastPlayedUnshuffledSong
-                    mediaController?.clearMediaItems()
-                    if (viewModel.playingFromSongsScreen) { // Playing from songs screen
-                        viewModel.queuedSongs = songInfo.toMutableList()
-                        for (i in songInfo) {
-                            mediaController?.addMediaItem(MediaItem.fromUri(i.songUri))
-                        }
-                    } else { // Playing from albums screen
-                        viewModel.queuedSongs = viewModel.albumSongInfo
-                        for (i in viewModel.albumSongInfo) {
-                            mediaController?.addMediaItem(MediaItem.fromUri(i.songUri))
-                        }
-                    }
-                    mediaController?.prepare()
-                    mediaController?.seekTo(viewModel.songIndex, 0L)
-                    viewModel.incrementSongIterator(1)
-                }
-                viewModel.shuffleMode = !viewModel.shuffleMode
-            },
-            modifier = Modifier
-                .size(40.dp),
-            colors = IconButtonColors(
-                containerColor = Color.Transparent,
-                contentColor = viewModel.iconColor,
-                disabledContentColor = Color.Transparent,
-                disabledContainerColor = Color.Transparent
-            ),
-            content = {
-                Icon(
-                    painter = (
-                            if (!viewModel.shuffleMode) {
-                                painterResource(R.drawable.arrow_right)
-                            } else {
-                                painterResource(R.drawable.shuffle)
-                            }
-                            ),
-                    contentDescription = "Shuffle controls"
-                )
-            }
-        )
+        RepeatControls(mediaController, viewModel)
+        ShuffleControls(mediaController, viewModel, songInfo)
         Spacer(modifier = Modifier.width(15.dp))
     }
+}
+
+@Composable
+fun RepeatControls(mediaController: MediaController?, viewModel: PlayerViewModel) {
+    IconButton( // Repeat controls
+        onClick = {
+            when (viewModel.repeatMode) {
+                "normal" -> {
+                    mediaController?.repeatMode = ExoPlayer.REPEAT_MODE_ALL
+                    viewModel.repeatMode = "repeatQueue"
+                }
+
+                "repeatQueue" -> {
+                    mediaController?.repeatMode = ExoPlayer.REPEAT_MODE_ONE
+                    viewModel.repeatMode = "repeatSong"
+                }
+
+                "repeatSong" -> {
+                    mediaController?.repeatMode = ExoPlayer.REPEAT_MODE_OFF
+                    viewModel.repeatMode = "normal"
+                }
+            }
+        },
+        modifier = Modifier
+            .size(40.dp),
+        colors = IconButtonColors(
+            containerColor = Color.Transparent,
+            contentColor = viewModel.iconColor,
+            disabledContentColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent
+        ),
+        content = {
+            Icon(
+                painter = (
+                        when (viewModel.repeatMode) {
+                            "normal" -> painterResource(R.drawable.repeat)
+                            "repeatQueue" -> painterResource(R.drawable.repeat_on)
+                            "repeatSong" -> painterResource(R.drawable.repeat_one_on)
+                            else -> painterResource(R.drawable.repeat)
+                        }
+                        ),
+                contentDescription = "Repeat controls"
+            )
+        }
+    )
+}
+
+@Composable
+fun ShuffleControls(mediaController: MediaController?, viewModel: PlayerViewModel, songInfo: List<SongInfo>) {
+    val tmpSongInfo = mutableListOf<SongInfo>()
+    IconButton( // Shuffle controls
+        onClick = {
+            if (!viewModel.shuffleMode) { // Switching to shuffle
+                if (!viewModel.playingFromSongsScreen) { // Playing from albums
+                    val tmpShuffledAlbumSongInfo = viewModel.albumSongInfo.shuffled()
+                    tmpSongInfo.clear()
+                    mediaController?.clearMediaItems()
+                    for (i in tmpShuffledAlbumSongInfo) {
+                        tmpSongInfo.add(i)
+                    }
+                    viewModel.shuffleSongInfo = tmpSongInfo
+                    for (i in viewModel.shuffleSongInfo) {
+                        mediaController?.addMediaItem(MediaItem.fromUri(i.songUri))
+                    }
+                } else { // Playing from songs screen
+                    val tmpShuffledSongInfo = songInfo.shuffled()
+                    tmpSongInfo.clear()
+                    mediaController?.clearMediaItems()
+                    for (i in tmpShuffledSongInfo) {
+                        tmpSongInfo.add(i)
+                    }
+                    viewModel.shuffleSongInfo = tmpSongInfo
+                    for (i in viewModel.shuffleSongInfo) {
+                        mediaController?.addMediaItem(MediaItem.fromUri(i.songUri))
+                    }
+                }
+                viewModel.queuedSongs = viewModel.shuffleSongInfo.toMutableStateList()
+                viewModel.updateLastPlayedUnshuffledSong()
+                viewModel.songIndex = 0
+                mediaController?.prepare()
+                mediaController?.play()
+            } else { // Switching to normal playback
+                viewModel.songIndex = viewModel.lastPlayedUnshuffledSong
+                mediaController?.clearMediaItems()
+                if (viewModel.playingFromSongsScreen) { // Playing from songs screen
+                    viewModel.queuedSongs = songInfo.toMutableStateList()
+                    for (i in songInfo) {
+                        mediaController?.addMediaItem(MediaItem.fromUri(i.songUri))
+                    }
+                } else { // Playing from albums screen
+                    viewModel.queuedSongs = viewModel.albumSongInfo.toMutableStateList()
+                    for (i in viewModel.albumSongInfo) {
+                        mediaController?.addMediaItem(MediaItem.fromUri(i.songUri))
+                    }
+                }
+                mediaController?.prepare()
+                mediaController?.seekTo(viewModel.songIndex, 0L)
+                viewModel.incrementSongIterator(1)
+            }
+            viewModel.shuffleMode = !viewModel.shuffleMode
+        },
+        modifier = Modifier
+            .size(40.dp),
+        colors = IconButtonColors(
+            containerColor = Color.Transparent,
+            contentColor = viewModel.iconColor,
+            disabledContentColor = Color.Transparent,
+            disabledContainerColor = Color.Transparent
+        ),
+        content = {
+            Icon(
+                painter = (
+                        if (!viewModel.shuffleMode) {
+                            painterResource(R.drawable.arrow_right)
+                        } else {
+                            painterResource(R.drawable.shuffle)
+                        }
+                        ),
+                contentDescription = "Shuffle controls"
+            )
+        }
+    )
 }
 
 //============================== Seek bar ==============================//
@@ -796,6 +708,7 @@ fun AudioEffectMenu(
             disabledContainerColor = Color.Transparent,
             disabledContentColor = viewModel.iconColor,
         ),
+        // Test the necessity of enabled now that popup is focusable
         enabled = !expanded,
         content = {
             Icon(
@@ -816,6 +729,11 @@ fun AudioEffectMenu(
                 speed = audioProcessor.speed
                 pitch = audioProcessor.pitch
             },
+            properties = PopupProperties(
+                focusable = true,
+                dismissOnBackPress = true,
+                dismissOnClickOutside = true
+            )
         ) {
             Column(
                 modifier = Modifier

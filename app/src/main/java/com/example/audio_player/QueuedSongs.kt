@@ -1,12 +1,10 @@
 package com.example.audio_player
 
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
@@ -25,10 +23,14 @@ import androidx.compose.foundation.lazy.LazyListPrefetchStrategy
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.CornerSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.layout.ContentScale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
 import androidx.media3.common.MediaItem
 import androidx.media3.session.MediaController
@@ -86,7 +88,6 @@ fun SongQueue(viewModel: PlayerViewModel, mediaController: MediaController?) {
                                 mediaController?.prepare()
                                 mediaController?.seekTo(i, 0L)
                                 mediaController?.play()
-//                                viewModel.updateAlbumArt(viewModel.queuedSongs[i].albumArt) !!!! DEBUG !!!! Likely not needed
                                 viewModel.updateSongDuration((viewModel.queuedSongs[i].time).toLong())
                                 viewModel.songIndex = i
                                 viewModel.playingFromSongsScreen = true
@@ -95,43 +96,33 @@ fun SongQueue(viewModel: PlayerViewModel, mediaController: MediaController?) {
                     verticalAlignment = Alignment.CenterVertically,
                     horizontalArrangement = Arrangement.Start
                 ) {
-                    Image( // Album art
-                        bitmap = viewModel.queuedSongs[i].albumArt,
-                        modifier = Modifier
-                            .size(60.dp),
-                        contentDescription = null,
-                        contentScale = ContentScale.Crop
-                    )
+                    AlbumCover(viewModel.queuedSongs[i], 60.dp)
                     Spacer(
                         modifier = Modifier
                             .width(10.dp)
                     )
-                    Column(
-                        modifier = Modifier
-                            .fillMaxSize(),
-                        verticalArrangement = Arrangement.Top,
-                        horizontalAlignment = Alignment.Start
-                    ) {
-                        LargeLcdText( //Song name
-                            text = viewModel.queuedSongs[i].name,
-                            viewModel = viewModel
-                        )
-                        Spacer(
-                            modifier = Modifier
-                                .height(5.dp)
-                        )
-                        LcdText( // Artist name
-                            text = viewModel.queuedSongs[i].artist,
-                            viewModel = viewModel
-                        )
-                        LcdText( // Album name
-                            text = viewModel.queuedSongs[i].album,
-                            viewModel = viewModel
-                        )
-                    }
+                    SongTextColumn(viewModel.queuedSongs[i], viewModel)
+                    RemoveFromQueue(viewModel, mediaController, i)
                 }
             }
         }
         ScrollBar(lazyColumnState, viewModel, lazyListSize.toFloat(), 10.toFloat())
+    }
+}
+
+@Composable
+fun RemoveFromQueue(viewModel: PlayerViewModel, mediaController: MediaController?, index: Int) {
+    IconButton(
+        onClick = {
+            mediaController?.removeMediaItem(index)
+            viewModel.queuedSongs.removeAt(index)
+        },
+        modifier = Modifier.size(36.dp),
+        colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White)
+    ) {
+        Icon(
+            painter = painterResource(R.drawable.remove_from_queue),
+            "Remove song from queue"
+        )
     }
 }

@@ -291,7 +291,7 @@ fun HorizontalTabRow(
             when (currentPage) {
                 0 -> SongQueue(viewModel, mediaController)
                 1 -> PlayerScreen(mediaController, spectrumAnalyzer, viewModel, songInfo)
-                2 -> SongsScreen(songInfo, mediaController, viewModel, pagerState, navController)
+                2 -> SongsScreen(songInfo, mediaController, viewModel, pagerState)
                 3 -> AlbumScreen(albumInfo, viewModel, navController, 6)
             }
         }
@@ -446,7 +446,7 @@ fun PortraitTabRow(
             when (currentPage) {
                 0 -> SongQueue(viewModel, mediaController)
                 1 -> PlayerScreen(mediaController, spectrumAnalyzer, viewModel, songInfo)
-                2 -> SongsScreen(songInfo, mediaController, viewModel, pagerState, navController)
+                2 -> SongsScreen(songInfo, mediaController, viewModel, pagerState)
                 3 -> AlbumScreen(albumInfo, viewModel, navController)
             }
         }

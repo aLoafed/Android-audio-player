@@ -2,10 +2,10 @@ package com.example.audio_player
 
 import android.content.Context
 import android.media.audiofx.PresetReverb
-import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
@@ -23,8 +23,8 @@ class PlayerViewModel : ViewModel() {
     var songIndex by mutableIntStateOf(0)
     var selectedAlbum by mutableStateOf("")
     var albumSongInfo = mutableListOf<SongInfo>()
-    var queuedSongs = mutableListOf<SongInfo>()
-
+    var queuedSongs = mutableStateListOf<SongInfo>()
+    var shuffleSongInfo = listOf<SongInfo>()
     var lastPlayedUnshuffledSong = 0
     //========================= Playing modes =========================
     var isPlaying by mutableStateOf(false)
