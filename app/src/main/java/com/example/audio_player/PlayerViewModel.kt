@@ -18,7 +18,8 @@ import com.example.audio_player.ui.theme.LcdGrey
 
 class PlayerViewModel : ViewModel() {
     //========================= Media info =========================
-    var duration by mutableFloatStateOf(1f) // Length of song
+    var duration by mutableFloatStateOf(0f) // Length of song
+        private set
     var currentSongPosition by mutableFloatStateOf((0f)) // Current position in song
     var songIndex by mutableIntStateOf(0)
     var selectedAlbum by mutableStateOf("")
@@ -30,7 +31,7 @@ class PlayerViewModel : ViewModel() {
     var isPlaying by mutableStateOf(false)
     var playingFromSongsScreen by mutableStateOf(true)
     var shuffleMode by mutableStateOf(false)
-    var repeatMode by mutableStateOf("normal")
+    var repeatMode by mutableStateOf("normal") // Change to ENUM?
     var queueingSongs by mutableStateOf(false)
     //============================ Audio effect ===========================
     var reverbPresetType by mutableIntStateOf(0)
@@ -43,7 +44,7 @@ class PlayerViewModel : ViewModel() {
             else -> 3
         }
     )
-    var valueRange by mutableStateOf(
+    var reverbValueRange by mutableStateOf(
         when (reverbPresetType) {
             PresetReverb.PRESET_SMALLROOM.toInt() -> 0f..2f
             PresetReverb.PRESET_MEDIUMHALL.toInt() -> 0f..1f
@@ -90,9 +91,10 @@ class PlayerViewModel : ViewModel() {
     var loadingFinished by mutableStateOf(false)
     var showBasicLoadingScreen = true
     var showEqualiser by mutableStateOf(true)
+    var audioEffectMenuExpanded by mutableStateOf(false)
     //========================= More options screen =========================//
     var showMoreOptions by mutableStateOf(false)
-    lateinit var moreOptionsSelectedSong: SongInfo // May need to be mutable state
+    lateinit var moreOptionsSelectedSong: SongInfo
     //========================= Init from Json =========================//
     fun initViewModel(context: Context) {
         val settingsManager = SettingsManager(context)
@@ -161,7 +163,7 @@ class PlayerViewModel : ViewModel() {
         currentSongPosition = time.toFloat() / 1000f
     }
     fun updateSongDuration(time: Long) {
-        duration = time.toFloat()
+        duration = time / 1000f
     }
     fun updateSongPosition(mediaController: MediaController?, time: Long) {
         mediaController?.seekTo(time * 1000)

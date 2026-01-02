@@ -9,10 +9,11 @@ import androidx.media3.common.Player
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.session.MediaController
 
+@OptIn(UnstableApi::class)
 class PlayerListener(
     private val applicationContext: Context,
     private val viewModel: PlayerViewModel,
-    private val mediaController: MediaController?,
+    private val mediaController: MediaController?
 ) : Player.Listener {
     @OptIn(UnstableApi::class)
     override fun onIsPlayingChanged(isPlaying: Boolean) {
@@ -26,15 +27,15 @@ class PlayerListener(
         reason: Int
     ) {
         super.onMediaItemTransition(mediaItem, reason)
+        if (mediaController == null) { return }
+
         if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_AUTO) {
             viewModel.incrementSongIterator(1)
         } else if (reason == Player.MEDIA_ITEM_TRANSITION_REASON_SEEK) {
-            mediaController?.let {
-                if (it.currentMediaItemIndex > viewModel.songIndex) {
-                    viewModel.incrementSongIterator(1)
-                } else {
-                    viewModel.incrementSongIterator(-1)
-                }
+            if (mediaController.currentMediaItemIndex > viewModel.songIndex) {
+                viewModel.incrementSongIterator(1)
+            } else {
+                viewModel.incrementSongIterator(-1)
             }
         }
     }

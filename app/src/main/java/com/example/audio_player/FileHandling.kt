@@ -2,36 +2,12 @@ package com.example.audio_player
 
 import android.content.ContentUris
 import android.content.Context
-import android.graphics.Bitmap
 import android.graphics.BitmapFactory
-import android.net.Uri
 import android.provider.MediaStore
 import androidx.annotation.OptIn
-import androidx.compose.ui.graphics.ImageBitmap
-import androidx.compose.ui.graphics.asAndroidBitmap
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.media3.common.util.UnstableApi
-import java.io.BufferedInputStream
-import java.io.DataOutputStream
 import java.io.FileNotFoundException
-import java.io.InputStream
-import java.io.InputStreamReader
-import java.io.OutputStream
-
-data class SongInfo(
-    val name: String,
-    val fileName: String,
-    val songUri: Uri,
-    val time: Float,
-    val artist: String,
-    val album: String,
-    val albumArt: ImageBitmap
-)
-
-data class AlbumInfo(
-    val albumName: String,
-    val albumArt: ImageBitmap
-)
 
 @OptIn(UnstableApi::class)
 fun getSongInfo(context: Context): Pair<List<SongInfo>, List<AlbumInfo>> {

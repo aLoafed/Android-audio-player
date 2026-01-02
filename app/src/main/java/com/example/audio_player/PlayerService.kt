@@ -6,7 +6,6 @@ import android.os.Handler
 import androidx.media3.common.AuxEffectInfo
 import androidx.media3.common.audio.AudioProcessor
 import androidx.media3.common.audio.SonicAudioProcessor
-import androidx.media3.common.util.Log
 import androidx.media3.common.util.UnstableApi
 import androidx.media3.exoplayer.DefaultRenderersFactory
 import androidx.media3.exoplayer.ExoPlayer
@@ -37,16 +36,16 @@ class PlayerService : MediaSessionService() {
 
     object SpectrumAnalyzer : AudioProcessor {
         private val _eqStateFlow = MutableStateFlow(
-            EQDataClass(
+            VisualiserData(
                 doubleArrayOf(),
                 0.0,
                 1000L
             )
         )
-        val eqStateFlow: StateFlow<EQDataClass> = _eqStateFlow.asStateFlow()
+        val eqStateFlow: StateFlow<VisualiserData> = _eqStateFlow.asStateFlow()
         var speed = 1f
         var pitch = 1f
-        var equaliserIsOn = false
+        var visualiserIsOn = false
         private val sonicAudioProcessor = SonicAudioProcessor()
         private var outputBuffer: ByteBuffer = AudioProcessor.EMPTY_BUFFER
         private const val ARRAY_SIZE = 512
@@ -108,7 +107,7 @@ class PlayerService : MediaSessionService() {
             } else {
                 outputBuffer
             }
-            if (equaliserIsOn) {
+            if (visualiserIsOn) {
                 //============================ Collecting buffer data ============================//
                 val shortBuffer = result.asShortBuffer()// analysisBuffer.asShortBuffer()
                 val fftArray = DoubleArray(ARRAY_SIZE) // 512 as it's a power of 2 and isn't too laggy // Current though laggy is 1024
@@ -119,7 +118,7 @@ class PlayerService : MediaSessionService() {
                         buffer = shortBuffer.get()
                         bufferVolume += (buffer * buffer).toDouble() // To cancel out the - & + values
                         fftArray[i] = buffer / 32768.0 // Normalisation
-                    } catch (e: BufferUnderflowException) {
+                    } catch (_: BufferUnderflowException) {
                         fftArray[i] = 0.0
                         bufferVolume += 0.0
                     }
@@ -147,7 +146,7 @@ class PlayerService : MediaSessionService() {
 
                 val audioLatency = 1000L
                 _eqStateFlow.tryEmit(
-                    EQDataClass(
+                    VisualiserData(
                         eqList,
                         volume,
                         audioLatency
@@ -183,7 +182,7 @@ class PlayerService : MediaSessionService() {
             endOfStreamQueued = false
             outputBuffer = AudioProcessor.EMPTY_BUFFER
         }
-        fun frequencyCalculator(absValueList: DoubleArray): DoubleArray {
+        private fun frequencyCalculator(absValueList: DoubleArray): DoubleArray {
             val tempList = DoubleArray(7)
             tempList[0] = (absValueList[1])
             tempList[1] = (absValueList[2])
@@ -194,10 +193,6 @@ class PlayerService : MediaSessionService() {
             tempList[6] = (absValueList[205])
             return tempList
         }
-    }
-
-    fun getAudioProcessor(): SpectrumAnalyzer {
-        return SpectrumAnalyzer
     }
 
     override fun onCreate() {
@@ -241,7 +236,6 @@ class PlayerService : MediaSessionService() {
         player = ExoPlayer.Builder(this)
             .setRenderersFactory(renderersFactory)
             .build()
-//        val mediaSessionCallback = object : MediaSession.Callback{}
         mediaSession = MediaSession.Builder(this, player)
             .build()
         SpectrumAnalyzer.setReverbId(player)
@@ -253,6 +247,7 @@ class PlayerService : MediaSessionService() {
             release()
             mediaSession = null
         }
+//        stopSelf() -- May not be needed
         super.onDestroy()
     }
 }

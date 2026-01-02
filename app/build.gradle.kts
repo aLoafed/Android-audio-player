@@ -46,7 +46,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.kotlinx.serialization.json) // Apache 2.0
     implementation(libs.jtransforms) // Custom JTransform license
     implementation(libs.colorpicker.compose) // Apache 2.0

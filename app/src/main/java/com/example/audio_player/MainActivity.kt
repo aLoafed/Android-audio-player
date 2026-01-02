@@ -39,6 +39,7 @@ import androidx.media3.session.MediaController
 import androidx.media3.session.SessionToken
 import com.example.audio_player.ui.theme.Audio_playerTheme
 import com.example.audio_player.ui.theme.lcdFont
+import com.google.common.util.concurrent.ListenableFuture
 import com.google.common.util.concurrent.MoreExecutors
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -57,7 +58,9 @@ class MainActivity : ComponentActivity() {
             }
         }
     )
-    val mediaSessionService = PlayerService()
+//    val mediaSessionService = PlayerService()
+
+    lateinit var controllerFuture: ListenableFuture<MediaController>
 
     @SuppressLint("InlinedApi")
     @ExperimentalFoundationApi
@@ -66,7 +69,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         var songInfo: List<SongInfo>?
         var albumInfo: List<AlbumInfo>?
-        var mediaInfoPair: Pair<List<SongInfo>, List<AlbumInfo>>? = null
+        var mediaInfoPair: Pair<List<SongInfo>, List<AlbumInfo>>?
         //==================== Check & request permissions ====================//
         val requestPermissionLauncher = registerForActivityResult(
             contract = ActivityResultContracts.RequestMultiplePermissions(),
@@ -124,11 +127,11 @@ class MainActivity : ComponentActivity() {
 
         // Init media dependencies
         var mediaController: MediaController? = null
-        val controllerFuture = MediaController.Builder(
+        controllerFuture = MediaController.Builder(
             this,
             SessionToken(
                 this,
-                ComponentName(this, mediaSessionService::class.java)
+                ComponentName(this, PlayerService::class.java) // ComponentName(this, mediaSessionService::class.java)
             )
         ).buildAsync()
         controllerFuture.addListener(
@@ -136,8 +139,8 @@ class MainActivity : ComponentActivity() {
             MoreExecutors.directExecutor()
         )
         lifecycleScope.launch {
-            val audioProcessor = mediaSessionService.getAudioProcessor()
-            audioProcessor.equaliserIsOn = true
+            val audioProcessor = PlayerService.SpectrumAnalyzer
+            audioProcessor.visualiserIsOn = true
             mediaInfoPair = requestInitPermissions(applicationContext, requestPermissionLauncher)
 
             enableEdgeToEdge()
@@ -181,10 +184,17 @@ class MainActivity : ComponentActivity() {
                             while (true) {
                                 mediaController.let {
                                     if (it.duration != C.TIME_UNSET) {
-                                        viewModel.updateSongDuration(time = mediaController.duration / 1000)
+//                                        if (audioProcessor.usingSonicProcessor) {
+//                                            viewModel.updateSongDuration(
+//                                                (mediaController.duration / audioProcessor.speed).toLong()
+//                                            )
+//                                        } else {
+//                                            viewModel.updateSongDuration(mediaController.duration)
+//                                        }
+                                        viewModel.updateSongDuration(mediaController.duration)
                                     }
+                                    delay(1.seconds / 30)
                                 }
-                                delay(1.seconds / 30)
                             }
                         }
                     }
@@ -193,20 +203,22 @@ class MainActivity : ComponentActivity() {
         }
     }
 
-    override fun onStop() {
-        super.onStop()
-        val spectrumAnalyzer = mediaSessionService.getAudioProcessor()
-        spectrumAnalyzer.equaliserIsOn = false
-    }
-
     override fun onResume() {
         super.onResume()
-        val audioProcessor = mediaSessionService.getAudioProcessor()
-        audioProcessor.equaliserIsOn = true
+//        val audioProcessor = mediaSessionService.getAudioProcessor()
+        PlayerService.SpectrumAnalyzer.visualiserIsOn = true
+    }
+
+    override fun onStop() {
+        super.onStop()
+//        val spectrumAnalyzer = mediaSessionService.getAudioProcessor()
+        PlayerService.SpectrumAnalyzer.visualiserIsOn = false
     }
 
     override fun onDestroy() {
         // For fixing mediaSessionService binding issues, tried: mediaSessionService.pauseAllPlayersAndStopSelf()
+//        mediaSessionService.stopSelf()
+        MediaController.releaseFuture(controllerFuture)
         super.onDestroy()
     }
 }
@@ -215,7 +227,7 @@ class MainActivity : ComponentActivity() {
 fun requestInitPermissions(
     context: Context,
     requestPermissionLauncher: ActivityResultLauncher<Array<String>>
-): Pair<List<SongInfo>, List<AlbumInfo>>?  {
+): Pair<List<SongInfo>, List<AlbumInfo>>? {
     val permissionList = mutableListOf<String>()
     var mediaInfoPair: Pair<List<SongInfo>, List<AlbumInfo>>? = null
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -239,7 +251,7 @@ fun requestInitPermissions(
         }
     }
     if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-        when(
+        when (
             ContextCompat.checkSelfPermission(
                 context,
                 Manifest.permission.READ_MEDIA_AUDIO
@@ -248,12 +260,13 @@ fun requestInitPermissions(
             PackageManager.PERMISSION_DENIED -> {
                 permissionList.add(Manifest.permission.READ_MEDIA_AUDIO)
             }
+
             PackageManager.PERMISSION_GRANTED -> {
                 mediaInfoPair = getSongInfo(context)
             }
         }
     } else {
-        when(
+        when (
             ContextCompat.checkSelfPermission(
                 context,
                 Manifest.permission.READ_EXTERNAL_STORAGE
@@ -290,7 +303,12 @@ fun LcdText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewMo
 }
 
 @Composable
-fun LargeLcdText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel, lineHeight: TextUnit = 17.sp) {
+fun LargeLcdText(
+    text: String,
+    modifier: Modifier = Modifier,
+    viewModel: PlayerViewModel,
+    lineHeight: TextUnit = 17.sp
+) {
     Text(
         modifier = modifier,
         text = text,

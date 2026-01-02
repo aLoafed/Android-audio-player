@@ -60,7 +60,7 @@ fun SpectrumAnalyzer(
     remember(stateFlowData.value) {
         scope.launch {
             delay(1850)
-            eqList = stateFlowData.value.eqList
+            eqList = stateFlowData.value.visualiserList
             volume = stateFlowData.value.volume
         }
     }

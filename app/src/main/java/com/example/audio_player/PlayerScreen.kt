@@ -26,6 +26,7 @@ import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.IconButtonColors
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Slider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -418,7 +419,6 @@ fun OtherMediaControls(
         horizontalArrangement = Arrangement.End,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        // Audio effects
         AudioEffectMenu(viewModel, audioProcessor, mediaController)
         RepeatControls(mediaController, viewModel)
         ShuffleControls(mediaController, viewModel, songInfo)
@@ -685,9 +685,10 @@ fun AudioEffectMenu(
     audioProcessor: PlayerService.SpectrumAnalyzer,
     mediaController: MediaController?,
 ) {
-    var expanded by remember { mutableStateOf(false) }
-    var speed by remember { mutableFloatStateOf(audioProcessor.speed) }
-    var pitch by remember { mutableFloatStateOf(audioProcessor.pitch) }
+//    var expanded by remember { mutableStateOf(false) }
+    val speed = TmpAudioEffectValue(remember { mutableFloatStateOf(audioProcessor.speed) })// by remember { mutableFloatStateOf(audioProcessor.speed) }
+    val pitch = TmpAudioEffectValue(remember { mutableFloatStateOf(audioProcessor.pitch) })// by remember { mutableFloatStateOf(audioProcessor.pitch) }
+
     val popupOffset =
         if (LocalConfiguration.current.orientation == Configuration.ORIENTATION_PORTRAIT) {
             IntOffset(175, -345)
@@ -696,8 +697,8 @@ fun AudioEffectMenu(
         }
     IconButton( // Speed & pitch change
         onClick = {
-            if (!expanded) {
-                expanded = true
+            if (!viewModel.audioEffectMenuExpanded) {
+                viewModel.audioEffectMenuExpanded = true
             }
         },
         modifier = Modifier
@@ -709,25 +710,24 @@ fun AudioEffectMenu(
             disabledContentColor = viewModel.iconColor,
         ),
         // Test the necessity of enabled now that popup is focusable
-        enabled = !expanded,
-        content = {
-            Icon(
-                painter = (
-                        painterResource(R.drawable.speed_pitch)
-                        ),
-                contentDescription = "Audio effects"
-            )
-        }
-    )
+        enabled = !viewModel.audioEffectMenuExpanded,
+    ) {
+        Icon(
+            painter = (
+                    painterResource(R.drawable.speed_pitch)
+                    ),
+            contentDescription = "Audio effects"
+        )
+    }
     // Popup audio effects menu
-    if (expanded) {
+    if (viewModel.audioEffectMenuExpanded) {
         Popup(
             alignment = Alignment.Center,
             offset = popupOffset,
             onDismissRequest = {
-                expanded = false
-                speed = audioProcessor.speed
-                pitch = audioProcessor.pitch
+                viewModel.audioEffectMenuExpanded = false
+                speed.value = mutableFloatStateOf(audioProcessor.speed)
+                pitch.value = mutableFloatStateOf(audioProcessor.pitch)
             },
             properties = PopupProperties(
                 focusable = true,
@@ -763,160 +763,124 @@ fun AudioEffectMenu(
                 ) {
                     val sliderHeight = 120.dp // Is read as width due to rotation
                     // Speed slider
-                    Column(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .animateContentSize()
-                            .width(sliderColumnWidth),
-                        verticalArrangement = Arrangement.SpaceEvenly,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        LcdText(
-                            "Speed:",
-                            viewModel = viewModel
-                        )
-                        Slider(
-                            modifier = Modifier
-                                .layout { measurable, constraints ->
-                                    val placeable = measurable.measure(
-                                        Constraints.fixed(
-                                            width = sliderHeight.roundToPx(),
-                                            height = 15.dp.roundToPx()
-                                        )
-                                    )
-                                    layout(15.dp.roundToPx(), sliderHeight.roundToPx()) {
-                                        placeable.place(
-                                            x = -(sliderHeight.roundToPx() - 15.dp.roundToPx()) / 2,
-                                            y = (sliderHeight.roundToPx() - 15.dp.roundToPx()) / 2,
-                                        )
-                                    }
-                                }
-                                .graphicsLayer(
-                                    rotationZ = -90f
-                                )
-                                .size(sliderHeight, 15.dp),
-                            value = speed,
-                            valueRange = 0f..2f,
-                            steps = 39, // For 0.05 increments
-                            onValueChange = {
-                                speed = it
-                            },
-                            thumb = {
-                                SliderThumb(viewModel)
-                            },
-                            track = {
-                                SettingsSliderTrack(viewModel)
-                            },
-                        )
-                        LargeLcdText(
-                            "%.2f".format(speed),
-                            viewModel = viewModel,
-                            lineHeight = 1.sp
-                        )
-                    }
-
-                    // Pitch slider
-                    Column(
-                        modifier = Modifier
-                            .fillMaxHeight()
-                            .animateContentSize()
-                            .width(sliderColumnWidth),
-                        verticalArrangement = Arrangement.SpaceEvenly,
-                        horizontalAlignment = Alignment.CenterHorizontally
-                    ) {
-                        LcdText(
-                            "Pitch:",
-                            viewModel = viewModel
-                        )
-                        Slider(
-                            value = pitch,
-                            valueRange = 0f..2f,
-                            steps = 39, // For 0.05 increments
-                            modifier = Modifier
-                                .layout { measurable, constraints ->
-                                    val placeable = measurable.measure(
-                                        Constraints.fixed(
-                                            width = sliderHeight.roundToPx(),
-                                            height = 15.dp.roundToPx()
-                                        )
-                                    )
-                                    layout(15.dp.roundToPx(), sliderHeight.roundToPx()) {
-                                        placeable.place(
-                                            x = -(sliderHeight.roundToPx() - 15.dp.roundToPx()) / 2,
-                                            y = (sliderHeight.roundToPx() - 15.dp.roundToPx()) / 2,
-                                        )
-                                    }
-                                }
-                                .graphicsLayer(
-                                    rotationZ = -90f
-                                )
-                                .size(sliderHeight, 15.dp),
-                            onValueChange = {
-                                pitch = it
-                            },
-                            thumb = {
-                                SliderThumb(viewModel)
-                            },
-                            track = {
-                                SettingsSliderTrack(viewModel)
-                            },
-                        )
-                        LargeLcdText(
-                            "%.2f".format(pitch),
-                            viewModel = viewModel
-                        )
-                    }
+                    SpeedPitchSlider(viewModel, sliderColumnWidth, sliderHeight, speed, "Speed")
+                    SpeedPitchSlider(viewModel, sliderColumnWidth, sliderHeight, pitch, "Pitch")
                     ReverbTypeSlider(viewModel, sliderColumnWidth, sliderHeight)
                     ReverbValueSlider(viewModel, sliderColumnWidth, sliderHeight)
                 }
-                // Apply changes
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(40.dp),
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.SpaceBetween // Arrangement.End for only apply changes
-                ) {
-                    IconButton(
-                        modifier = Modifier
-                            .size(50.dp),
-                        onClick = {
-                            mediaController?.pause()
-                            audioProcessor.speed = speed
-                            audioProcessor.pitch = pitch
-                            audioProcessor.setReverbPreset((viewModel.reverbPresetType + viewModel.reverbPresetValue).toShort())
-                            if (audioProcessor.pitch != 1f || audioProcessor.speed != 1f) {
-                                audioProcessor.usingSonicProcessor = true
-                            } else {
-                                false
-                            }
-                            audioProcessor.configure(
-                                AudioProcessor.AudioFormat(
-                                    44100,
-                                    2,
-                                    C.ENCODING_PCM_16BIT
-                                )
-                            )
-                            audioProcessor.flush()
-                            mediaController?.play()
-                            expanded = false
-                        },
-                        content = {
-                            Icon(
-                                painterResource(R.drawable.done_tick),
-                                contentDescription = "Apply changes"
-                            )
-                        },
-                        colors = IconButtonColors(
-                            containerColor = Color.Transparent,
-                            contentColor = viewModel.iconColor,
-                            disabledContentColor = Color.Transparent,
-                            disabledContainerColor = Color.Transparent
-                        ),
-                    )
-                }
+                ApplyChangesButton(mediaController, audioProcessor, speed, pitch, viewModel)
             }
         }
+    }
+}
+
+@OptIn(UnstableApi::class)
+@Composable
+fun ApplyChangesButton(
+    mediaController: MediaController?,
+    audioProcessor: PlayerService.SpectrumAnalyzer,
+    speed: TmpAudioEffectValue,
+    pitch: TmpAudioEffectValue,
+    viewModel: PlayerViewModel
+) {
+    Row(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(40.dp),
+        verticalAlignment = Alignment.CenterVertically,
+        horizontalArrangement = Arrangement.SpaceBetween // Arrangement.End for only apply changes
+    ) {
+        IconButton(
+            modifier = Modifier
+                .size(50.dp),
+            onClick = {
+                val tmpIsPlaying = viewModel.isPlaying
+                if (tmpIsPlaying) { mediaController?.pause() }
+                audioProcessor.speed = speed.value.floatValue
+                audioProcessor.pitch = pitch.value.floatValue
+                audioProcessor.setReverbPreset((viewModel.reverbPresetType + viewModel.reverbPresetValue).toShort())
+                if (audioProcessor.pitch != 1f || audioProcessor.speed != 1f) {
+                    audioProcessor.usingSonicProcessor = true
+                } else {
+                    audioProcessor.usingSonicProcessor = false
+                }
+                audioProcessor.configure(
+                    AudioProcessor.AudioFormat(
+                        44100,
+                        2,
+                        C.ENCODING_PCM_16BIT
+                    )
+                )
+                audioProcessor.flush()
+                if (tmpIsPlaying) { mediaController?.play() }
+                viewModel.updateSongDuration(
+                    audioProcessor.getDurationAfterProcessorApplied(viewModel.duration.toLong())
+                )
+                viewModel.audioEffectMenuExpanded = false
+            },
+            colors = IconButtonDefaults.iconButtonColors(contentColor = viewModel.iconColor)
+        ) {
+            Icon(
+                painterResource(R.drawable.done_tick),
+                contentDescription = "Apply changes"
+            )
+        }
+    }
+}
+
+@kotlin.OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun SpeedPitchSlider(viewModel: PlayerViewModel, sliderColumnWidth: Dp, sliderHeight: Dp, value: TmpAudioEffectValue, type: String) {
+    Column(
+        modifier = Modifier
+            .fillMaxHeight()
+            .animateContentSize()
+            .width(sliderColumnWidth),
+        verticalArrangement = Arrangement.SpaceEvenly,
+        horizontalAlignment = Alignment.CenterHorizontally
+    ) {
+        LcdText(
+            "$type:",
+            viewModel = viewModel
+        )
+        Slider(
+            modifier = Modifier
+                .layout { measurable, constraints ->
+                    val placeable = measurable.measure(
+                        Constraints.fixed(
+                            width = sliderHeight.roundToPx(),
+                            height = 15.dp.roundToPx()
+                        )
+                    )
+                    layout(15.dp.roundToPx(), sliderHeight.roundToPx()) {
+                        placeable.place(
+                            x = -(sliderHeight.roundToPx() - 15.dp.roundToPx()) / 2,
+                            y = (sliderHeight.roundToPx() - 15.dp.roundToPx()) / 2,
+                        )
+                    }
+                }
+                .graphicsLayer(
+                    rotationZ = -90f
+                )
+                .size(sliderHeight, 15.dp),
+            value = value.value.floatValue,
+            valueRange = 0f..2f,
+            steps = 39, // For 0.05 increments
+            onValueChange = {
+                value.value.floatValue = it
+            },
+            thumb = {
+                SliderThumb(viewModel)
+            },
+            track = {
+                SettingsSliderTrack(viewModel)
+            },
+        )
+        LargeLcdText(
+            "%.2f".format(value.value.floatValue),
+            viewModel = viewModel,
+            lineHeight = 1.sp
+        )
     }
 }
 
@@ -972,10 +936,10 @@ fun ReverbTypeSlider(
                     viewModel.showReverbValueSlider = true
                     if (viewModel.reverbPresetType == PresetReverb.PRESET_SMALLROOM.toInt()) {
                         viewModel.steps = 3
-                        viewModel.valueRange = 0f..2f
+                        viewModel.reverbValueRange = 0f..2f
                     } else {
                         viewModel.steps = 2
-                        viewModel.valueRange = 0f..1f
+                        viewModel.reverbValueRange = 0f..1f
                     }
                 } else {
                     viewModel.menuWidth = 180.dp
@@ -1027,7 +991,7 @@ fun ReverbValueSlider(
             val reverbValueSliderHeight = sliderHeight - 15.dp
             Slider(
                 value = viewModel.reverbPresetValue.toFloat(),
-                valueRange = viewModel.valueRange,
+                valueRange = viewModel.reverbValueRange,
                 steps = viewModel.steps,
                 modifier = Modifier
                     .layout { measurable, constraints ->
