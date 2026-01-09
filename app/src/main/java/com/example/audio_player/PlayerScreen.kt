@@ -685,7 +685,6 @@ fun AudioEffectMenu(
     audioProcessor: PlayerService.SpectrumAnalyzer,
     mediaController: MediaController?,
 ) {
-//    var expanded by remember { mutableStateOf(false) }
     val speed = TmpAudioEffectValue(remember { mutableFloatStateOf(audioProcessor.speed) })// by remember { mutableFloatStateOf(audioProcessor.speed) }
     val pitch = TmpAudioEffectValue(remember { mutableFloatStateOf(audioProcessor.pitch) })// by remember { mutableFloatStateOf(audioProcessor.pitch) }
 
@@ -709,7 +708,6 @@ fun AudioEffectMenu(
             disabledContainerColor = Color.Transparent,
             disabledContentColor = viewModel.iconColor,
         ),
-        // Test the necessity of enabled now that popup is focusable
         enabled = !viewModel.audioEffectMenuExpanded,
     ) {
         Icon(
@@ -788,7 +786,7 @@ fun ApplyChangesButton(
             .fillMaxWidth()
             .height(40.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.SpaceBetween // Arrangement.End for only apply changes
+        horizontalArrangement = Arrangement.SpaceBetween
     ) {
         IconButton(
             modifier = Modifier
@@ -799,11 +797,7 @@ fun ApplyChangesButton(
                 audioProcessor.speed = speed.value.floatValue
                 audioProcessor.pitch = pitch.value.floatValue
                 audioProcessor.setReverbPreset((viewModel.reverbPresetType + viewModel.reverbPresetValue).toShort())
-                if (audioProcessor.pitch != 1f || audioProcessor.speed != 1f) {
-                    audioProcessor.usingSonicProcessor = true
-                } else {
-                    audioProcessor.usingSonicProcessor = false
-                }
+                audioProcessor.usingSonicProcessor = audioProcessor.pitch != 1f || audioProcessor.speed != 1f
                 audioProcessor.configure(
                     AudioProcessor.AudioFormat(
                         44100,

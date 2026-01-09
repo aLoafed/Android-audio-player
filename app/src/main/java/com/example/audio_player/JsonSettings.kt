@@ -19,7 +19,6 @@ data class SettingsData(
     val sliderThumbColor: Int = Color.White.toArgb(),
     val sliderTrackColor: Int = changeBrightness(Color.White.toArgb(), 0.8f).toArgb(),
     val customColors: Map<String, Int>,
-    val showBasicLoadingScreen: Boolean = true,
     val showEqualiser: Boolean = true,
 )
 

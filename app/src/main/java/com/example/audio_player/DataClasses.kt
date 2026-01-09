@@ -8,7 +8,27 @@ data class VisualiserData(
     val visualiserList: DoubleArray,
     val volume: Double,
     val latency: Long
-)
+) {
+    override fun equals(other: Any?): Boolean {
+        if (this === other) return true
+        if (javaClass != other?.javaClass) return false
+
+        other as VisualiserData
+
+        if (volume != other.volume) return false
+        if (latency != other.latency) return false
+        if (!visualiserList.contentEquals(other.visualiserList)) return false
+
+        return true
+    }
+
+    override fun hashCode(): Int {
+        var result = volume.hashCode()
+        result = 31 * result + latency.hashCode()
+        result = 31 * result + visualiserList.contentHashCode()
+        return result
+    }
+}
 
 data class SongInfo(
     val name: String,

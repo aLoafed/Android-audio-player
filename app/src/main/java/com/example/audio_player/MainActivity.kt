@@ -12,26 +12,21 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.ActivityResultLauncher
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.activity.viewModels
 import androidx.annotation.OptIn
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.material3.ExperimentalMaterial3Api
-import androidx.compose.material3.LocalTextStyle
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
-import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.TextUnit
 import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import androidx.core.graphics.ColorUtils
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.media3.common.C
 import androidx.media3.common.util.UnstableApi
@@ -48,18 +43,7 @@ import kotlin.time.Duration.Companion.seconds
 @kotlin.OptIn(ExperimentalMaterial3Api::class)
 @UnstableApi
 class MainActivity : ComponentActivity() {
-    val viewModel by viewModels<PlayerViewModel>(
-        factoryProducer = {
-            object : ViewModelProvider.Factory {
-                override fun <T : ViewModel> create(modelClass: Class<T>): T {
-                    return PlayerViewModel(
-                    ) as T
-                }
-            }
-        }
-    )
-//    val mediaSessionService = PlayerService()
-
+    val viewModel = PlayerViewModel()
     lateinit var controllerFuture: ListenableFuture<MediaController>
 
     @SuppressLint("InlinedApi")
@@ -145,11 +129,7 @@ class MainActivity : ComponentActivity() {
 
             enableEdgeToEdge()
             setContent {
-                if (viewModel.showBasicLoadingScreen) {
-                    BasicLoadingScreen(viewModel)
-                } else {
-                    DetailedLoadingScreen(viewModel)
-                }
+                BasicLoadingScreen(viewModel)
             }
 
             while (mediaController == null || mediaInfoPair == null) {
@@ -351,25 +331,6 @@ fun PlayerLcdText(text: String, modifier: Modifier = Modifier, viewModel: Player
         fontFamily = lcdFont,
         fontWeight = FontWeight.Normal,
         textAlign = TextAlign.Center,
-    )
-}
-
-@Composable
-fun ExtraLargeLcdText(
-    text: String,
-    modifier: Modifier = Modifier,
-    viewModel: PlayerViewModel,
-    style: TextStyle = LocalTextStyle.current
-) {
-    Text(
-        modifier = modifier,
-        text = text,
-        color = viewModel.textColor,
-        fontSize = 30.sp,
-        fontFamily = lcdFont,
-        fontWeight = FontWeight.Normal,
-        textAlign = TextAlign.Center,
-        style = style
     )
 }
 

@@ -6,6 +6,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableFloatStateOf
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.graphics.Color
@@ -60,7 +61,7 @@ class PlayerViewModel : ViewModel() {
     var eqTextColor = LcdBlueWhite
     var sliderThumbColor = Color.White
     var sliderTrackColor = Color.White
-    val colorMap = mutableMapOf(
+    val colorMap = mutableStateMapOf(
         "Dark blue" to LcdGrey,
         "Red" to Color.Red,
         "Green" to Color.Green,
@@ -89,7 +90,6 @@ class PlayerViewModel : ViewModel() {
     val customColorMap = mutableMapOf<String, Int>()
     //========================= Miscellaneous/Settings =========================//
     var loadingFinished by mutableStateOf(false)
-    var showBasicLoadingScreen = true
     var showEqualiser by mutableStateOf(true)
     var audioEffectMenuExpanded by mutableStateOf(false)
     //========================= More options screen =========================//
@@ -112,7 +112,6 @@ class PlayerViewModel : ViewModel() {
             intToColorMap[i] = Color(settings.customColors[i]!!)
         }
         colorMap.putAll(intToColorMap)
-        showBasicLoadingScreen = settings.showBasicLoadingScreen
         showEqualiser = settings.showEqualiser
     }
     //========================= Setters =========================
@@ -123,10 +122,6 @@ class PlayerViewModel : ViewModel() {
         colorMap[name] = color
         otherColorMap[name] = color
         customColorMap[name] = color.toArgb()
-    }
-    fun removeCustomColors(key: String) {
-        colorMap.remove(key)
-        otherColorMap.remove(key)
     }
 
     fun updateColor(choice: String, color: Color?) {

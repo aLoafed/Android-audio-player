@@ -27,7 +27,6 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.layout.LazyLayoutCacheWindow
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.pager.PagerState
 import androidx.compose.material3.Icon
@@ -66,15 +65,9 @@ fun SongsScreen(
     viewModel: PlayerViewModel,
     pagerState: PagerState
 ) {
-    // --------- May want to consider however speed has improved ---------
-    // Lazy list prefetch strategy has no effect as there's no nested scrolling
-    // Lazy list cache doesn't seem to do much
-
-    val lazyListCache = LazyLayoutCacheWindow(1600.dp, 1600.dp) // 1600.dp?
     val lazyColumnState = rememberLazyListState(
         initialFirstVisibleItemIndex = 0,
         initialFirstVisibleItemScrollOffset = 0,
-//        cacheWindow = lazyListCache
     )
     val lazyColumnSize = songInfo.count()
     val playSongCallback = remember {
@@ -247,7 +240,6 @@ fun ScrollBar(columnState: LazyListState, viewModel: PlayerViewModel, lazyColumn
                 .pointerInput(Unit) {
                     detectVerticalDragGestures { pointerChange, value ->
                         val initialLocale = tabOffset
-                        // tabOffset = pointerChange.position.y; was here, may need to revert
                         val yDelta = pointerChange.position.y
                         scope.launch {
                             columnState.scrollBy(
