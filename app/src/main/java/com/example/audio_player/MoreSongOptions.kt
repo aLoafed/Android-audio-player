@@ -47,9 +47,9 @@ fun MoreSongOptions(viewModel: PlayerViewModel, mediaController: MediaController
                 modifier = Modifier
                     .fillMaxHeight(0.55f)
                     .fillMaxWidth(0.65f)
-                    .padding(5.dp)
+                    .padding(horizontal = 5.dp)
                     .background(viewModel.backgroundColor)
-                    .border(0.dp, Color.White)
+                    .border(0.dp, viewModel.iconColor)
                     .padding(5.dp),
                 horizontalAlignment = Alignment.Start,
                 verticalArrangement = Arrangement.Top
@@ -66,7 +66,7 @@ fun AddSongToQueue(viewModel: PlayerViewModel, mediaController: MediaController?
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .height(50.dp)
+            .height(30.dp)
             .clickable(
                 onClick = { addSongToQueueLogic(mediaController, song, viewModel) }
             ),

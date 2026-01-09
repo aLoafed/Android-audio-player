@@ -118,7 +118,7 @@ fun RemoveFromQueue(viewModel: PlayerViewModel, mediaController: MediaController
             viewModel.queuedSongs.removeAt(index)
         },
         modifier = Modifier.size(36.dp),
-        colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White)
+        colors = IconButtonDefaults.iconButtonColors(contentColor = viewModel.iconColor)
     ) {
         Icon(
             painter = painterResource(R.drawable.remove_from_queue),

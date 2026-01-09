@@ -265,14 +265,15 @@ fun requestInitPermissions(
     return mediaInfoPair
 }
 
+// Uppercase as lcd font only supports capitals
 @Composable
 fun LcdText(text: String, modifier: Modifier = Modifier, viewModel: PlayerViewModel) {
     Text(
         modifier = modifier,
         text = if (text.length > 34) {
-            "${text.removeRange(34 until text.length)}..."
+            "${text.removeRange(34 until text.length)}...".uppercase()
         } else {
-            text
+            text.uppercase()
         },
         color = viewModel.textColor,
         fontSize = 15.sp,
@@ -291,7 +292,7 @@ fun LargeLcdText(
 ) {
     Text(
         modifier = modifier,
-        text = text,
+        text = text.uppercase(),
         color = viewModel.textColor,
         fontSize = 20.sp,
         fontFamily = lcdFont,
@@ -305,9 +306,9 @@ fun PlayerLargeLcdText(text: String, modifier: Modifier = Modifier, viewModel: P
     Text(
         modifier = modifier,
         text = if (text.length > 30) {
-            "${text.removeRange(34 until text.length)}..."
+            "${text.removeRange(34 until text.length)}...".uppercase()
         } else {
-            text
+            text.uppercase()
         },
         color = viewModel.textColor,
         fontSize = 25.sp,
@@ -322,9 +323,9 @@ fun PlayerLcdText(text: String, modifier: Modifier = Modifier, viewModel: Player
     Text(
         modifier = modifier,
         text = if (text.length > 34) {
-            "${text.removeRange(34 until text.length)}..."
+            "${text.removeRange(34 until text.length)}...".uppercase()
         } else {
-            text
+            text.uppercase()
         },
         color = viewModel.textColor,
         fontSize = 20.sp,
@@ -342,7 +343,7 @@ fun AlbumScreenLcdText(
 ) {
     Text(
         modifier = modifier,
-        text = text,
+        text = text.uppercase(),
         color = viewModel.textColor,
         fontSize = 15.sp,
         fontFamily = lcdFont,

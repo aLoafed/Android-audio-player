@@ -7,6 +7,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -37,11 +38,9 @@ fun AlbumScreen(
     navController: NavController,
     elementsPerRow: Int = 3,
 ) {
-    val fetchStrategy = LazyListPrefetchStrategy(50)
     val lazyColumnState = rememberLazyListState(
         initialFirstVisibleItemIndex = 0,
         initialFirstVisibleItemScrollOffset = 0,
-        prefetchStrategy = fetchStrategy
     )
     val rowNumbers = (
             if (albumInfo.count() % elementsPerRow != 0) {
@@ -98,6 +97,7 @@ fun AlbumScreen(
                                     contentDescription = null,
                                     contentScale = ContentScale.Crop
                                 )
+                                Spacer(Modifier.height(5.dp))
                                 AlbumScreenLcdText(
                                     albumInfo[rowIndex * elementsPerRow + index].albumName,
                                     viewModel = viewModel,
@@ -128,6 +128,7 @@ fun AlbumScreen(
                                         contentDescription = null,
                                         contentScale = ContentScale.Crop
                                     )
+                                    Spacer(Modifier.height(5.dp))
                                     AlbumScreenLcdText(
                                         albumInfo[rowIndex * elementsPerRow + index].albumName,
                                         viewModel = viewModel,
@@ -157,6 +158,7 @@ fun AlbumScreen(
                                         contentDescription = null,
                                         contentScale = ContentScale.Crop
                                     )
+                                    Spacer(Modifier.height(5.dp))
                                     AlbumScreenLcdText(
                                         albumInfo[rowIndex * 3 + index - 1].albumName,
                                         viewModel = viewModel,

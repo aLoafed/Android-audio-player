@@ -25,6 +25,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuAnchorType
@@ -36,6 +37,7 @@ import androidx.compose.material3.IconButtonColors
 import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Switch
 import androidx.compose.material3.SwitchColors
+import androidx.compose.material3.SwitchDefaults
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
@@ -308,23 +310,15 @@ fun EQVisibilitySwitch(viewModel: PlayerViewModel, tmpMiscSettings: MutableMap<S
                 switched = !switched
                 tmpMiscSettings["showEqualiser"] = switched
             },
-            colors = SwitchColors(
-                checkedThumbColor = Color.White,
-                checkedTrackColor = LightLcdGrey,
-                checkedBorderColor = Color.White,
+            colors = SwitchDefaults.colors(
+                checkedThumbColor = viewModel.iconColor,
+                checkedTrackColor = viewModel.backgroundColor,
+                checkedBorderColor = viewModel.iconColor,
                 checkedIconColor = viewModel.iconColor,
-                uncheckedThumbColor = Color.White,
-                uncheckedTrackColor = LightLcdGrey,
-                uncheckedBorderColor = Color.White,
+                uncheckedThumbColor = viewModel.iconColor,
+                uncheckedTrackColor = viewModel.backgroundColor,
+                uncheckedBorderColor = viewModel.iconColor,
                 uncheckedIconColor = viewModel.iconColor,
-                disabledCheckedThumbColor = Color.White,
-                disabledCheckedTrackColor = Color.White,
-                disabledCheckedBorderColor = Color.White,
-                disabledCheckedIconColor = Color.White,
-                disabledUncheckedThumbColor = Color.White,
-                disabledUncheckedTrackColor = Color.White,
-                disabledUncheckedBorderColor = Color.White,
-                disabledUncheckedIconColor = Color.White
             )
         )
     }
@@ -349,11 +343,9 @@ fun ResetToDefaultsButton(viewModel: PlayerViewModel, context: Context) {
             viewModel.showEqualiser = true
             settingsManager.saveSettings(defaultData)
         },
-        colors = ButtonColors(
-            containerColor = LightLcdGrey,
-            contentColor = Color.White,
-            disabledContainerColor = LightLcdGrey,
-            disabledContentColor = Color.White
+        colors = ButtonDefaults.buttonColors(
+            containerColor = viewModel.backgroundColor,
+            contentColor = viewModel.backgroundColor
         )
     ) {
         LcdText(
@@ -372,11 +364,9 @@ fun CustomColorButton(
         onClick = {
             navController.navigate("color_picker")
         },
-        colors = ButtonColors(
-            containerColor = LightLcdGrey,
-            contentColor = Color.White,
-            disabledContainerColor = LightLcdGrey,
-            disabledContentColor = Color.White
+        colors = ButtonDefaults.buttonColors(
+            containerColor = viewModel.backgroundColor,
+            contentColor = viewModel.backgroundColor
         )
     ) {
         LcdText(
@@ -408,11 +398,9 @@ fun SaveChangesButton(
             )
             saveChanges(viewModel, context)
         },
-        colors = ButtonColors(
-            containerColor = LightLcdGrey,
-            contentColor = Color.White,
-            disabledContainerColor = LightLcdGrey,
-            disabledContentColor = Color.White
+        colors = ButtonDefaults.buttonColors(
+            containerColor = viewModel.backgroundColor,
+            contentColor = viewModel.backgroundColor
         )
     ) {
         LcdText(
@@ -473,7 +461,7 @@ fun ColourListDropDownMenu(
                         type = ExposedDropdownMenuAnchorType.PrimaryNotEditable,
                         enabled = true
                     ),
-                value = selectedText,
+                value = selectedText.uppercase(),
                 onValueChange = {  },
                 readOnly = true,
                 trailingIcon = {
@@ -512,8 +500,10 @@ fun ColourListDropDownMenu(
                                     modifier = Modifier.size(24.dp),
                                     onClick = {
                                         viewModel.colorMap.remove(i)
+                                        viewModel.otherColorMap.remove(i)
+                                        viewModel.customColorMap.remove(i)
                                     },
-                                    colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White)
+                                    colors = IconButtonDefaults.iconButtonColors(contentColor = viewModel.iconColor)
                                 ) {
                                     Icon(painterResource(R.drawable.delete), "Delete color")
                                 }
@@ -597,7 +587,8 @@ fun ColourOtherListDropDownMenu(
             )
             ExposedDropdownMenu(
                 expanded = expanded,
-                onDismissRequest = { expanded = false }
+                onDismissRequest = { expanded = false },
+                containerColor = LcdGrey.increaseBrightness(0.03f),
             ) {
                 for (i in viewModel.otherColorMap.keys) {
                     DropdownMenuItem(
@@ -606,9 +597,11 @@ fun ColourOtherListDropDownMenu(
                                 IconButton(
                                     modifier = Modifier.size(24.dp),
                                     onClick = {
+                                        viewModel.otherColorMap.remove(i)
                                         viewModel.colorMap.remove(i)
+                                        viewModel.customColorMap.remove(i)
                                     },
-                                    colors = IconButtonDefaults.iconButtonColors(contentColor = Color.White)
+                                    colors = IconButtonDefaults.iconButtonColors(contentColor = viewModel.iconColor)
                                 ) {
                                     Icon(painterResource(R.drawable.delete), "Delete color")
                                 }
@@ -783,11 +776,9 @@ fun HorizontalColorPicker(viewModel: PlayerViewModel, navController: NavControll
                             viewModel.updateCustomColors(selectedColor, tmpName)
                             navController.popBackStack()
                         },
-                        colors = ButtonColors(
-                            containerColor = LightLcdGrey,
-                            contentColor = Color.White,
-                            disabledContainerColor = LightLcdGrey,
-                            disabledContentColor = Color.White,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = viewModel.backgroundColor,
+                            contentColor = viewModel.backgroundColor
                         )
                     ) {
                         LcdText(
@@ -922,11 +913,9 @@ fun PortraitColorPicker(viewModel: PlayerViewModel, navController: NavController
                     viewModel.updateCustomColors(selectedColor, tmpName)
                     navController.popBackStack()
                 },
-                colors = ButtonColors(
-                    containerColor = LightLcdGrey,
-                    contentColor = Color.White,
-                    disabledContainerColor = LightLcdGrey,
-                    disabledContentColor = Color.White,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = viewModel.backgroundColor,
+                    contentColor = viewModel.backgroundColor
                 )
             ) {
                 LcdText(

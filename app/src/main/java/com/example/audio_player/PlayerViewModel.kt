@@ -112,6 +112,7 @@ class PlayerViewModel : ViewModel() {
             intToColorMap[i] = Color(settings.customColors[i]!!)
         }
         colorMap.putAll(intToColorMap)
+        otherColorMap.putAll(intToColorMap)
         showEqualiser = settings.showEqualiser
     }
     //========================= Setters =========================

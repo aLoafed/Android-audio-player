@@ -160,7 +160,7 @@ fun InfoLcdText(
 ) {
     Text(
         modifier = modifier,
-        text = text,
+        text = text.uppercase(),
         color = viewModel.textColor,
         fontSize = fontSize,
         fontFamily = lcdFont,
